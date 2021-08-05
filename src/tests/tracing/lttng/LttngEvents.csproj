@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <CLRTestPriority>0</CLRTestPriority>
+    <CLRTestTargetUnsupported Condition="'$(TargetOS)' != 'Linux'">true</CLRTestTargetUnsupported>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="RunInLttngSessionScope.sh" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="LttngEvents.cs" />
+  </ItemGroup>
+
+    <PropertyGroup>
+    <BashCLRTestPreCommands><![CDATA[
+export CLRCustomTestLauncher="./RunInLttngSessionScope.sh"
+]]></BashCLRTestPreCommands>
+  </PropertyGroup>
+</Project>

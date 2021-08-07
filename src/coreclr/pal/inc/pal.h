@@ -972,6 +972,11 @@ PALAPI GetFileSizeEx(
 PALIMPORT
 VOID
 PALAPI
+DeleteBuffer(IN VOID *buffer);
+
+PALIMPORT
+VOID
+PALAPI
 GetSystemTimeAsFileTime(
             OUT LPFILETIME lpSystemTimeAsFileTime);
 

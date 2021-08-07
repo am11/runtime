@@ -368,7 +368,7 @@ def generateWriteEventBody(template, providerName, eventName, runtimeFlavor):
         checking = """    if (!success)
     {
         if (!fixedBuffer)
-            delete[] buffer;
+            DeleteBuffer((void*)buffer);
         return ERROR_WRITE_FAULT;
     }\n\n"""
     elif runtimeFlavor.mono:
@@ -386,7 +386,7 @@ def generateWriteEventBody(template, providerName, eventName, runtimeFlavor):
     if runtimeFlavor.coreclr:
         footer = """
     if (!fixedBuffer)
-        delete[] buffer;
+        DeleteBuffer((void*)buffer);
 """
     elif runtimeFlavor.mono:
         footer = """
@@ -443,7 +443,7 @@ bool ResizeBuffer(BYTE *&buffer, size_t& size, size_t currLen, size_t newSize, b
     memcpy(newBuffer, buffer, currLen);
 
     if (!fixedBuffer)
-        delete[] buffer;
+        DeleteBuffer((void*)buffer);
 
     buffer = newBuffer;
     size = newSize;

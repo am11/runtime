@@ -357,7 +357,7 @@ def generateMethodBody(template, providerName, eventName):
 """ % (template.estimated_size, template.estimated_size)
         footer = """
     if (!fixedBuffer)
-        delete[] buffer;
+        DeleteBuffer((void*)buffer);
 """
 
         pack_list = []
@@ -383,7 +383,7 @@ def generateMethodBody(template, providerName, eventName):
         tracepoint = """    if (!success)
     {
         if (!fixedBuffer)
-            delete[] buffer;
+            DeleteBuffer((void*)buffer);
         return ERROR_WRITE_FAULT;
     }
 

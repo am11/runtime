@@ -11,6 +11,13 @@
 
 #define wcslen PAL_wcslen
 
+VOID
+PALAPI
+DeleteBuffer(IN VOID *buffer)
+{
+    delete[] reinterpret_cast<char *&>(buffer);
+}
+
 bool ResizeBuffer(char *&buffer, size_t& size, size_t currLen, size_t newSize, bool &fixedBuffer)
 {
     newSize = (size_t)(newSize * 1.5);
@@ -29,7 +36,7 @@ bool ResizeBuffer(char *&buffer, size_t& size, size_t currLen, size_t newSize, b
     memcpy(newBuffer, buffer, currLen);
 
     if (!fixedBuffer)
-        delete[] buffer;
+        DeleteBuffer((void*)buffer);
 
     buffer = newBuffer;
     size = newSize;

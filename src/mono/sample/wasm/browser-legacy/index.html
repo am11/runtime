@@ -10,7 +10,7 @@
 </head>
 
 <body>
-  <h3 id="header">Wasm Browser Sample</h3>
+  <h3 id="header">Wasm Browser Legacy Sample</h3>
   Result from Sample.Test.TestMeaning: <span id="out"></span>
   <script type='text/javascript'>
     var test_exit = function (exit_code) {
@@ -26,8 +26,8 @@
     };
 
     var App = {
-      init: function ({ MONO, INTERNAL, BINDING, Module }) {
-        var ret = INTERNAL.call_static_method("[Wasm.Browser.Sample] Sample.Test:TestMeaning", []);
+      init: function () {
+        var ret = INTERNAL.call_static_method("[Wasm.Browser.LegacySample] Sample.Test:TestMeaning", []);
         document.getElementById("out").innerHTML = ret;
 
         console.debug(`ret: ${ret}`);
@@ -36,8 +36,9 @@
       },
     };
   </script>
-  <script type="text/javascript" src="dotnet.js"></script>
   <script type="text/javascript" src="runtime.js"></script>
+
+  <script defer src="dotnet.js"></script>
 
 </body>
 

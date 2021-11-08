@@ -71,7 +71,8 @@
       <_EmccCommonFlags Include="--source-map-base http://example.com" />
 
       <_EmccCommonFlags Include="-s STRICT_JS=1" />      
-      <_EmccCommonFlags Include="-s MODULARIZE=1" Condition="'$(WasmEnableES6)' != 'false'" />
+      <_EmccCommonFlags Include="-s EXPORT_NAME=&quot;'createDotnetRuntime'&quot;" />
+      <_EmccCommonFlags Include="-s MODULARIZE=1"/>
       <_EmccCommonFlags Include="-s EXPORT_ES6=1" Condition="'$(WasmEnableES6)' != 'false'" />
     </ItemGroup>
 
@@ -182,6 +183,9 @@
                        runtime/pinvoke.c;
                        runtime/corebindings.c;
                        runtime/library-dotnet.js;
+                       runtime/modularize-dotnet.pre.js;
+                       runtime/modularize-dotnet.post.js;
+                       runtime/modularize-dotnet.extpost.js;
                        $(SystemNativeDir)\pal_random.js;"
           DestinationFolder="$(NativeBinDir)src"
           SkipUnchangedFiles="true" />

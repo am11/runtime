@@ -7,25 +7,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
-  <body onload="onLoad()">
+  <body>
     <h3 id="header">Wasm Browser Sample - Simple Benchmark</h3>
     Output:<br><br> <span id="out"></span>
     <script type='text/javascript'>
-      var is_testing = false;
       var tasks = '';
-      var onLoad = function() {
-        var url = new URL(decodeURI(window.location));
-        let args = url.searchParams.getAll('arg');
-        is_testing = args !== undefined && (args.find(arg => arg == '--testing') !== undefined);
-        tasks = url.searchParams.getAll('task');
-      };
 
       var test_exit = function(exit_code)
       {
-        if (!is_testing) {
-          console.log(`test_exit: ${exit_code}`);
-          return;
-        }
+        console.log(`test_exit: ${exit_code}`);
 
         /* Set result in a tests_done element, to be read by xharness */
         var tests_done_elem = document.createElement("label");
@@ -57,8 +47,6 @@
       };
     </script>
     <script type="text/javascript" src="runtime.js"></script>
-
     <script defer src="dotnet.js"></script>
-
   </body>
 </html>

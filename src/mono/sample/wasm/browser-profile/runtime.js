@@ -3,7 +3,6 @@
 
 "use strict";
 var Module = {
-    is_testing: false,
     config: null,
     configSrc: "./mono-config.json",
     onConfigLoaded: function () {
@@ -32,11 +31,9 @@ var Module = {
         document.getElementById("out").innerHTML = ret;
         console.log("ready");
 
-        if (Module.is_testing) {
-            console.debug(`ret: ${ret}`);
-            let exit_code = ret == 42 ? 0 : 1;
-            Module.test_exit(exit_code);
-        }
+        console.debug(`ret: ${ret}`);
+        let exit_code = ret == 42 ? 0 : 1;
+        Module.test_exit(exit_code);
 
         if (MONO.config.enable_profiler) {
             INTERNAL.call_static_method("[Wasm.BrowserProfile.Sample] Sample.Test:StopProfile", []);
@@ -45,10 +42,7 @@ var Module = {
     },
 
     test_exit: function (exit_code) {
-        if (!Module.is_testing) {
-            console.log(`test_exit: ${exit_code}`);
-            return;
-        }
+        console.log(`test_exit: ${exit_code}`);
 
         /* Set result in a tests_done element, to be read by xharness */
         const tests_done_elem = document.createElement("label");

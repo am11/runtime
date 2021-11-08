@@ -65,8 +65,7 @@ export function mono_wasm_set_runtime_options(options: string[]): void {
     cwraps.mono_wasm_parse_runtime_options(options.length, argv);
 }
 
-function _handle_loaded_asset(ctx: MonoInitContext, asset: AssetEntry, url: string, blob: ArrayBuffer) {
-    const bytes = new Uint8Array(blob);
+function _handle_loaded_asset(ctx: MonoInitContext, asset: AssetEntry, url: string, bytes: Uint8Array) {
     if (ctx.tracing)
         console.log(`MONO_WASM: Loaded:${asset.name} as ${asset.behavior} size ${bytes.length} from ${url}`);
 
@@ -163,45 +162,50 @@ function _apply_configuration_from_args(args: MonoConfig) {
         mono_wasm_init_coverage_profiler(args.coverage_profiler_options);
 }
 
-function _get_fetch_file_cb_from_args(args: MonoConfig): (asset: string) => Promise<Response> {
+async function _get_file_contents(path: string, options?: any): Promise<Uint8Array | null> {
+    let data: Uint8Array | null = null;
+    if (typeof (Deno) !== "undefined" && typeof (Deno.readFile) === "function") {
+        data = await Deno.readFile(path);
+    } else if (typeof (fetch) === "function") {
+        const response = await fetch(path, options);
+        const arrayBuffer = await response.arrayBuffer();
+        data = new Uint8Array(arrayBuffer);
+    } else if (typeof (readbuffer) === "function") {
+        data = new Uint8Array(readbuffer(path)); // d8
+    } else if (typeof (require) === "function") {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const fs = require("fs");
+        const response = await fs.promises.readFile(path);
+        data = new Uint8Array(response);
+    } else {
+        throw new Error("This environment does not expose 'fetch', 'readFile' or 'readbuffer' functions.");
+    }
+    return data
+}
+
+function _get_fetch_file_cb_from_args(args: MonoConfig): (asset: string) => Promise<any> {
     if (typeof (args.fetch_file_cb) === "function")
         return args.fetch_file_cb;
 
-    if (typeof (fetch) === "function") {
-        return function (asset) {
-            return fetch(asset, { credentials: "same-origin" });
-        };
-    } else if (ENVIRONMENT_IS_NODE || typeof (read) === "function") {
-        return async function (asset) {
-            let data: any = null;
-            let err: any = null;
-            try {
-                if (ENVIRONMENT_IS_NODE) {
-                    // eslint-disable-next-line @typescript-eslint/no-var-requires
-                    const fs = require("fs");
-                    data = await fs.promises.readFile(asset);
-                }
-                else {
-                    data = read(asset, "binary");
-                }
+    return async function (asset) {
+        let data: Uint8Array | null = null;
+        let err: any = null;
+        try {
+            data = await _get_file_contents(asset, { credentials: "same-origin" });
+        }
+        catch (exc) {
+            data = null;
+            err = exc;
+        }
+        return {
+            ok: !!data,
+            url: asset,
+            data: function () {
+                if (err) throw err;
+                return data;
             }
-            catch (exc) {
-                data = null;
-                err = exc;
-            }
-            const res: any = {
-                ok: !!data,
-                url: asset,
-                arrayBuffer: async function () {
-                    if (err) throw err;
-                    return new Uint8Array(data);
-                }
-            };
-            return <Response>res;
         };
-    } else {
-        throw new Error("No fetch_file_cb was provided and this environment does not expose 'fetch'.");
-    }
+    };
 }
 
 function _finalize_startup(args: MonoConfig, ctx: MonoInitContext) {
@@ -368,7 +372,7 @@ function _load_assets_and_runtime(args: MonoConfig) {
         }
     };
 
-    const processFetchResponseBuffer = function (asset: AssetEntry, url: string, buffer: ArrayBuffer) {
+    const processFetchResponseBuffer = function (asset: AssetEntry, url: string, buffer: Uint8Array) {
         try {
             _handle_loaded_asset(ctx, asset, url, buffer);
         } catch (exc) {
@@ -383,7 +387,7 @@ function _load_assets_and_runtime(args: MonoConfig) {
         let sourceIndex = 0;
         const sourcesList = asset.load_remote ? args.remote_sources! : [""];
 
-        const handleFetchResponse = function (response: Response) {
+        const handleFetchResponse = function (response: any) {
             if (!response.ok) {
                 try {
                     attemptNextSource();
@@ -395,8 +399,7 @@ function _load_assets_and_runtime(args: MonoConfig) {
             }
 
             try {
-                const bufferPromise = response.arrayBuffer();
-                bufferPromise.then((data) => processFetchResponseBuffer(asset, response.url, data));
+                processFetchResponseBuffer(asset, response.url, response.data());
             } catch (exc) {
                 console.error(`MONO_WASM: Unhandled exception in handleFetchResponse for asset ${asset.name} ${exc}`);
                 attemptNextSource();
@@ -525,22 +528,12 @@ export function mono_wasm_load_data_archive(data: TypedArray, prefix: string): b
  */
 export async function mono_wasm_load_config(configFilePath: string): Promise<void> {
     const module = Module;
+    const decoder = new TextDecoder('utf-8');
     module.addRunDependency(configFilePath);
     try {
-        let config = null;
-        // NOTE: when we add nodejs make sure to include the nodejs fetch package
-        if (ENVIRONMENT_IS_WEB) {
-            const configRaw = await fetch(configFilePath);
-            config = await configRaw.json();
-        } else if (ENVIRONMENT_IS_NODE) {
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const fs = require("fs");
-            const json = await fs.promises.readFile(configFilePath);
-            config = JSON.parse(json);
-        } else { // shell or worker
-            const json = read(configFilePath);// read is a v8 debugger command
-            config = JSON.parse(json);
-        }
+        const response = await _get_file_contents(configFilePath);
+        let config = JSON.parse(decoder.decode(response!));
+
         runtimeHelpers.config = config;
         config.environment_variables = config.environment_variables || {};
         config.assets = config.assets || [];

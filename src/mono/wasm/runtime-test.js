@@ -7,7 +7,8 @@
 "use strict";
 
 //glue code to deal with the differences between chrome, ch, d8, jsc and sm.
-const is_browser = typeof window != "undefined";
+const is_deno = typeof Deno !== "undefined" && typeof Deno.readFile !== "undefined";
+const is_browser = !is_deno && typeof window !== "undefined";
 const is_node = !is_browser && typeof process === 'object' && typeof process.versions === 'object' && typeof process.versions.node === 'string';
 
 // if the engine doesn't provide a console
@@ -102,12 +103,89 @@ if (typeof globalThis.performance === 'undefined') {
     }
 }
 
-loadDotnet("./dotnet.js").then((createDotnetRuntime) => {
+function processArguments(incomingArguments) {
+    console.log("Incoming arguments: " + incomingArguments.join(' '));
+    let profilers = [];
+    let setenv = {};
+    let runtime_args = [];
+    let enable_gc = true;
+    let working_dir = '/';
+    while (incomingArguments && incomingArguments.length > 0) {
+        const currentArg = incomingArguments[0];
+        if (currentArg.startsWith("--profile=")) {
+            const arg = currentArg.substring("--profile=".length);
+            profilers.push(arg);
+        } else if (currentArg.startsWith("--setenv=")) {
+            const arg = currentArg.substring("--setenv=".length);
+            const parts = arg.split('=');
+            if (parts.length != 2)
+                fail_exec(1, "Error: malformed argument: '" + currentArg);
+            setenv[parts[0]] = parts[1];
+        } else if (currentArg.startsWith("--runtime-arg=")) {
+            const arg = currentArg.substring("--runtime-arg=".length);
+            runtime_args.push(arg);
+        } else if (currentArg == "--disable-on-demand-gc") {
+            enable_gc = false;
+        } else if (currentArg.startsWith("--working-dir=")) {
+            const arg = currentArg.substring("--working-dir=".length);
+            working_dir = arg;
+        } else {
+            break;
+        }
+        incomingArguments = incomingArguments.slice(1);
+    }
+
+    // cheap way to let the testing infrastructure know we're running in a browser context (or>
+    setenv["IsBrowserDomSupported"] = is_browser.toString().toLowerCase();
+
+    console.log("Application arguments: " + incomingArguments.join(' '));
+
+    return {
+        applicationArgs: incomingArguments,
+        profilers,
+        setenv,
+        runtime_args,
+        enable_gc,
+        working_dir,
+    }
+}
+
+
+let processedArguments = null;
+// this can't be function because of `arguments` scope
+try {
+    if (is_node) {
+        processedArguments = processArguments(process.argv.slice(2));
+    } else if (is_deno) {
+        processedArguments = processArguments(Deno.args);
+    } else if (is_browser) {
+        // We expect to be run by tests/runtime/run.js which passes in the arguments using htt>
+        const url = new URL(decodeURI(window.location));
+        let urlArguments = []
+        for (let param of url.searchParams) {
+            if (param[0] == "arg") {
+                urlArguments.push(param[1]);
+            }
+        }
+        processedArguments = processArguments(urlArguments);
+    } else if (typeof arguments !== "undefined") {
+        processedArguments = processArguments(Array.from(arguments));
+    } else if (typeof scriptArgs !== "undefined") {
+        processedArguments = processArguments(Array.from(scriptArgs));
+    } else if (typeof WScript !== "undefined" && WScript.Arguments) {
+        processedArguments = processArguments(Array.from(WScript.Arguments));
+    }
+} catch (e) {
+    console.error(e);
+}
+
+const { MONO, INTERNAL, BINDING, Module } = await loadDotnet("./dotnet.js").then((createDotnetRuntime) => {
     return createDotnetRuntime(({ MONO, INTERNAL, BINDING, Module }) => ({
         disableDotNet6Compatibility: true,
         mainScriptUrlOrBlob: "dotnet.js",
         config: null,
         configSrc: "./mono-config.json",
+        wasmBinary: is_deno ? Deno.readFileSync('./dotnet.wasm', 'utf8') : undefined,
         onConfigLoaded: function () {
             if (!Module.config) {
                 console.error("Could not find ./mono-config.json. Cancelling run");
@@ -146,7 +224,6 @@ loadDotnet("./dotnet.js").then((createDotnetRuntime) => {
     fail_exec(1, "failed to load the dotnet.js file");
     throw err;
 });
-
 
 const App = {
     init: function ({ MONO, INTERNAL, BINDING, Module }) {
@@ -232,6 +309,7 @@ const App = {
         }
     }
 };
+
 globalThis.App = App; // Necessary as System.Runtime.InteropServices.JavaScript.Tests.MarshalTests (among others) call the App.call_test_method directly
 
 function fail_exec(exit_code, reason) {
@@ -255,79 +333,6 @@ function fail_exec(exit_code, reason) {
     }
 }
 
-function processArguments(incomingArguments) {
-    console.log("Incoming arguments: " + incomingArguments.join(' '));
-    let profilers = [];
-    let setenv = {};
-    let runtime_args = [];
-    let enable_gc = true;
-    let working_dir = '/';
-    while (incomingArguments && incomingArguments.length > 0) {
-        const currentArg = incomingArguments[0];
-        if (currentArg.startsWith("--profile=")) {
-            const arg = currentArg.substring("--profile=".length);
-            profilers.push(arg);
-        } else if (currentArg.startsWith("--setenv=")) {
-            const arg = currentArg.substring("--setenv=".length);
-            const parts = arg.split('=');
-            if (parts.length != 2)
-                fail_exec(1, "Error: malformed argument: '" + currentArg);
-            setenv[parts[0]] = parts[1];
-        } else if (currentArg.startsWith("--runtime-arg=")) {
-            const arg = currentArg.substring("--runtime-arg=".length);
-            runtime_args.push(arg);
-        } else if (currentArg == "--disable-on-demand-gc") {
-            enable_gc = false;
-        } else if (currentArg.startsWith("--working-dir=")) {
-            const arg = currentArg.substring("--working-dir=".length);
-            working_dir = arg;
-        } else {
-            break;
-        }
-        incomingArguments = incomingArguments.slice(1);
-    }
-
-    // cheap way to let the testing infrastructure know we're running in a browser context (or not)
-    setenv["IsBrowserDomSupported"] = is_browser.toString().toLowerCase();
-
-    console.log("Application arguments: " + incomingArguments.join(' '));
-
-    return {
-        applicationArgs: incomingArguments,
-        profilers,
-        setenv,
-        runtime_args,
-        enable_gc,
-        working_dir,
-    }
-}
-
-let processedArguments = null;
-// this can't be function because of `arguments` scope
-try {
-    if (is_node) {
-        processedArguments = processArguments(process.argv.slice(2));
-    } else if (is_browser) {
-        // We expect to be run by tests/runtime/run.js which passes in the arguments using http parameters
-        const url = new URL(decodeURI(window.location));
-        let urlArguments = []
-        for (let param of url.searchParams) {
-            if (param[0] == "arg") {
-                urlArguments.push(param[1]);
-            }
-        }
-        processedArguments = processArguments(urlArguments);
-    } else if (typeof arguments !== "undefined") {
-        processedArguments = processArguments(Array.from(arguments));
-    } else if (typeof scriptArgs !== "undefined") {
-        processedArguments = processArguments(Array.from(scriptArgs));
-    } else if (typeof WScript !== "undefined" && WScript.Arguments) {
-        processedArguments = processArguments(Array.from(WScript.Arguments));
-    }
-} catch (e) {
-    console.error(e);
-}
-
 async function loadDotnet(file) {
     let loadScript = undefined;
     if (typeof WScript !== "undefined") { // Chakra
@@ -338,6 +343,11 @@ async function loadDotnet(file) {
     } else if (is_node) { // NodeJS
         loadScript = async function (file) {
             return require(file);
+        };
+    } else if (is_deno) { // Deno
+        loadScript = async function (file) {
+            const dotnet = await import(file);
+            return dotnet.default;
         };
     } else if (is_browser) { // vanila JS in browser
         loadScript = async function (file) {

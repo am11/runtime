@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 /* eslint-disable @typescript-eslint/triple-slash-reference */
+/// <reference path="./types/deno.d.ts" />
 /// <reference path="./types/emscripten.d.ts" />
 /// <reference path="./types/v8.d.ts" />
 

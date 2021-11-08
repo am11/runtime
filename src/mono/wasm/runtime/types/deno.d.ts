@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-// readbuffer is a v8 debugger command
-declare function readbuffer(name: string): ArrayBuffer;
+declare namespace Deno {
+  declare function readFile(path: string): Promise<Uint8Array>;
+}

@@ -47,7 +47,32 @@ include(../utils/CMakeLists.txt)
 include(../metadata/CMakeLists.txt)
 include(../sgen/CMakeLists.txt)
 if(INTERNAL_ZLIB)  # TODO: hook up HAVE_SYS_ZLIB instead
-  include(../zlib/CMakeLists.txt)
+  set(zlib_sources_base
+    adler32.c
+    compress.c
+    crc32.c
+    uncompr.c
+    deflate.c
+    gzguts.h
+    trees.c
+    zutil.c
+    inflate.c
+    infback.c
+    inftrees.c
+    inffast.c
+    crc32.h
+    deflate.h
+    inffast.h
+    inffixed.h
+    inflate.h
+    inftrees.h
+    trees.h
+    zconf.h
+    zlib.h
+    zutil.h
+  )
+
+  addprefix(zlib_sources ${CLR_SRC_NATIVE_DIR}/libs/System.IO.Compression.Native/zlib "${zlib_sources_base}")
 endif()
 include(../component/CMakeLists.txt)
 

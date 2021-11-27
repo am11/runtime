@@ -41,12 +41,12 @@ unw_get_accessors (unw_addr_space_t as)
   return &as->acc;
 }
 
-unw_accessors_t * 
+unw_accessors_t *
 unw_get_accessors_int (unw_addr_space_t as)
 {
   return unw_get_accessors(as);
 }
- 
+
 #if defined(TARGET_AMD64) && !defined(HOST_AMD64)
 #define X86_64_SCF_NONE 0
 #endif
@@ -73,3 +73,10 @@ UNW_OBJ(handle_signal_frame) (unw_cursor_t *cursor)
 {
   return -UNW_EBADFRAME;
 }
+
+#if defined(TARGET_ARM64)
+void tdep_init_mem_validate (void)
+{
+  // intentionally left blank
+}
+#endif

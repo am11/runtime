@@ -122,3 +122,10 @@ int fstat(int fd, struct stat *buf)
 {
     return 0;
 }
+
+#ifdef __aarch64__
+void tdep_init_mem_validate (void)
+{
+  // intentionally left blank
+}
+#endif

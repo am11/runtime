@@ -9138,19 +9138,21 @@ void Interpreter::DoCallWork(bool virtualCall, void* thisArg, CORINFO_RESOLVED_T
     }
 
 #if INTERP_TRACING
-    if (intrinsicId != CORINFO_INTRINSIC_Illegal)
+    if (intrinsicId == CORINFO_INTRINSIC_Illegal)
         InterlockedIncrement(&s_totalInterpCallsToIntrinsics);
 #endif // INTERP_TRACING
     bool didIntrinsic = false;
     if (!m_constrainedFlag)
     {
+        // TODO: enable when NamedIntrinsic is available to interpreter
+        /*
         switch (intrinsicId)
         {
-        case CORINFO_INTRINSIC_ByReference_Ctor:
+        case NI_System_ByReference_ctor:
             DoByReferenceCtor();
             didIntrinsic = true;
             break;
-        case CORINFO_INTRINSIC_ByReference_Value:
+        case NI_System_ByReference_get_Value:
             DoByReferenceValue();
             didIntrinsic = true;
             break;
@@ -9167,7 +9169,6 @@ void Interpreter::DoCallWork(bool virtualCall, void* thisArg, CORINFO_RESOLVED_T
             OpStackTypeSet(m_curStackHt, InterpreterType(CORINFO_TYPE_NATIVEINT));
             m_curStackHt++; didIntrinsic = true;
             break;
-        */
 #endif // INTERP_ILSTUBS
         default:
 #if INTERP_TRACING
@@ -9175,6 +9176,7 @@ void Interpreter::DoCallWork(bool virtualCall, void* thisArg, CORINFO_RESOLVED_T
 #endif // INTERP_TRACING
             break;
         }
+        */
 
         // Plus some other calls that we're going to treat "like" intrinsics...
         if (methToCall == CoreLibBinder::GetMethod(METHOD__STUBHELPERS__SET_LAST_ERROR))

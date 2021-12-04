@@ -79,12 +79,6 @@ namespace Internal.JitInterface
             table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_Array_Get, "Get", null, null);
             table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_Array_Address, "Address", null, null);
             table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_Array_Set, "Set", null, null);
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_ByReference_Ctor, ".ctor", "System", "ByReference`1");
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_ByReference_Value, "get_Value", "System", "ByReference`1");
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_GetRawHandle, "EETypePtrOf", "System", "EETypePtr");
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_GetRawHandle, "MethodTableOf", "System", "Object");
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_GetRawHandle, "DefaultConstructorOf", "System", "Activator");
-            table.Add(CorInfoIntrinsics.CORINFO_INTRINSIC_GetRawHandle, "AllocatorOf", "System", "Activator");
 
             return table;
         }
@@ -127,17 +121,6 @@ namespace Internal.JitInterface
                 case CorInfoIntrinsics.CORINFO_INTRINSIC_Array_Set:
                     if (!method.OwningType.IsArray)
                         return CorInfoIntrinsics.CORINFO_INTRINSIC_Illegal;
-                    break;
-
-                case CorInfoIntrinsics.CORINFO_INTRINSIC_ByReference_Ctor:
-                case CorInfoIntrinsics.CORINFO_INTRINSIC_ByReference_Value:
-                    if (pMustExpand != null)
-                        *pMustExpand = 1;
-                    break;
-
-                case CorInfoIntrinsics.CORINFO_INTRINSIC_GetRawHandle:
-                    if (pMustExpand != null)
-                        *pMustExpand = 1;
                     break;
 
                 default:

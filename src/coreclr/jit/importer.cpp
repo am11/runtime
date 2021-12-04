@@ -3648,8 +3648,7 @@ GenTree* Compiler::impInitializeArrayIntrinsic(CORINFO_SIG_INFO* sig)
 const char* Compiler::impGetIntrinsicName(CorInfoIntrinsics intrinsicID)
 {
     static const char* const intrinsicNameMap[CORINFO_INTRINSIC_Count] = {
-        "CORINFO_INTRINSIC_Array_Get",        "CORINFO_INTRINSIC_Array_Address",     "CORINFO_INTRINSIC_Array_Set",
-        "CORINFO_INTRINSIC_ByReference_Ctor", "CORINFO_INTRINSIC_ByReference_Value", "CORINFO_INTRINSIC_GetRawHandle",
+        "CORINFO_INTRINSIC_Array_Get",        "CORINFO_INTRINSIC_Array_Address",     "CORINFO_INTRINSIC_Array_Set"
     };
 
     if ((0 <= intrinsicID) && (intrinsicID < CORINFO_INTRINSIC_Count))
@@ -3975,66 +3974,6 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
             retNode = impArrayAccessIntrinsic(clsHnd, sig, memberRef, readonlyCall, intrinsicID);
             break;
 
-        // Implement ByReference Ctor.  This wraps the assignment of the ref into a byref-like field
-        // in a value type.  The canonical example of this is Span<T>. In effect this is just a
-        // substitution.  The parameter byref will be assigned into the newly allocated object.
-        case CORINFO_INTRINSIC_ByReference_Ctor:
-        {
-            // Remove call to constructor and directly assign the byref passed
-            // to the call to the first slot of the ByReference struct.
-            op1                                    = impPopStack().val;
-            GenTree*             thisptr           = newobjThis;
-            CORINFO_FIELD_HANDLE fldHnd            = info.compCompHnd->getFieldInClass(clsHnd, 0);
-            GenTree*             field             = gtNewFieldRef(TYP_BYREF, fldHnd, thisptr, 0);
-            GenTree*             assign            = gtNewAssignNode(field, op1);
-            GenTree*             byReferenceStruct = gtCloneExpr(thisptr->gtGetOp1());
-            assert(byReferenceStruct != nullptr);
-            impPushOnStack(byReferenceStruct, typeInfo(TI_STRUCT, clsHnd));
-            retNode = assign;
-            break;
-        }
-        // Implement ptr value getter for ByReference struct.
-        case CORINFO_INTRINSIC_ByReference_Value:
-        {
-            op1                         = impPopStack().val;
-            CORINFO_FIELD_HANDLE fldHnd = info.compCompHnd->getFieldInClass(clsHnd, 0);
-            GenTree*             field  = gtNewFieldRef(TYP_BYREF, fldHnd, op1, 0);
-            retNode                     = field;
-            break;
-        }
-
-        case CORINFO_INTRINSIC_GetRawHandle:
-        {
-            noway_assert(IsTargetAbi(CORINFO_CORERT_ABI)); // Only CoreRT supports it.
-            CORINFO_RESOLVED_TOKEN resolvedToken;
-            resolvedToken.tokenContext = impTokenLookupContextHandle;
-            resolvedToken.tokenScope   = info.compScopeHnd;
-            resolvedToken.token        = memberRef;
-            resolvedToken.tokenType    = CORINFO_TOKENKIND_Method;
-
-            CORINFO_GENERICHANDLE_RESULT embedInfo;
-            info.compCompHnd->expandRawHandleIntrinsic(&resolvedToken, &embedInfo);
-
-            GenTree* rawHandle = impLookupToTree(&resolvedToken, &embedInfo.lookup, gtTokenToIconFlags(memberRef),
-                                                 embedInfo.compileTimeHandle);
-            if (rawHandle == nullptr)
-            {
-                return nullptr;
-            }
-
-            noway_assert(genTypeSize(rawHandle->TypeGet()) == genTypeSize(TYP_I_IMPL));
-
-            unsigned rawHandleSlot = lvaGrabTemp(true DEBUGARG("rawHandle"));
-            impAssignTempGen(rawHandleSlot, rawHandle, clsHnd, (unsigned)CHECK_SPILL_NONE);
-
-            GenTree*  lclVar     = gtNewLclvNode(rawHandleSlot, TYP_I_IMPL);
-            GenTree*  lclVarAddr = gtNewOperNode(GT_ADDR, TYP_I_IMPL, lclVar);
-            var_types resultType = JITtype2varType(sig->retType);
-            retNode              = gtNewOperNode(GT_IND, resultType, lclVarAddr);
-
-            break;
-        }
-
         default:
             /* Unknown intrinsic */
             intrinsicID = CORINFO_INTRINSIC_Illegal;
@@ -4090,6 +4029,35 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
                 break;
             }
 
+            // Implement ByReference Ctor.  This wraps the assignment of the ref into a byref-like field
+            // in a value type.  The canonical example of this is Span<T>. In effect this is just a
+            // substitution.  The parameter byref will be assigned into the newly allocated object.
+            case NI_System_ByReference_ctor:
+            {
+                // Remove call to constructor and directly assign the byref passed
+                // to the call to the first slot of the ByReference struct.
+                GenTree* op1                           = impPopStack().val;
+                GenTree*             thisptr           = newobjThis;
+                CORINFO_FIELD_HANDLE fldHnd            = info.compCompHnd->getFieldInClass(clsHnd, 0);
+                GenTree*             field             = gtNewFieldRef(TYP_BYREF, fldHnd, thisptr, 0);
+                GenTree*             assign            = gtNewAssignNode(field, op1);
+                GenTree*             byReferenceStruct = gtCloneExpr(thisptr->gtGetOp1());
+                assert(byReferenceStruct != nullptr);
+                impPushOnStack(byReferenceStruct, typeInfo(TI_STRUCT, clsHnd));
+                retNode = assign;
+                break;
+            }
+
+            // Implement ptr value getter for ByReference struct.
+            case NI_System_ByReference_get_Value:
+            {
+                GenTree* op1                = impPopStack().val;
+                CORINFO_FIELD_HANDLE fldHnd = info.compCompHnd->getFieldInClass(clsHnd, 0);
+                GenTree*             field  = gtNewFieldRef(TYP_BYREF, fldHnd, op1, 0);
+                retNode                     = field;
+                break;
+            }
+
             case NI_System_Runtime_CompilerServices_RuntimeHelpers_CreateSpan:
             {
                 retNode = impCreateSpanIntrinsic(sig);
@@ -4099,6 +4067,41 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
             case NI_System_Runtime_CompilerServices_RuntimeHelpers_InitializeArray:
             {
                 retNode = impInitializeArrayIntrinsic(sig);
+                break;
+            }
+
+            case NI_System_Activator_AllocatorOf:
+            case NI_System_Activator_DefaultConstructorOf:
+            case NI_System_Object_MethodTableOf:
+            case NI_System_EETypePtr_EETypePtrOf:
+            {
+                noway_assert(IsTargetAbi(CORINFO_CORERT_ABI)); // Only CoreRT supports it.
+                CORINFO_RESOLVED_TOKEN resolvedToken;
+                resolvedToken.tokenContext = impTokenLookupContextHandle;
+                resolvedToken.tokenScope   = info.compScopeHnd;
+                resolvedToken.token        = memberRef;
+                resolvedToken.tokenType    = CORINFO_TOKENKIND_Method;
+
+                CORINFO_GENERICHANDLE_RESULT embedInfo;
+                info.compCompHnd->expandRawHandleIntrinsic(&resolvedToken, &embedInfo);
+
+                GenTree* rawHandle = impLookupToTree(&resolvedToken, &embedInfo.lookup, gtTokenToIconFlags(memberRef),
+                                                     embedInfo.compileTimeHandle);
+                if (rawHandle == nullptr)
+                {
+                    return nullptr;
+                }
+
+                noway_assert(genTypeSize(rawHandle->TypeGet()) == genTypeSize(TYP_I_IMPL));
+
+                unsigned rawHandleSlot = lvaGrabTemp(true DEBUGARG("rawHandle"));
+                impAssignTempGen(rawHandleSlot, rawHandle, clsHnd, (unsigned)CHECK_SPILL_NONE);
+
+                GenTree*  lclVar     = gtNewLclvNode(rawHandleSlot, TYP_I_IMPL);
+                GenTree*  lclVarAddr = gtNewOperNode(GT_ADDR, TYP_I_IMPL, lclVar);
+                var_types resultType = JITtype2varType(sig->retType);
+                retNode              = gtNewOperNode(GT_IND, resultType, lclVarAddr);
+
                 break;
             }
 
@@ -5059,6 +5062,28 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
         {
             result = NI_System_Enum_HasFlag;
         }
+        else if (strcmp(className, "Activator") == 0)
+        {
+            if (strcmp(methodName, "AllocatorOf") == 0)
+            {
+                result = NI_System_Activator_AllocatorOf;
+            }
+            else if (strcmp(methodName, "DefaultConstructorOf") == 0)
+            {
+                result = NI_System_Activator_DefaultConstructorOf;
+            }
+        }
+        else if (strcmp(className, "ByReference`1") == 0)
+        {
+            if (strcmp(methodName, ".ctor") == 0)
+            {
+                result = NI_System_ByReference_ctor;
+            }
+            else if (strcmp(methodName, "get_Value") == 0)
+            {
+                result = NI_System_ByReference_get_Value;
+            }
+        }
         else if (strcmp(className, "Math") == 0 || strcmp(className, "MathF") == 0)
         {
             if (strcmp(methodName, "Abs") == 0)
@@ -5206,6 +5231,10 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
             {
                 result = NI_System_Object_GetType;
             }
+            else if (strcmp(methodName, "MethodTableOf") == 0)
+            {
+                result = NI_System_Object_MethodTableOf;
+            }
         }
         else if (strcmp(className, "RuntimeTypeHandle") == 0)
         {
@@ -5264,6 +5293,13 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
             if (strcmp(methodName, "get_Item") == 0)
             {
                 result = NI_System_ReadOnlySpan_get_Item;
+            }
+        }
+        else if (strcmp(className, "EETypePtr") == 0)
+        {
+            if (strcmp(methodName, "EETypePtrOf") == 0)
+            {
+                result = NI_System_EETypePtr_EETypePtrOf;
             }
         }
     }

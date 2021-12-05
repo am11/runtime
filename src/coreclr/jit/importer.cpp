@@ -4218,6 +4218,29 @@ GenTree* Compiler::impIntrinsic(GenTree*                newobjThis,
                 break;
             }
 
+            case NI_System_Span_get_Length:
+            case NI_System_ReadOnlySpan_get_Length:
+            {
+                GenTree* op1 = impPopStack().val;
+                if (opts.OptimizationEnabled())
+                {
+                    /* Use GT_ARR_LENGTH operator so rng check opts see this */
+                    GenTreeArrLen* arrLen = gtNewArrLen(TYP_INT, op1, OFFSETOF__CORINFO_Array__length, compCurBB);
+
+                    op1 = arrLen;
+                }
+                else
+                {
+                    /* Create the expression "*(array_addr + ArrLenOffs)" */
+                    op1 = gtNewOperNode(GT_ADD, TYP_BYREF, op1,
+                                        gtNewIconNode(OFFSETOF__CORINFO_Array__length, TYP_I_IMPL));
+                    op1 = gtNewIndir(TYP_INT, op1);
+                }
+
+                retNode = op1;
+                break;
+            }
+
             case NI_System_Runtime_CompilerServices_RuntimeHelpers_CreateSpan:
             {
                 retNode = impCreateSpanIntrinsic(sig);
@@ -5251,12 +5274,20 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
             {
                 result = NI_System_Span_get_Item;
             }
+            else if (strcmp(methodName, "get_Length") == 0)
+            {
+                result = NI_System_Span_get_Length;
+            }
         }
         else if (strcmp(className, "ReadOnlySpan`1") == 0)
         {
             if (strcmp(methodName, "get_Item") == 0)
             {
                 result = NI_System_ReadOnlySpan_get_Item;
+            }
+            else if (strcmp(methodName, "get_Length") == 0)
+            {
+                result = NI_System_ReadOnlySpan_get_Length;
             }
         }
     }

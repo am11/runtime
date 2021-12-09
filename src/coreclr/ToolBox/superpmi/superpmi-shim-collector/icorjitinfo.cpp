@@ -251,17 +251,6 @@ void interceptor_ICJI::expandRawHandleIntrinsic(CORINFO_RESOLVED_TOKEN*       pR
     original_ICorJitInfo->expandRawHandleIntrinsic(pResolvedToken, pResult);
 }
 
-// If a method's attributes have (getMethodAttribs) CORINFO_FLG_INTRINSIC set,
-// getIntrinsicID() returns the intrinsic ID.
-CorInfoIntrinsics interceptor_ICJI::getIntrinsicID(CORINFO_METHOD_HANDLE method, bool* pMustExpand /* OUT */
-                                                   )
-{
-    mc->cr->AddCall("getIntrinsicID");
-    CorInfoIntrinsics temp = original_ICorJitInfo->getIntrinsicID(method, pMustExpand);
-    mc->recGetIntrinsicID(method, pMustExpand, temp);
-    return temp;
-}
-
 // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
 bool interceptor_ICJI::isIntrinsicType(CORINFO_CLASS_HANDLE classHnd)
 {

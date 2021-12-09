@@ -874,26 +874,6 @@ enum CorInfoException
     CORINFO_Exception_Count,
 };
 
-
-// This enumeration is returned by getIntrinsicID. Methods corresponding to
-// these values will have "well-known" specified behavior. Calls to these
-// methods could be replaced with inlined code corresponding to the
-// specified behavior (without having to examine the IL beforehand).
-
-enum CorInfoIntrinsics
-{
-    CORINFO_INTRINSIC_Array_Get,            // Get the value of an element in an array
-    CORINFO_INTRINSIC_Array_Address,        // Get the address of an element in an array
-    CORINFO_INTRINSIC_Array_Set,            // Set the value of an element in an array
-
-    CORINFO_INTRINSIC_ByReference_Ctor,
-    CORINFO_INTRINSIC_ByReference_Value,
-    CORINFO_INTRINSIC_GetRawHandle,
-
-    CORINFO_INTRINSIC_Count,
-    CORINFO_INTRINSIC_Illegal = -1,         // Not a true intrinsic,
-};
-
 // Can a value be accessed directly from JITed code.
 enum InfoAccessType
 {
@@ -2094,22 +2074,15 @@ public:
             CORINFO_CLASS_HANDLE elemType
             ) = 0;
 
-    // Given resolved token that corresponds to an intrinsic classified as
-    // a CORINFO_INTRINSIC_GetRawHandle intrinsic, fetch the handle associated
-    // with the token. If this is not possible at compile-time (because the current method's
-    // code is shared and the token contains generic parameters) then indicate
-    // how the handle should be looked up at runtime.
+    // Given resolved token that corresponds to an intrinsic classified to
+    // get a raw handle (NI_System_Activator_AllocatorOf etc.), fetch the
+    // handle associated with the token. If this is not possible at
+    // compile-time (because the current method's code is shared and the
+    // token contains generic parameters) then indicate how the handle
+    // should be looked up at runtime.
     virtual void expandRawHandleIntrinsic(
         CORINFO_RESOLVED_TOKEN *        pResolvedToken,
         CORINFO_GENERICHANDLE_RESULT *  pResult) = 0;
-
-    // If a method's attributes have (getMethodAttribs) CORINFO_FLG_INTRINSIC set,
-    // getIntrinsicID() returns the intrinsic ID.
-    // *pMustExpand tells whether or not JIT must expand the intrinsic.
-    virtual CorInfoIntrinsics getIntrinsicID(
-            CORINFO_METHOD_HANDLE       method,
-            bool*                       pMustExpand = NULL      /* OUT */
-            ) = 0;
 
     // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
     // This defaults to false.

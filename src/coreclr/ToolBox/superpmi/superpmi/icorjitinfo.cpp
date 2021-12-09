@@ -217,15 +217,6 @@ void MyICJI::expandRawHandleIntrinsic(CORINFO_RESOLVED_TOKEN* pResolvedToken, CO
     DebugBreakorAV(129);
 }
 
-// If a method's attributes have (getMethodAttribs) CORINFO_FLG_INTRINSIC set,
-// getIntrinsicID() returns the intrinsic ID.
-CorInfoIntrinsics MyICJI::getIntrinsicID(CORINFO_METHOD_HANDLE method, bool* pMustExpand /* OUT */
-                                         )
-{
-    jitInstance->mc->cr->AddCall("getIntrinsicID");
-    return jitInstance->mc->repGetIntrinsicID(method, pMustExpand);
-}
-
 // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
 bool MyICJI::isIntrinsicType(CORINFO_CLASS_HANDLE classHnd)
 {

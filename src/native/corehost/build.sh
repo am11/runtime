@@ -73,6 +73,7 @@ handle_arguments() {
 }
 
 source "$__RepoRootDir"/eng/native/build-commons.sh
+set -x
 
 # Set dependent variables
 __LogsDir="$__RootBinDir/log"
@@ -82,7 +83,13 @@ __MsbuildDebugLogsDir="$__LogsDir/MsbuildDebugLogs"
 __DistroRidLower="$(echo $__DistroRid | tr '[:upper:]' '[:lower:]')"
 __BinDir="$__RootBinDir/bin/$__DistroRidLower.$__BuildType"
 __IntermediatesDir="$__RootBinDir/obj/$__DistroRidLower.$__BuildType"
-
+echo "old: $__DistroRidLower  |  $__IntermediatesDir  |  $__BinDir"
+__ConfigTriplet="$(echo "$__TargetOS.$__BuildArch" | tr '[:upper:]' '[:lower:]')"
+__DirName="$__ConfigTriplet.$__BuildType"
+__BinDir="$__RootBinDir/bin/$__DirName"
+__IntermediatesDir="$__RootBinDir/obj/$__DirName"
+echo "new: $__DistroRidLower  |  $__IntermediatesDir  |  $__BinDir"
+exit 1
 export __BinDir __IntermediatesDir __CoreClrArtifacts __RuntimeFlavor
 
 __CMakeArgs="-DCLI_CMAKE_HOST_VER=\"$__host_ver\" -DCLI_CMAKE_COMMON_HOST_VER=\"$__apphost_ver\" -DCLI_CMAKE_HOST_FXR_VER=\"$__fxr_ver\" $__CMakeArgs"

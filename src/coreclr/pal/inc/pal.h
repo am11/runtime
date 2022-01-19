@@ -2848,19 +2848,6 @@ VirtualQuery(
 #define LPTR                (LMEM_FIXED | LMEM_ZEROINIT)
 
 PALIMPORT
-HLOCAL
-PALAPI
-LocalAlloc(
-       IN UINT uFlags,
-       IN SIZE_T uBytes);
-
-PALIMPORT
-VOID
-PALAPI
-LocalFree(
-      IN HLOCAL hMem);
-
-PALIMPORT
 BOOL
 PALAPI
 FlushInstructionCache(

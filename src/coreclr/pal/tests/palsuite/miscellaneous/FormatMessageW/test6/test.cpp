@@ -68,7 +68,7 @@ PALTEST(miscellaneous_FormatMessageW_test6_paltest_formatmessagew_test6, "miscel
              "something should be put into the buffer.");
     }
   
-    LocalFree(OutBuffer);
+    free(OutBuffer);
   
     PAL_Terminate();
     return PASS;

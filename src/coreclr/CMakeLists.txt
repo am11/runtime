@@ -248,7 +248,7 @@ add_subdirectory(md)
 
 if(NOT FOO)
   add_subdirectory(debug)
-endf()
+endif()
 
 add_subdirectory(binder)
 add_subdirectory(classlibnative)

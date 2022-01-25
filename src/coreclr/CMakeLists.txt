@@ -245,11 +245,6 @@ add_subdirectory(gcinfo)
 add_subdirectory(jit)
 add_subdirectory(vm)
 add_subdirectory(md)
-
-if(NOT FOO)
-  add_subdirectory(debug)
-endif()
-
 add_subdirectory(binder)
 add_subdirectory(classlibnative)
 add_subdirectory(dlls)
@@ -259,7 +254,9 @@ add_subdirectory(interop)
 
 if(CLR_CMAKE_HOST_WIN32)
   add_subdirectory(hosts)
-endif(CLR_CMAKE_HOST_WIN32)
+elseif(NOT FOO)
+  add_subdirectory(debug)
+endif()
 
 #----------------------------------------------------
 # Cross target Component install configuration

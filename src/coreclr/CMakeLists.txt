@@ -245,9 +245,11 @@ add_subdirectory(gcinfo)
 add_subdirectory(jit)
 add_subdirectory(vm)
 add_subdirectory(md)
+
 if (NOT FOO)
   add_subdirectory(debug)
 endf()
+
 add_subdirectory(binder)
 add_subdirectory(classlibnative)
 add_subdirectory(dlls)

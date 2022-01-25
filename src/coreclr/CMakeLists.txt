@@ -155,7 +155,9 @@ endif(CLR_CMAKE_HOST_WIN32)
 #----------------------------------
 include(clrdefinitions.cmake)
 
-if(FEATURE_STANDALONE_GC)
+set(FOO 1)
+
+if(FEATURE_STANDALONE_GC AND NOT FOO)
   add_definitions(-DFEATURE_STANDALONE_GC)
   add_subdirectory(gc)
 endif(FEATURE_STANDALONE_GC)

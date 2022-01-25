@@ -246,7 +246,7 @@ add_subdirectory(jit)
 add_subdirectory(vm)
 add_subdirectory(md)
 
-if (NOT FOO)
+if(NOT FOO)
   add_subdirectory(debug)
 endf()
 

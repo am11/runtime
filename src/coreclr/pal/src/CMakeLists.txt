@@ -9,6 +9,11 @@ elseif (CLR_CMAKE_TARGET_FREEBSD)
   include_directories(SYSTEM $ENV{ROOTFS_DIR}/usr/local/include)
 endif()
 
+set(FOO 1)
+
+if (NOT FOO)
+message(FATAL_ERROR "no way 0")
+
 if(NOT CLR_CMAKE_USE_SYSTEM_LIBUNWIND)
   include_directories(libunwind/include)
   include_directories(libunwind/include/tdep)
@@ -21,6 +26,8 @@ elseif(NOT CLR_CMAKE_TARGET_OSX)
 else()
   add_subdirectory(libunwind)
 endif(NOT CLR_CMAKE_USE_SYSTEM_LIBUNWIND)
+
+endif()
 
 include(configure.cmake)
 
@@ -96,11 +103,13 @@ endif(CLR_CMAKE_HOST_ALPINE_LINUX)
 # turn off capability to remove unused functions (which was enabled in debug build with sanitizers)
 set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -Wl,--no-gc-sections")
 
+if (NOT FOO)
 set(ARCH_SOURCES
   arch/${PAL_ARCH_SOURCES_DIR}/context2.S
   arch/${PAL_ARCH_SOURCES_DIR}/debugbreak.S
   arch/${PAL_ARCH_SOURCES_DIR}/exceptionhelper.S
   arch/${PAL_ARCH_SOURCES_DIR}/processor.cpp
+  exception/seh.cpp
 )
 
 if(NOT CLR_CMAKE_TARGET_OSX)
@@ -109,12 +118,14 @@ if(NOT CLR_CMAKE_TARGET_OSX)
     arch/${PAL_ARCH_SOURCES_DIR}/signalhandlerhelper.cpp
   )
 endif(NOT CLR_CMAKE_TARGET_OSX)
+endif()
 
-if(CLR_CMAKE_HOST_ARCH_ARM)
+if(CLR_CMAKE_HOST_ARCH_ARM AND NOT FOO)
+message(FATAL_ERROR "no way 1")
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set_source_files_properties(exception/seh.cpp PROPERTIES COMPILE_FLAGS -Wno-error=inline-asm)
   endif()
-endif(CLR_CMAKE_HOST_ARCH_ARM)
+endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND (CLR_CMAKE_HOST_ARCH_AMD64 OR CLR_CMAKE_HOST_ARCH_I386))
   add_compile_options(-Wa,--divide)
@@ -134,7 +145,6 @@ set(SOURCES
   cruntime/thread.cpp
   cruntime/wchar.cpp
   debug/debug.cpp
-  exception/seh.cpp
   exception/signal.cpp
   file/directory.cpp
   file/file.cpp
@@ -217,9 +227,9 @@ set(SOURCES
   thread/threadsusp.cpp
 )
 
-if(NOT CLR_CMAKE_USE_SYSTEM_LIBUNWIND)
+if(NOT CLR_CMAKE_USE_SYSTEM_LIBUNWIND AND NOT FOO)
   set(LIBUNWIND_OBJECTS $<TARGET_OBJECTS:libunwind>)
-endif(NOT CLR_CMAKE_USE_SYSTEM_LIBUNWIND)
+endif()
 
 add_library(coreclrpal
   STATIC
@@ -230,6 +240,7 @@ add_library(coreclrpal
 )
 
 # Build separate pal library for DAC (addition to regular pal library)
+if (NOT FOO)
 if(CLR_CMAKE_TARGET_OSX)
   set(LIBUNWIND_DAC_OBJECTS $<TARGET_OBJECTS:libunwind_dac>)
 
@@ -246,8 +257,9 @@ else()
     )
   endif(NOT FEATURE_CROSSBITNESS)
 endif(CLR_CMAKE_TARGET_OSX)
+endif()
 
-if(NOT FEATURE_CROSSBITNESS)
+if(NOT FEATURE_CROSSBITNESS AND NOT FOO)
   target_include_directories(coreclrpal_dac PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/libunwind/include
     ${CMAKE_CURRENT_SOURCE_DIR}/libunwind/include/tdep
@@ -255,7 +267,7 @@ if(NOT FEATURE_CROSSBITNESS)
     ${CMAKE_CURRENT_BINARY_DIR}/libunwind/include
     ${CMAKE_CURRENT_BINARY_DIR}/libunwind/include/tdep
   )
-endif(NOT FEATURE_CROSSBITNESS)
+endif()
 
 # There is only one function exported in 'tracepointprovider.cpp' namely 'PAL_InitializeTracing',
 # which is guarded with '#if defined(__linux__)'. On macOS, Xcode issues the following warning:

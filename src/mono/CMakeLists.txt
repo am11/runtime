@@ -497,7 +497,7 @@ if(GCC)
     set(WARNINGS "${WARNINGS} -Qunused-arguments -Wno-tautological-compare -Wno-parentheses-equality -Wno-self-assign -Wno-return-stack-address -Wno-constant-logical-operand -Wno-zero-length-array")
   endif()
 
-  set(WERROR "-Werror=return-type")
+  set(WERROR "-Werror=return-type -Werror")
   set(WERROR_C "-Werror=implicit-function-declaration")
 
   check_c_compiler_flag("-Werror=incompatible-pointer-types" WERROR_INCOMPATIBLE_POINTER_TYPES)
@@ -509,10 +509,6 @@ if(GCC)
   append("${WARNINGS} ${WERROR}" CMAKE_CXX_FLAGS)
 
   set(MONO_ZERO_LEN_ARRAY 0)
-
-  if(ENABLE_WERROR)
-    append("-Werror" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
-  endif()
 endif()
 
 ######################################

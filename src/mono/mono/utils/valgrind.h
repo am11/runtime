@@ -775,7 +775,7 @@ typedef
     _zzq_args[3] = (unsigned long long int)(_zzq_arg3);           \
     _zzq_args[4] = (unsigned long long int)(_zzq_arg4);           \
     _zzq_args[5] = (unsigned long long int)(_zzq_arg5);           \
-    __asm__ volatile("mov x3, %1\n\t" /*default*/                 \
+    __asm__ volatile("mov w3, %w1\n\t" /*default*/                \
                      "mov x4, %2\n\t" /*ptr*/                     \
                      __SPECIAL_INSTRUCTION_PREAMBLE               \
                      /* X3 = client_request ( X4 ) */             \

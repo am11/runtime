@@ -504,7 +504,7 @@ typedef struct ucontext {
 
 #ifndef UCONTEXT_REG_SET_PC
 #define UCONTEXT_REG_SET_PC(ctx, val) do { \
-	UCONTEXT_REG_PC (ctx) = (val); \
+	UCONTEXT_REG_PC (ctx) = (__uint64_t)(val); \
 	 } while (0)
 #endif
 #ifndef UCONTEXT_REG_SET_SP

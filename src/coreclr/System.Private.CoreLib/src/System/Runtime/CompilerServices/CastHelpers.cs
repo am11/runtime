@@ -161,9 +161,6 @@ namespace System.Runtime.CompilerServices
         private static extern object ChkCastAny_NoCacheLookup(void* toTypeHnd, object obj);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern ref byte Unbox_Helper(void* toTypeHnd, object obj);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void WriteBarrier(ref object? dst, object obj);
 
         // IsInstanceOf test used for unusual cases (naked type parameters, variant generic types)
@@ -519,18 +516,6 @@ namespace System.Runtime.CompilerServices
 
         slowPath:
             return ChkCast_Helper(toTypeHnd, obj);
-        }
-
-        [DebuggerHidden]
-        [StackTraceHidden]
-        [DebuggerStepThrough]
-        private static ref byte Unbox(void* toTypeHnd, object obj)
-        {
-            // this will throw NullReferenceException if obj is null, attributed to the user code, as expected.
-            if (RuntimeHelpers.GetMethodTable(obj) == toTypeHnd)
-                return ref obj.GetRawData();
-
-            return ref Unbox_Helper(toTypeHnd, obj);
         }
 
         internal struct ArrayElement

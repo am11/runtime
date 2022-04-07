@@ -431,14 +431,11 @@
       <_MonoCXXFLAGS Condition="'$(Platform)' == 'arm64' or '$(Platform)' == 'arm'" Include="-DNDEBUG" />
       <_MonoCXXFLAGS Condition="'$(Platform)' == 'arm64' or '$(Platform)' == 'arm'" Include="-UDEBUG" />
     </ItemGroup>
+
     <!-- Linux options -->
-    <ItemGroup Condition="'$(TargetsLinux)' == true">
+    <ItemGroup Condition="'$(TargetsLinux)' == 'true'">
       <_MonoCFLAGS Include="-Wl,--build-id=sha1" />
       <_MonoCXXFLAGS Include="-Wl,--build-id=sha1" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(RealTargetOS)' == 'Linux'">
-      <_MonoAOTCFLAGS Include="-Wl,--build-id=sha1" />
-      <_MonoAOTCXXFLAGS Include="-Wl,--build-id=sha1" />
     </ItemGroup>
 
     <!-- Devloop features -->

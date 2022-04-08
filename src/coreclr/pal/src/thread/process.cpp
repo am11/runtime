@@ -3071,7 +3071,7 @@ VOID
 PROCNotifyProcessShutdown(bool isExecutingOnAltStack)
 {
     // Call back into the coreclr to clean up the debugger transport pipes
-    PSHUTDOWN_CALLBACK callback = InterlockedExchangePointer(&g_shutdownCallback, NULL);
+    PSHUTDOWN_CALLBACK callback = InterlockedExchangePointer(&g_shutdownCallback, 0);
     if (callback != NULL)
     {
         callback(isExecutingOnAltStack);

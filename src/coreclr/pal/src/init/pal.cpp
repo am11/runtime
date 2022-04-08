@@ -348,7 +348,7 @@ Initialize(
             // Want this critical section to NOT be internal to avoid the use of unsafe region markers.
             InternalInitializeCriticalSectionAndSpinCount(&temp_critsec, 0, false);
 
-            if(NULL != InterlockedCompareExchangePointer(&init_critsec, &temp_critsec, NULL))
+            if(NULL != InterlockedCompareExchangePointer(&init_critsec, &temp_critsec, 0))
             {
                 // Another thread got in before us! shouldn't happen, if the PAL
                 // isn't initialized there shouldn't be any other threads

@@ -639,7 +639,11 @@ void GCToOSInterface::YieldThread(uint32_t switchCount)
 static void* VirtualReserveInner(size_t size, size_t alignment, uint32_t flags, uint32_t hugePagesFlag = 0)
 {
     assert(!(flags & VirtualReserveFlags::WriteWatch) && "WriteWatch not supported on Unix");
+#if defined(HOST_ARM64) && defined(TARGET_OSX)
+    if (alignment < OS_PAGE_SIZE)
+#else
     if (alignment == 0)
+#endif
     {
         alignment = OS_PAGE_SIZE;
     }

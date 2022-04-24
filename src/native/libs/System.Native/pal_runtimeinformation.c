@@ -100,6 +100,12 @@ int32_t SystemNative_GetOSArchitecture()
                 result = ARCH_ARM64;
             }
 
+            // starts with "armv6" (armv6h or armv6l etc.): armv6
+            else if (strncmp("armv6", isa, strlen("armv6")) == 0)
+            {
+                result = ARCH_ARMV6;
+            }
+
             // starts with "arm": arm
             else if (strncmp("arm", isa, strlen("arm")) == 0)
             {

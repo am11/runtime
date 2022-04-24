@@ -31,7 +31,7 @@ namespace System.Runtime.InteropServices
             }
         }
 
-        public static Architecture OSArchitecture
+        public static unsafe Architecture OSArchitecture
         {
             get
             {
@@ -40,16 +40,30 @@ namespace System.Runtime.InteropServices
                 if (osArch < 0)
                 {
                     Interop.Kernel32.SYSTEM_INFO sysInfo;
-                    unsafe
-                    {
-                        Interop.Kernel32.GetNativeSystemInfo(&sysInfo);
-                    }
+                    Interop.Kernel32.GetNativeSystemInfo(&sysInfo);
+
                     osArch = (int)Map(sysInfo.wProcessorArchitecture);
 
+                    // If we are running an x64 process on a non-x64 windows machine, we will report x64 as OS architecutre.
+                    //
+                    // IsWow64Process2 is only available on Windows 10+, so we will perform run-time introspection via indirect load
+                    if (NativeLibrary.TryGetExport(NativeLibrary.Load(Interop.Libraries.Kernel32), "IsWow64Process2", out IntPtr isWow64Process2Ptr) && isWow64Process2Ptr != IntPtr.Zero)
+                    {
+                        const int IMAGE_FILE_MACHINE_AMD64 = 0x8664; // from winnt.h
+                        ushort pProcessMachine = 0, pNativeMachine = 0;
+                        var isWow64Process2 = (delegate* unmanaged<IntPtr, ushort*, ushort*, int>)isWow64Process2Ptr;
+                        if (isWow64Process2(Interop.Kernel32.GetCurrentProcess(), &pProcessMachine, &pNativeMachine) != 0 &&
+                            pProcessMachine != pNativeMachine && pProcessMachine == IMAGE_FILE_MACHINE_AMD64)
+                        {
+                            osArch = (int)Architecture.X64;
+                        }
+                    }
+
                     s_osArchPlusOne = osArch + 1;
+
+                    Debug.Assert(osArch >= 0);
                 }
 
-                Debug.Assert(osArch >= 0);
                 return (Architecture)osArch;
             }
         }

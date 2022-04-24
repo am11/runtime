@@ -90,13 +90,6 @@ int32_t SystemNative_GetOSArchitecture()
             // aarch64 or arm64: arm64
             if (strcmp("aarch64", isa) == 0 || strcmp("arm64", isa) == 0)
             {
-#ifdef TARGET_OSX
-                int is_translated_process = 0;
-                size_t size = sizeof(is_translated_process);
-                if (sysctlbyname("sysctl.proc_translated", &is_translated_process, &size, NULL, 0) == 0)
-                    result = ARCH_X64;
-                else
-#endif
                 result = ARCH_ARM64;
             }
 
@@ -116,6 +109,13 @@ int32_t SystemNative_GetOSArchitecture()
             else if (strcmp("x86_64", isa) == 0 ||
                 strcmp("amd64", isa) == 0)
             {
+#ifdef TARGET_OSX
+                int is_translated_process = 0;
+                size_t size = sizeof(is_translated_process);
+                if (sysctlbyname("sysctl.proc_translated", &is_translated_process, &size, NULL, 0) == 0)
+                    result = ARCH_ARM64;
+                else
+#endif
                 result = ARCH_X64;
             }
 

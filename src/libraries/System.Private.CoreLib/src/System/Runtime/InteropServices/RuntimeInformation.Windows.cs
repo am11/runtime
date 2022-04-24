@@ -39,24 +39,26 @@ namespace System.Runtime.InteropServices
 
                 if (osArch < 0)
                 {
-                    Interop.Kernel32.SYSTEM_INFO sysInfo;
-                    Interop.Kernel32.GetNativeSystemInfo(&sysInfo);
-
-                    osArch = (int)Map(sysInfo.wProcessorArchitecture);
-
                     // If we are running an x64 process on a non-x64 windows machine, we will report x64 as OS architecutre.
                     //
                     // IsWow64Process2 is only available on Windows 10+, so we will perform run-time introspection via indirect load
                     if (NativeLibrary.TryGetExport(NativeLibrary.Load(Interop.Libraries.Kernel32), "IsWow64Process2", out IntPtr isWow64Process2Ptr) && isWow64Process2Ptr != IntPtr.Zero)
                     {
                         const int IMAGE_FILE_MACHINE_AMD64 = 0x8664; // from winnt.h
-                        ushort pProcessMachine = 0, pNativeMachine = 0;
+                        ushort processMachine = 0, nativeMachine = 0;
                         var isWow64Process2 = (delegate* unmanaged<IntPtr, ushort*, ushort*, int>)isWow64Process2Ptr;
-                        if (isWow64Process2(Interop.Kernel32.GetCurrentProcess(), &pProcessMachine, &pNativeMachine) != 0 &&
-                            pProcessMachine != pNativeMachine && pProcessMachine == IMAGE_FILE_MACHINE_AMD64)
+                        if (isWow64Process2(Interop.Kernel32.GetCurrentProcess(), &processMachine, &nativeMachine) != 0)
                         {
-                            osArch = (int)Architecture.X64;
+                            osArch = (int)MapMachineConstant(processMachine);
                         }
+                    }
+
+                    if (osArch == -1)
+                    {
+                        Interop.Kernel32.SYSTEM_INFO sysInfo;
+                        Interop.Kernel32.GetNativeSystemInfo(&sysInfo);
+
+                        osArch = (int)Map(sysInfo.wProcessorArchitecture);
                     }
 
                     s_osArchPlusOne = osArch + 1;
@@ -84,5 +86,18 @@ namespace System.Runtime.InteropServices
                     return Architecture.X86;
             }
         }
+
+        private static Architecture MapMachineConstant(ushort pNativeMachine) => pNativeMachine switch
+        {
+            0x014c /* IMAGE_FILE_MACHINE_I386 */ => Architecture.X86,
+
+            0x01c0 /* IMAGE_FILE_MACHINE_ARM */ or 0x01c2 /* IMAGE_FILE_MACHINE_THUMB */ or /* IMAGE_FILE_MACHINE_ARMNT */  => Architecture.Arm,
+
+            0x8664 /* IMAGE_FILE_MACHINE_AMD64 */ => Architecture.X64
+
+            0xAA64 /* IMAGE_FILE_MACHINE_ARM64 */  => Architecture.Arm64
+
+            _ /* IMAGE_FILE_MACHINE_UNKNOWN etc. */ => -1
+        };
     }
 }

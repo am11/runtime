@@ -9,6 +9,17 @@ permissions:
   pull-requests: write
 
 jobs:
+  cleanup_old_runs:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Delete old workflow runs
+      run: |
+        _UrlPath="/repos/$GITHUB_REPOSITORY/actions/runs"
+
+        gh api -X GET "$_UrlPath" --paginate \
+          | jq '.workflow_runs[] | select(.name == '\"$GITHUB_WORKFLOW\"' and .status == "completed") | .id' \
+          | xargs -I{} gh api -X DELETE "$_UrlPath"/{}
+
   backport:
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to')
     runs-on: ubuntu-20.04

@@ -345,7 +345,27 @@ namespace Internal.TypeSystem.Ecma
         {
             get
             {
-                return (GetMethodFlags(MethodFlags.AttributeMetadataCache | MethodFlags.RuntimeExport) & MethodFlags.RuntimeExport) != 0;
+                var metadataReader = MetadataReader;
+                var attributeHandle = metadataReader.GetCustomAttributeHandle(metadataReader.GetMethodDefinition(This.Handle).GetCustomAttributes(),
+                    "System.Runtime.InteropServices", "UnmanagedCallersOnlyAttribute");
+
+                if (attributeHandle.IsNil)
+                    return false;
+
+                decoded = metadataReader.GetCustomAttribute(attributeHandle).DecodeValue(new CustomAttributeTypeProvider(This.Module));
+                if (decoded == null)
+                    return null;
+
+                var decodedValue = decoded.Value;
+                string entrypoint = null;
+
+                foreach (var argument in decodedValue.NamedArguments)
+                {
+                    if (argument.Name == "EntryPoint")
+                        entrypoint = (string)argument.Value;
+                }
+
+                return (GetMethodFlags(MethodFlags.AttributeMetadataCache | MethodFlags.RuntimeExport) & MethodFlags.RuntimeExport) != 0 && !string.IsNullOrEmpty(entrypoint);
             }
         }
 

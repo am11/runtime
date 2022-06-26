@@ -43,8 +43,7 @@ namespace ILCompiler
                 if (ecmaMethod.IsRuntimeExport)
                 {
                     string runtimeExportName = ecmaMethod.GetRuntimeExportName();
-                    if (runtimeExportName != null)
-                        rootProvider.AddCompilationRoot((MethodDesc)ecmaMethod, "Runtime export", runtimeExportName);
+                    rootProvider.AddCompilationRoot((MethodDesc)ecmaMethod, "Runtime export", runtimeExportName);
                 }
                 else if (ecmaMethod.IsUnmanagedCallersOnly)
                 {

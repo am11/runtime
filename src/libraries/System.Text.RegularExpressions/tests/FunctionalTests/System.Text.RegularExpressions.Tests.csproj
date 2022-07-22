@@ -50,7 +50,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == '$(NetCoreAppCurrent)'">
     <Compile Include="CustomDerivedRegexScenarioTest.cs" />
     <Compile Include="CSharpCodeFixVerifier`2.cs" />
-    <Compile Include="UpgradeToRegexGeneratorAnalyzerTests.cs" />
+    <Compile Include="UpgradeToGeneratedRegexAnalyzerTests.cs" />
     <Compile Include="RegexRunnerTests.cs" />
     <Compile Include="Regex.Count.Tests.cs" />
     <Compile Include="RegexAssert.netcoreapp.cs" />
@@ -63,7 +63,7 @@
     <Compile Include="MatchCollectionTests2.cs" />
     <Compile Include="PrecompiledRegexScenarioTest.cs" />
     <Compile Include="RegexCompilationInfoTests.cs" />
-    <Compile Include="RegexGeneratorAttributeTests.cs" />
+    <Compile Include="GeneratedRegexAttributeTests.cs" />
     <Compile Include="RegexGeneratorParserTests.cs" />
     <Compile Include="RegexGroupNameTests.cs" />
     <Compile Include="RegexExperiment.cs" />

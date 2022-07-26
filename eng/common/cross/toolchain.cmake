@@ -80,8 +80,11 @@ elseif(TARGET_ARCH_NAME STREQUAL "x64")
   elseif(ILLUMOS)
     set(TOOLCHAIN "x86_64-illumos")
   endif()
+elseif(TARGET_ARCH_NAME STREQUAL "riscv64")
+  set(CMAKE_SYSTEM_PROCESSOR riscv64)
+  set(TOOLCHAIN "riscv64-linux-gnu")
 else()
-  message(FATAL_ERROR "Arch is ${TARGET_ARCH_NAME}. Only armel, arm, armv6, arm64, ppc64le, s390x and x86 are supported!")
+  message(FATAL_ERROR "Arch is ${TARGET_ARCH_NAME}. Only armel, arm, armv6, arm64, ppc64le, s390x, riscv64 and x86 are supported!")
 endif()
 
 if(DEFINED ENV{TOOLCHAIN})
@@ -226,7 +229,7 @@ endif()
 
 # Specify compile options
 
-if((TARGET_ARCH_NAME MATCHES "^(arm|armv6|armel|arm64|ppc64le|s390x)$" AND NOT ANDROID AND NOT FREEBSD) OR ILLUMOS)
+if((TARGET_ARCH_NAME MATCHES "^(arm|armv6|armel|arm64|ppc64le|s390x|riscv64)$" AND NOT ANDROID AND NOT FREEBSD) OR ILLUMOS)
   set(CMAKE_C_COMPILER_TARGET ${TOOLCHAIN})
   set(CMAKE_CXX_COMPILER_TARGET ${TOOLCHAIN})
   set(CMAKE_ASM_COMPILER_TARGET ${TOOLCHAIN})

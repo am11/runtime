@@ -3398,7 +3398,8 @@ namespace Internal.JitInterface
 #if !READYTORUN
             var target = _compilation.TypeSystemContext.Target;
 
-            if (target.Architecture == TargetArchitecture.ARM64 && target.OperatingSystem == TargetOS.Linux)
+            if (target.Architecture == TargetArchitecture.ARM64 &&
+                (target.OperatingSystem == TargetOS.Linux || target.OperatingSystem == TargetOS.OSX))
             {
                 blobData = CompressARM64CFI(blobData);
             }

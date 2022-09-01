@@ -986,7 +986,6 @@ bool DoTheStep(uintptr_t pc, UnwindInfoSections uwInfoSections, REGDISPLAY *regs
         PORTABILITY_ASSERT("DoTheStep");
 #endif
 
-        printf("stepRet %d pIP %lx\n", stepRet, regs->GetIP());
         return stepRet == UNW_STEP_SUCCESS;
     }
 #endif

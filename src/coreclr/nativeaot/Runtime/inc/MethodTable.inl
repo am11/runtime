@@ -90,13 +90,13 @@ inline TypeManagerHandle* MethodTable::GetTypeManagerPtr()
 {
     uint32_t cbOffset = GetFieldOffset(ETF_TypeManagerIndirection);
 
-/*#if !defined(USE_PORTABLE_HELPERS)
+#if !defined(USE_PORTABLE_HELPERS)
     if (!IsDynamicType())
     {
         return (TypeManagerHandle*)FollowRelativePointer((int32_t*)((uint8_t*)this + cbOffset));
     }
     else
-#endif*/
+#endif
     {
         return *(TypeManagerHandle**)((uint8_t*)this + cbOffset);
     }

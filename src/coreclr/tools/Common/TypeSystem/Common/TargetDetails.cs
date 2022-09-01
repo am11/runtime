@@ -96,8 +96,7 @@ namespace Internal.TypeSystem
         {
             get
             {
-                //return (Abi != TargetAbi.CppCodegen) && (Architecture != TargetArchitecture.Wasm32);
-                return false;
+                return (Abi != TargetAbi.CppCodegen) && (Architecture != TargetArchitecture.Wasm32);
             }
         }
 

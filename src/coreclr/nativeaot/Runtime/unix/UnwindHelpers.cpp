@@ -991,17 +991,7 @@ bool DoTheStep(uintptr_t pc, UnwindInfoSections uwInfoSections, REGDISPLAY *regs
 #endif
 
 #if _LIBUNWIND_SUPPORT_DWARF_UNWIND
-    bool retVal = false;
-#if defined(_LIBUNWIND_SUPPORT_COMPACT_UNWIND)
-    // If there is a compact unwind encoding table, look there first.
-    if (uwInfoSections.compact_unwind_section != 0) {
-      retVal = uc.getInfoFromCompactEncodingSection(pc, uwInfoSections);
-    }
-#endif
-    if (!retVal)
-    {
-       retVal = uc.getInfoFromDwarfSection(pc, uwInfoSections, 0 /* fdeSectionOffsetHint */);
-    }
+    bool retVal = uc.getInfoFromDwarfSection(pc, uwInfoSections, 0 /* fdeSectionOffsetHint */);
     if (!retVal)
     {
         return false;

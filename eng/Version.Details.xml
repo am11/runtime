@@ -16,7 +16,7 @@
       <Uri>https://github.com/dotnet/wcf</Uri>
       <Sha>7f504aabb1988e9a093c1e74d8040bd52feb2f01</Sha>
     </Dependency>
-    <Dependency Name="runtime.linux-arm64.Microsoft.NETCore.Runtime.ObjWriter" Version="1.0.0-alpha.1.22431.4">
+    <Dependency Name="runtime.linux-arm64.Microsoft.NETCore.Runtime.ObjWriter" Version="1.0.0-dev">
       <Uri>https://github.com/dotnet/llvm-project</Uri>
       <Sha>ce127716e4d7e310739a1cd8fbd45f3552a3a62b</Sha>
     </Dependency>

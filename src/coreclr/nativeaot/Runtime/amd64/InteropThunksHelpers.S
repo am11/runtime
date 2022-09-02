@@ -14,7 +14,7 @@ LEAF_ENTRY RhCommonStub, _TEXT
     alloc_stack    SIZEOF_FP_REGS
     SAVE_FLOAT_ARGUMENT_REGISTERS 0
 
-    INLINE_GET_TLS_VAR  tls_thunkData
+    INLINE_GET_TLS_VAR  C_FUNC(tls_thunkData)
 
     RESTORE_FLOAT_ARGUMENT_REGISTERS 0
     free_stack    SIZEOF_FP_REGS
@@ -38,7 +38,7 @@ LEAF_END RhGetCommonStubAddress, _TEXT
 
 LEAF_ENTRY RhGetCurrentThunkContext, _TEXT
 
-    INLINE_GET_TLS_VAR  tls_thunkData
+    INLINE_GET_TLS_VAR  C_FUNC(tls_thunkData)
 
     mov    rax, qword ptr [rax]
     ret

@@ -974,19 +974,18 @@ bool DoTheStep(uintptr_t pc, UnwindInfoSections uwInfoSections, REGDISPLAY *regs
 #if _LIBUNWIND_SUPPORT_COMPACT_UNWIND
     // If there is a compact unwind encoding table, look there first.
     if (uwInfoSections.compact_unwind_section != 0 && uc.getInfoFromCompactEncodingSection(pc, uwInfoSections)) {
-        int stepRet;
-
         unw_proc_info_t procInfo;
         uc.getInfo(&procInfo);
 
 #if defined(_LIBUNWIND_TARGET_AARCH64)
-        CompactUnwinder_arm64<LocalAddressSpace> compactInst;
-        stepRet = compactInst.stepWithCompactEncoding(procInfo.format, pc, _addressSpace, *(Registers_REGDISPLAY*)regs);
+        if ((procInfo.format & UNWIND_ARM64_MODE_MASK) != UNWIND_ARM64_MODE_DWARF) {
+            CompactUnwinder_arm64<LocalAddressSpace> compactInst;
+            int stepRet = compactInst.stepWithCompactEncoding(procInfo.format, pc, _addressSpace, *(Registers_REGDISPLAY*)regs);
+            return stepRet == UNW_STEP_SUCCESS;
+        }
 #else
         PORTABILITY_ASSERT("DoTheStep");
 #endif
-
-        return stepRet == UNW_STEP_SUCCESS;
     }
 #endif
 

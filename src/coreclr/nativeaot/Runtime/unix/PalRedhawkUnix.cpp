@@ -750,6 +750,28 @@ static int W32toUnixAccessControl(uint32_t flProtect)
     return prot;
 }
 
+#if defined(HOST_OSX) && defined(HOST_ARM64)
+REDHAWK_PALEXPORT void PAL_JitWriteProtect(bool writeEnable)
+{
+    thread_local int enabledCount = 0;
+    if (writeEnable)
+    {
+        if (enabledCount++ == 0)
+        {
+            pthread_jit_write_protect_np(0);
+        }
+    }
+    else
+    {
+        if (--enabledCount == 0)
+        {
+            pthread_jit_write_protect_np(1);
+        }
+        ASSERT(enabledCount >= 0);
+    }
+}
+#endif // HOST_OSX && HOST_ARM64
+
 REDHAWK_PALEXPORT _Ret_maybenull_ _Post_writable_byte_size_(size) void* REDHAWK_PALAPI PalVirtualAlloc(_In_opt_ void* pAddress, size_t size, uint32_t allocationType, uint32_t protect)
 {
     // TODO: thread safety!
@@ -772,8 +794,27 @@ REDHAWK_PALEXPORT _Ret_maybenull_ _Post_writable_byte_size_(size) void* REDHAWK_
         static const size_t Alignment = 64 * 1024;
 
         size_t alignedSize = size + (Alignment - OS_PAGE_SIZE);
+        void * pRetVal = NULL;
 
-        void * pRetVal = mmap(pAddress, alignedSize, unixProtect, MAP_ANON | MAP_PRIVATE, -1, 0);
+#if defined(HOST_ARM64)
+        void * pvMappedFile = mmap(NULL, alignedSize, PROT_READ, MAP_PRIVATE, -1, 0);
+        if (MAP_FAILED != pvMappedFile)
+        {
+            if (0 == mprotect(pAddress, alignedSize, MAP_ANON | MAP_PRIVATE | PROT_WRITE))
+            {
+                PAL_JitWriteProtect(true);
+                memcpy(pAddress, pvMappedFile, alignedSize);
+                PAL_JitWriteProtect(false);
+
+                if (0 == munmap(pvMappedFile, alignedSize))
+                {
+                    pRetVal = pAddress;
+                }
+            }
+        }
+#else
+        pRetVal = mmap(pAddress, alignedSize, unixProtect, MAP_ANON | MAP_PRIVATE, -1, 0);
+#endif
 
         if (pRetVal != NULL)
         {

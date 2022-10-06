@@ -22,7 +22,6 @@
 #if defined(FEATURE_NATIVEAOT) && !defined(TARGET_WINDOWS)
 #include "CommonTypes.h"
 #else
-#include <algorithm>
 #include <new>
 #endif
 

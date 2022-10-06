@@ -33,6 +33,10 @@
 #define FALLTHROUGH
 #endif
 
+#ifdef TARGET_WINDOWS
+#include <algorithm>
+#endif
+
 #if HAVE_SYS_TIME_H
  #include <sys/time.h>
 #else

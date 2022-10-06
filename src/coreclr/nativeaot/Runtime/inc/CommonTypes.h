@@ -9,13 +9,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifndef TARGET_WINDOWS
+#ifdef TARGET_WINDOWS
+
+#include <new>
+
+#else
 
 extern "C" void __cxa_pure_virtual();
 
 namespace std
 {
-   struct nothrow_t{ };
+   struct nothrow_t {};
    const std::nothrow_t nothrow;
 }
 
@@ -24,10 +28,6 @@ void* operator new(size_t n, const std::nothrow_t&) noexcept;
 void* operator new[](size_t n, const std::nothrow_t&) noexcept;
 void operator delete(void *p) noexcept;
 void operator delete[](void *p) noexcept;
-
-#else
-
-#include <new>
 
 #endif
 

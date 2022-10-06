@@ -22,6 +22,7 @@ enum CrstType
     CrstSuspendEE,
     CrstCastCache,
     CrstYieldProcessorNormalized,
+    CrstEnvrionment,
 };
 
 enum CrstFlags

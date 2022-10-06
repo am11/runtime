@@ -6,8 +6,30 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstdlib>
+#include <stdlib.h>
+#include <stdio.h>
+
+#ifndef TARGET_WINDOWS
+
+extern "C" void __cxa_pure_virtual();
+
+namespace std
+{
+   struct nothrow_t{ };
+   const std::nothrow_t nothrow;
+}
+
+//void* operator new(size_t n) noexcept;
+void* operator new(size_t n, const std::nothrow_t&) noexcept;
+void* operator new[](size_t n, const std::nothrow_t&) noexcept;
+void operator delete(void *p) noexcept;
+void operator delete[](void *p) noexcept;
+
+#else
+
 #include <new>
+
+#endif
 
 using std::nothrow;
 using std::size_t;

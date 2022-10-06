@@ -346,8 +346,9 @@ public:
 
 typedef UnixHandle<UnixHandleType::Thread, pthread_t> ThreadUnixHandle;
 
-#if !HAVE_THREAD_LOCAL
+#ifdef TARGET_LINUX
 extern "C" int __cxa_thread_atexit(void (*)(void*), void*, void *);
+extern "C" int __cxa_thread_atexit_impl(void (*)(void*), void *, void *);
 extern "C" void *__dso_handle;
 #endif
 
@@ -487,6 +488,13 @@ extern "C" void PalAttachThread(void* thread)
     __cxa_thread_atexit(RuntimeThreadShutdown, thread, &__dso_handle);
 #endif
 }
+
+#ifdef TARGET_LINUX
+int __cxa_thread_atexit(void (*func)(void*), void* t, void* c)
+{
+    return __cxa_thread_atexit_impl(func, t, c);
+}
+#endif
 
 // Detach thread from PAL.
 // It fails fast if some other thread value was attached to PAL.
@@ -941,13 +949,16 @@ extern "C" UInt32_BOOL ResetEvent(HANDLE event)
     return UInt32_TRUE;
 }
 
+extern CrstStatic g_EnvironmentLock;
+
 extern "C" uint32_t GetEnvironmentVariableA(const char * name, char * buffer, uint32_t size)
 {
-    // Using std::getenv instead of getenv since it is guaranteed to be thread safe w.r.t. other
-    // std::getenv calls in C++11
-    const char* value = std::getenv(name);
+    g_EnvironmentLock.Enter();
+
+    const char* value = getenv(name);
     if (value == NULL)
     {
+        g_EnvironmentLock.Leave();
         return 0;
     }
 
@@ -956,8 +967,11 @@ extern "C" uint32_t GetEnvironmentVariableA(const char * name, char * buffer, ui
     if (valueLen < size)
     {
         strcpy(buffer, value);
+        g_EnvironmentLock.Leave();
         return valueLen;
     }
+
+    g_EnvironmentLock.Leave();
 
     // return required size including the null character or 0 if the size doesn't fit into uint32_t
     return (valueLen < UINT32_MAX) ? (valueLen + 1) : 0;

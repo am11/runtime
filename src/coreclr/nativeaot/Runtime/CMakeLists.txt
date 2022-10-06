@@ -105,9 +105,6 @@ if (WIN32)
     ${GC_DIR}/handletablepriv.h
     ${GC_DIR}/objecthandle.h
     ${GC_DIR}/softwarewritewatch.h)
-endif(WIN32)
-
-if(WIN32)
 
   include_directories(windows)
 
@@ -163,6 +160,7 @@ else()
     unix/UnixSignals.cpp
     unix/UnwindHelpers.cpp
     unix/UnixNativeCodeManager.cpp
+    stdcppshim.cpp
   )
 
   include(${CLR_SRC_NATIVE_DIR}/external/llvm-libunwind.cmake)

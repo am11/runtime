@@ -4,8 +4,8 @@
 //
 // RWLock.cpp -- adapted from CLR SimpleRWLock.cpp
 //
-#include "common.h"
 #include "CommonTypes.h"
+#include "common.h"
 #include "CommonMacros.h"
 #include "daccess.h"
 #include "PalRedhawkCommon.h"

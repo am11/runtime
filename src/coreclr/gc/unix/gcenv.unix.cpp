@@ -2,15 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #define _WITH_GETLINE
-#include <cstdint>
-#include <cstddef>
-#include <cstdio>
-#include <cassert>
 #define __STDC_FORMAT_MACROS
-#include <cinttypes>
-#include <memory>
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 
 #include "config.gc.h"
 #include "common.h"
@@ -37,8 +32,6 @@
 #else
 #define FALLTHROUGH
 #endif
-
-#include <algorithm>
 
 #if HAVE_SYS_TIME_H
  #include <sys/time.h>
@@ -927,7 +920,7 @@ static size_t GetLogicalProcessorCacheSizeFromOS()
                 }
                 else
                 {
-                    cacheSize = std::max(cacheSize, size);
+                    cacheSize = cacheSize > size ? cacheSize : size;
                 }
             }
         }

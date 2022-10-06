@@ -2187,7 +2187,7 @@ void TableFreeBulkUnpreparedHandles(HandleTable *pTable, uint32_t uType, const O
     if (uCount > uFreeGranularity)
     {
         // try to allocate a bigger buffer to work in
-        pLargeScratchBuffer = new (nothrow) OBJECTHANDLE[uCount];
+        pLargeScratchBuffer = (OBJECTHANDLE*)malloc(sizeof(OBJECTHANDLE) * uCount);
 
         // did we get it?
         if (pLargeScratchBuffer)
@@ -2215,7 +2215,7 @@ void TableFreeBulkUnpreparedHandles(HandleTable *pTable, uint32_t uType, const O
 
     // if we allocated a sorting buffer then free it now
     if (pLargeScratchBuffer)
-        delete [] pLargeScratchBuffer;
+        free(pLargeScratchBuffer);
 }
 
 #endif // !DACCESS_COMPILE

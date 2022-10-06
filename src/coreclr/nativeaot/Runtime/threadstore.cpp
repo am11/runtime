@@ -78,9 +78,11 @@ ThreadStore::~ThreadStore()
 // static
 ThreadStore * ThreadStore::Create(RuntimeInstance * pRuntimeInstance)
 {
-    NewHolder<ThreadStore> pNewThreadStore = new (nothrow) ThreadStore();
+    NewHolder<ThreadStore> pNewThreadStore = (ThreadStore*)malloc(sizeof(ThreadStore));
     if (NULL == pNewThreadStore)
         return NULL;
+
+    new (pNewThreadStore) ThreadStore();
 
     if (!PalRegisterHijackCallback(Thread::HijackCallback))
         return NULL;
@@ -93,7 +95,7 @@ ThreadStore * ThreadStore::Create(RuntimeInstance * pRuntimeInstance)
 
 void ThreadStore::Destroy()
 {
-    delete this;
+    free(this);
 }
 
 // static

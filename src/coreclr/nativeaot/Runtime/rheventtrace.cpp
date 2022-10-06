@@ -75,7 +75,7 @@ void BulkTypeEventLogger::LogTypeAndParameters(uint64_t thAsAddr, ETW::TypeSyste
     }
     else if (cTypeParams > 1)
     {
-        rgTypeParameters = new (nothrow) ULONGLONG[cTypeParams];
+        rgTypeParameters = (ULONGLONG*)malloc(sizeof(ULONGLONG * cTypeParams));
         for (DWORD i=0; i < cTypeParams; i++)
         {
             rgTypeParameters[i] = pVal->rgTypeParameters[i];
@@ -321,7 +321,7 @@ void BulkTypeEventLogger::Cleanup()
 {
     if (s_loggedTypesHash != NULL)
     {
-        delete s_loggedTypesHash;
+        free(s_loggedTypesHash);
         s_loggedTypesHash = NULL;
     }
 }

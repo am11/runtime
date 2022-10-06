@@ -107,7 +107,7 @@ HHANDLETABLE HndCreateHandleTable(const uint32_t *pTypeFlags, uint32_t uTypeCoun
     uint32_t dwSize = sizeof(HandleTable) + (uTypeCount * sizeof(HandleTypeCache));
 
     // allocate the table
-    HandleTable *pTable = (HandleTable *) new (nothrow) uint8_t[dwSize];
+    HandleTable *pTable = (HandleTable *)malloc(sizeof(uint8_t) * dwSize);
     if (pTable == NULL)
         return NULL;
 
@@ -120,7 +120,7 @@ HHANDLETABLE HndCreateHandleTable(const uint32_t *pTypeFlags, uint32_t uTypeCoun
     if (!pTable->pSegmentList)
     {
         // free the table's memory and get out
-        delete [] (uint8_t*)pTable;
+        free((uint8_t*)pTable);
         return NULL;
     }
 
@@ -131,7 +131,7 @@ HHANDLETABLE HndCreateHandleTable(const uint32_t *pTypeFlags, uint32_t uTypeCoun
     if (!pTable->Lock.InitNoThrow(CrstHandleTable, CrstFlags(CRST_REENTRANCY | CRST_UNSAFE_ANYMODE | CRST_DEBUGGER_THREAD | CRST_UNSAFE_SAMELEVEL)))
     {
         SegmentFree(pTable->pSegmentList);
-        delete [] (uint8_t*)pTable;
+        free((uint8_t*)pTable);
         return NULL;
     }
 
@@ -210,7 +210,7 @@ void HndDestroyHandleTable(HHANDLETABLE hTable)
     }
 
     // free the table's memory
-    delete [] (uint8_t*) pTable;
+    free((uint8_t*)pTable);
 }
 /*
  * HndSetHandleTableIndex

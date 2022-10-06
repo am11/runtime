@@ -20,7 +20,7 @@ SHash<TRAITS>::SHash()
 template <typename TRAITS>
 SHash<TRAITS>::~SHash()
 {
-    delete [] m_table;
+    free(m_table);
 }
 
 template <typename TRAITS>
@@ -98,7 +98,7 @@ void SHash<TRAITS>::RemovePtr(element_t * p)
 template <typename TRAITS>
 void SHash<TRAITS>::RemoveAll()
 {
-    delete [] m_table;
+    free(m_table);
 
     m_table = NULL;
     m_tableSize = 0;
@@ -218,7 +218,7 @@ bool SHash<TRAITS>::Reallocate(count_t newTableSize)
         return false;
     }
 
-    element_t *newTable = new (nothrow) element_t [newTableSize];
+    element_t *newTable = (element_t*)malloc(sizeof(element_t) * newTableSize);
     if (newTable == NULL)
     {
         TRAITS::OnFailure(ftAllocation);
@@ -244,7 +244,7 @@ bool SHash<TRAITS>::Reallocate(count_t newTableSize)
     // @todo:
     // We might want to try to delay this cleanup to allow asynchronous readers
 
-    delete [] m_table;
+    free(m_table);
 
     m_table = PTR_element_t(newTable);
     m_tableSize = newTableSize;

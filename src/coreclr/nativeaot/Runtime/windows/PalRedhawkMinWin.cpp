@@ -390,7 +390,7 @@ REDHAWK_PALEXPORT CONTEXT* PalAllocateCompleteOSContext(_Out_ uint8_t** contextB
     }
 
     // So now allocate a buffer of that size and call InitializeContext again
-    uint8_t* buffer = new (nothrow)uint8_t[contextSize];
+    uint8_t* buffer = (uint8_t)malloc(sizeof(uint8_t) * contextSize);
     if (buffer != NULL)
     {
         success = pfnInitializeContext2 ?
@@ -399,7 +399,7 @@ REDHAWK_PALEXPORT CONTEXT* PalAllocateCompleteOSContext(_Out_ uint8_t** contextB
 
         if (!success)
         {
-            delete[] buffer;
+            free(buffer);
             buffer = NULL;
         }
     }
@@ -412,7 +412,7 @@ REDHAWK_PALEXPORT CONTEXT* PalAllocateCompleteOSContext(_Out_ uint8_t** contextB
     *contextBuffer = buffer;
 
 #else
-    pOSContext = new (nothrow) CONTEXT;
+    pOSContext = (CONTEXT*)malloc(sizeof(CONTEXT));
     pOSContext->ContextFlags = CONTEXT_COMPLETE;
     *contextBuffer = NULL;
 #endif

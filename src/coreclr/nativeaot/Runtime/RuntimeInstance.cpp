@@ -173,7 +173,7 @@ RuntimeInstance::~RuntimeInstance()
 {
     if (NULL != m_pThreadStore)
     {
-        delete m_pThreadStore;
+        free(m_pThreadStore);
         m_pThreadStore = NULL;
     }
 }
@@ -207,9 +207,11 @@ bool RuntimeInstance::RegisterUnboxingStubs(PTR_VOID pvStartRange, uint32_t cbRa
 {
     ASSERT(pvStartRange != NULL && cbRange > 0);
 
-    UnboxingStubsRegion * pEntry = new (nothrow) UnboxingStubsRegion();
+    UnboxingStubsRegion * pEntry = (UnboxingStubsRegion*)malloc(sizeof(UnboxingStubsRegion));
     if (NULL == pEntry)
         return false;
+
+    new (pEntry) UnboxingStubsRegion();
 
     pEntry->m_pRegionStart = pvStartRange;
     pEntry->m_cbRegion = cbRange;
@@ -245,9 +247,11 @@ extern "C" bool __stdcall RegisterUnboxingStubs(PTR_VOID pvStartRange, uint32_t 
 
 bool RuntimeInstance::RegisterTypeManager(TypeManager * pTypeManager)
 {
-    TypeManagerEntry * pEntry = new (nothrow) TypeManagerEntry();
+    TypeManagerEntry * pEntry = (TypeManagerEntry*)malloc(sizeof(TypeManagerEntry));
     if (NULL == pEntry)
         return false;
+
+    new (pEntry) TypeManagerEntry();
 
     pEntry->m_pTypeManager = pTypeManager;
 
@@ -270,9 +274,11 @@ COOP_PINVOKE_HELPER(TypeManagerHandle, RhpCreateTypeManager, (HANDLE osModule, v
 
 COOP_PINVOKE_HELPER(void*, RhpRegisterOsModule, (HANDLE hOsModule))
 {
-    RuntimeInstance::OsModuleEntry * pEntry = new (nothrow) RuntimeInstance::OsModuleEntry();
+    RuntimeInstance::OsModuleEntry * pEntry = (RuntimeInstance::OsModuleEntry*)malloc(sizeof(RuntimeInstance::OsModuleEntry));
     if (NULL == pEntry)
         return nullptr; // Return null on failure.
+
+    new (pEntry) RuntimeInstance::OsModuleEntry();
 
     pEntry->m_osModule = hOsModule;
 
@@ -294,9 +300,11 @@ RuntimeInstance::TypeManagerList& RuntimeInstance::GetTypeManagerList()
 // static
 bool RuntimeInstance::Initialize(HANDLE hPalInstance)
 {
-    NewHolder<RuntimeInstance> pRuntimeInstance = new (nothrow) RuntimeInstance();
+    NewHolder<RuntimeInstance> pRuntimeInstance = (RuntimeInstance*)malloc(sizeof(RuntimeInstance));
     if (NULL == pRuntimeInstance)
         return false;
+
+    new (pRuntimeInstance) RuntimeInstance();
 
     CreateHolder<ThreadStore>  pThreadStore = ThreadStore::Create(pRuntimeInstance);
     if (NULL == pThreadStore)
@@ -316,7 +324,7 @@ bool RuntimeInstance::Initialize(HANDLE hPalInstance)
 
 void RuntimeInstance::Destroy()
 {
-    delete this;
+    free(this);
 }
 
 bool RuntimeInstance::ShouldHijackLoopForGcStress(uintptr_t CallsiteIP)
@@ -349,7 +357,7 @@ EXTERN_C void RhpInitialDynamicInterfaceDispatch();
 
 COOP_PINVOKE_HELPER(void *, RhNewInterfaceDispatchCell, (MethodTable * pInterface, int32_t slotNumber))
 {
-    InterfaceDispatchCell * pCell = new (nothrow) InterfaceDispatchCell[2];
+    InterfaceDispatchCell * pCell = (InterfaceDispatchCell*)malloc(sizeof(InterfaceDispatchCell) * 2);
     if (pCell == NULL)
         return NULL;
 

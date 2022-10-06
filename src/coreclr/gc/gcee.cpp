@@ -386,7 +386,9 @@ uint32_t gc_heap::background_gc_wait (alloc_wait_reason awr, int time_out_ms)
 
 /******************************************************************************/
 IGCHeapInternal* CreateGCHeap() {
-    return new(nothrow) GCHeap();   // we return wks or svr
+    GCHeap* heap = (GCHeap*)malloc(sizeof(GCHeap));
+    new (heap) GCHeap();
+    return heap; // we return wks or svr
 }
 
 void GCHeap::DiagTraceGCSegments()
@@ -436,7 +438,7 @@ void GCHeap::DiagDescrGenerations (gen_walk_fn fn, void *context)
 segment_handle GCHeap::RegisterFrozenSegment(segment_info *pseginfo)
 {
 #ifdef FEATURE_BASICFREEZE
-    heap_segment * seg = new (nothrow) heap_segment;
+    heap_segment * seg = (heap_segment*)malloc(sizeof(heap_segment));
     if (!seg)
     {
         return NULL;
@@ -461,7 +463,7 @@ segment_handle GCHeap::RegisterFrozenSegment(segment_info *pseginfo)
 
     if (heap->insert_ro_segment(seg) == FALSE)
     {
-        delete seg;
+        free(seg);
         return NULL;
     }
 

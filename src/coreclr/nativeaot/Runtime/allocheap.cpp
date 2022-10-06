@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
 #include "common.h"
 #include "CommonTypes.h"
 #include "CommonMacros.h"
@@ -94,9 +95,11 @@ bool AllocHeap::Init(
     }
 #endif // FEATURE_RWX_MEMORY
 
-    BlockListElem *pBlock = new (nothrow) BlockListElem(pbInitialMem, cbInitialMemReserve);
+    BlockListElem *pBlock = (BlockListElem*)malloc(sizeof(BlockListElem));
     if (pBlock == NULL)
         return false;
+
+    new (pBlock) BlockListElem(pbInitialMem, cbInitialMemReserve);
     m_blockList.PushHead(pBlock);
 
     if (!_UpdateMemPtrs(pbInitialMem,
@@ -121,7 +124,7 @@ AllocHeap::~AllocHeap()
         BlockListElem *pCur = m_blockList.PopHead();
         if (pCur->GetStart() != m_pbInitialMem || m_fShouldFreeInitialMem)
             PalVirtualFree(pCur->GetStart(), pCur->GetLength(), MEM_RELEASE);
-        delete pCur;
+        free(pCur);
     }
 }
 
@@ -284,12 +287,14 @@ bool AllocHeap::_AllocNewBlock(uintptr_t cbMem)
     if (pbMem == NULL)
         return false;
 
-    BlockListElem *pBlockListElem = new (nothrow) BlockListElem(pbMem, cbMem);
+    BlockListElem *pBlockListElem = (BlockListElem*)(sizeof(BlockListElem));
     if (pBlockListElem == NULL)
     {
         PalVirtualFree(pbMem, 0, MEM_RELEASE);
         return false;
     }
+
+    new (pBlockListElem) BlockListElem(pbMem, cbMem);
 
     // Add to the list. While there is no race for writers (we hold the lock) we have the
     // possibility of simultaneous readers, and using the interlocked version creates a

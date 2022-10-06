@@ -435,9 +435,11 @@ void ReclaimUnusedInterfaceDispatchCaches()
 // One time initialization of interface dispatch.
 bool InitializeInterfaceDispatch()
 {
-    g_pAllocHeap = new (nothrow) AllocHeap();
+    g_pAllocHeap = (AllocHeap*)malloc(sizeof(AllocHeap));
     if (g_pAllocHeap == NULL)
         return false;
+
+    new (g_pAllocHeap) AllocHeap();
 
     if (!g_pAllocHeap->Init())
         return false;

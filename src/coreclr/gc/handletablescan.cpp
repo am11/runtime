@@ -1094,7 +1094,7 @@ void CALLBACK BlockQueueBlocksForAsyncScan(PTR_TableSegment pSegment, uint32_t u
             if (!pQNode->pNext)
             {
                 // no more nodes - allocate a new one
-                ScanQNode *pQNodeT = new (nothrow) ScanQNode();
+                ScanQNode *pQNodeT = (ScanQNode*)malloc(sizeof(ScanQNode));
 
                 // did it succeed?
                 if (!pQNodeT)
@@ -1270,9 +1270,8 @@ void CALLBACK FreeScanQNode(AsyncScanInfo *, ScanQNode *pQNode, uintptr_t)
     LIMITED_METHOD_CONTRACT;
 
     // free the node's memory
-    delete  pQNode;
+    free(pQNode);
 }
-
 
 /*
  * xxxTableScanQueuedBlocksAsync

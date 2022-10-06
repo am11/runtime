@@ -94,7 +94,7 @@ void StressLog::Initialize(unsigned facilities,  unsigned level, unsigned maxByt
 
     g_pStressLog = &theLog;
 
-    theLog.pLock = new (nothrow) CrstStatic();
+    theLog.pLock = (CrstStatic*)malloc(sizeof(CrstStatic));
     theLog.pLock->Init(CrstStressLog);
     if (maxBytesPerThread < STRESSLOG_CHUNK_SIZE)
     {
@@ -199,14 +199,14 @@ ThreadStressLog* StressLog::CreateThreadStressLogHelper(Thread * pThread) {
     }
 
     if (msgs == 0)  {
-        msgs = new (nothrow) ThreadStressLog();
-
+        msgs = (ThreadStressLog*)malloc(sizeof(ThreadStressLog));
         if (msgs == 0 ||!msgs->IsValid ())
         {
-            delete msgs;
+            free(msgs);
             msgs = 0;
             goto LEAVE;
         }
+        new (msgs) ThreadStressLog();
     }
 
     msgs->Activate (pThread);
@@ -433,7 +433,7 @@ bool StressLog::Initialize()
 
             if (!curPtrInitialized)
             {
-                delete curThreadStressLog;
+                free(curThreadStressLog);
                 return false;
             }
 

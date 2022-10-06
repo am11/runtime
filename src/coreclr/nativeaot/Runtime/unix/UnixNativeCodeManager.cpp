@@ -886,12 +886,13 @@ bool RhRegisterOSModule(void * pModule,
                         void * pvUnboxingStubsStartRange, uint32_t cbUnboxingStubsRange,
                         void ** pClasslibFunctions, uint32_t nClasslibFunctions)
 {
-    NewHolder<UnixNativeCodeManager> pUnixNativeCodeManager = new (nothrow) UnixNativeCodeManager((TADDR)pModule,
-        pvManagedCodeStartRange, cbManagedCodeRange,
-        pClasslibFunctions, nClasslibFunctions);
-
+    NewHolder<UnixNativeCodeManager> pUnixNativeCodeManager = (UnixNativeCodeManager*)malloc(sizeof(UnixNativeCodeManager));
     if (pUnixNativeCodeManager == nullptr)
         return false;
+
+    new (pUnixNativeCodeManager) UnixNativeCodeManager((TADDR)pModule,
+        pvManagedCodeStartRange, cbManagedCodeRange,
+        pClasslibFunctions, nClasslibFunctions);
 
     RegisterCodeManager(pUnixNativeCodeManager, pvManagedCodeStartRange, cbManagedCodeRange);
 

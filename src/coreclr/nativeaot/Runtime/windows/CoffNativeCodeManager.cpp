@@ -989,14 +989,15 @@ bool RhRegisterOSModule(void * pModule,
 
     IMAGE_DATA_DIRECTORY * pRuntimeFunctions = &(pNTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION]);
 
-    NewHolder<CoffNativeCodeManager> pCoffNativeCodeManager = new (nothrow) CoffNativeCodeManager((TADDR)pModule,
+    NewHolder<CoffNativeCodeManager> pCoffNativeCodeManager = (CoffNativeCodeManager*)malloc(sizeof(CoffNativeCodeManager));
+    if (pCoffNativeCodeManager == nullptr)
+        return false;
+
+    new (pCoffNativeCodeManager) CoffNativeCodeManager((TADDR)pModule,
         pvManagedCodeStartRange, cbManagedCodeRange,
         dac_cast<PTR_RUNTIME_FUNCTION>((TADDR)pModule + pRuntimeFunctions->VirtualAddress),
         pRuntimeFunctions->Size / sizeof(RUNTIME_FUNCTION),
         pClasslibFunctions, nClasslibFunctions);
-
-    if (pCoffNativeCodeManager == nullptr)
-        return false;
 
     RegisterCodeManager(pCoffNativeCodeManager, pvManagedCodeStartRange, cbManagedCodeRange);
 

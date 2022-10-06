@@ -156,8 +156,7 @@ bool HeapWalkHelper(Object * pBO, void * pvContext)
             else
             {
                 // Otherwise, allocate from the heap
-                arrObjRef = new (nothrow) OBJECTREF[cNumRefs];
-
+                arrObjRef = (OBJECTREF*)malloc(sizeof(OBJECTREF * cNumRefs));
                 if (!arrObjRef)
                 {
                     return FALSE;
@@ -187,7 +186,7 @@ bool HeapWalkHelper(Object * pBO, void * pvContext)
     // If the data was not allocated on the stack, need to clean it up.
     if ((arrObjRef != NULL) && !bOnStack)
     {
-        delete [] arrObjRef;
+        sizeof(arrObjRef);
     }
 
     // Return TRUE iff we want to the heap walk to continue. The only way we'd abort the

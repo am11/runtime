@@ -711,7 +711,7 @@ inline StressMsg* ThreadStressLog::AdvReadPastBoundary() {
 inline ThreadStressLog::ThreadStressLog()
 {
     chunkListHead = chunkListTail = curWriteChunk = NULL;
-    StressLogChunk * newChunk = new (nothrow) StressLogChunk;
+    StressLogChunk * newChunk = (StressLogChunk*)malloc(sizeof(StressLogChunk));
     //OOM or in cantalloc region
     if (newChunk == NULL)
     {
@@ -749,7 +749,7 @@ inline ThreadStressLog::~ThreadStressLog ()
     {
         StressLogChunk * tmp = chunk;
         chunk = chunk->next;
-        delete tmp;
+        free(tmp);
         StressLog::ChunkDeleted ();
     } while (chunk != chunkListHead);
 }
@@ -764,11 +764,15 @@ FORCEINLINE bool ThreadStressLog::GrowChunkList ()
     {
         return FALSE;
     }
-    StressLogChunk * newChunk = new (nothrow) StressLogChunk (chunkListTail, chunkListHead);
+
+    StressLogChunk * newChunk = (StressLogChunk*)malloc(sizeof(StressLogChunk));
     if (newChunk == NULL)
     {
         return FALSE;
     }
+
+    new (newChunk) StressLogChunk (chunkListTail, chunkListHead);
+
     StressLog::NewChunk ();
     chunkListLength++;
     chunkListHead->prev = newChunk;

@@ -362,7 +362,7 @@ void Thread::Destroy()
                 RhHandleFree(m_pThreadLocalModuleStatics[i]);
             }
         }
-        delete[] m_pThreadLocalModuleStatics;
+        free(m_pThreadLocalModuleStatics);
     }
 
 #ifdef STRESS_LOG
@@ -373,7 +373,7 @@ void Thread::Destroy()
 #ifdef FEATURE_SUSPEND_REDIRECTION
     if (m_redirectionContextBuffer != NULL)
     {
-        delete[] m_redirectionContextBuffer;
+        free(m_redirectionContextBuffer);
     }
 #endif //FEATURE_SUSPEND_REDIRECTION
 
@@ -1283,7 +1283,7 @@ bool Thread::SetThreadStaticStorageForModule(Object * pStorage, uint32_t moduleI
             return false;
         }
 
-        PTR_PTR_VOID pThreadLocalModuleStatics = new (nothrow) PTR_VOID[newSize];
+        PTR_PTR_VOID pThreadLocalModuleStatics = (PTR_PTR_VOID)malloc(sizeof(PTR_VOID) * newSize);
         if (pThreadLocalModuleStatics == NULL)
         {
             return false;
@@ -1294,7 +1294,7 @@ bool Thread::SetThreadStaticStorageForModule(Object * pStorage, uint32_t moduleI
         if (m_pThreadLocalModuleStatics != NULL)
         {
             memcpy(pThreadLocalModuleStatics, m_pThreadLocalModuleStatics, sizeof(PTR_VOID) * m_numThreadLocalModuleStatics);
-            delete[] m_pThreadLocalModuleStatics;
+            free(m_pThreadLocalModuleStatics);
         }
 
         m_pThreadLocalModuleStatics = pThreadLocalModuleStatics;

@@ -63,9 +63,11 @@ bool RestrictedCallouts::RegisterGcCallout(GcRestrictedCalloutKind eKind, void *
         RhFailFast();
     }
 
-    GcRestrictedCallout * pCallout = new (nothrow) GcRestrictedCallout();
+    GcRestrictedCallout * pCallout = (GcRestrictedCallout*)malloc(sizeof(GcRestrictedCallout));
     if (pCallout == NULL)
         return false;
+
+    new (pCallout) GcRestrictedCallout();
 
     pCallout->m_pCalloutMethod = pCalloutMethod;
 
@@ -104,7 +106,7 @@ void RestrictedCallouts::UnregisterGcCallout(GcRestrictedCalloutKind eKind, void
             else
                 s_rgGcRestrictedCallouts[eKind] = pCurrCallout->m_pNext;
 
-            delete pCurrCallout;
+            free(pCurrCallout);
 
             return;
         }
@@ -123,9 +125,11 @@ void RestrictedCallouts::UnregisterGcCallout(GcRestrictedCalloutKind eKind, void
 // success, false if insufficient memory was available for the registration.
 bool RestrictedCallouts::RegisterRefCountedHandleCallback(void * pCalloutMethod, MethodTable * pTypeFilter)
 {
-    HandleTableRestrictedCallout * pCallout = new (nothrow) HandleTableRestrictedCallout();
+    HandleTableRestrictedCallout * pCallout = (HandleTableRestrictedCallout*)malloc(sizeof(HandleTableRestrictedCallout));
     if (pCallout == NULL)
         return false;
+
+    new (pCallout) HandleTableRestrictedCallout();
 
     pCallout->m_pCalloutMethod = pCalloutMethod;
     pCallout->m_pTypeFilter = pTypeFilter;
@@ -159,7 +163,7 @@ void RestrictedCallouts::UnregisterRefCountedHandleCallback(void * pCalloutMetho
             else
                 s_pHandleTableRestrictedCallouts = pCurrCallout->m_pNext;
 
-            delete pCurrCallout;
+            free(pCurrCallout);
 
             return;
         }

@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
 #include "common.h"
 #include "CommonTypes.h"
 #include "CommonMacros.h"
@@ -36,7 +37,9 @@ TypeManager * TypeManager::Create(HANDLE osModule, void * pModuleHeader, void** 
     if (pReadyToRunHeader->MajorVersion != ReadyToRunHeaderConstants::CurrentMajorVersion)
         return nullptr;
 
-    return new (nothrow) TypeManager(osModule, pReadyToRunHeader, pClasslibFunctions, nClasslibFunctions);
+    TypeManager* manager = (TypeManager*)malloc(sizeof(TypeManager));
+    if (manager) new (manager) TypeManager(osModule, pReadyToRunHeader, pClasslibFunctions, nClasslibFunctions);
+    return manager;
 }
 
 TypeManager::TypeManager(HANDLE osModule, ReadyToRunHeader * pHeader, void** pClasslibFunctions, uint32_t nClasslibFunctions)

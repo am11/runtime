@@ -12,7 +12,9 @@ GCHandleStore* g_gcGlobalHandleStore;
 
 IGCHandleManager* CreateGCHandleManager()
 {
-    return new (nothrow) GCHandleManager();
+    IGCHandleManager* manager = (IGCHandleManager*)malloc(sizeof(GCHandleManager));
+    new (manager) GCHandleManager();
+    return manager;
 }
 
 void GCHandleStore::Uproot()
@@ -84,16 +86,18 @@ IGCHandleStore* GCHandleManager::GetGlobalHandleStore()
 IGCHandleStore* GCHandleManager::CreateHandleStore()
 {
 #ifndef FEATURE_NATIVEAOT
-    GCHandleStore* store = new (nothrow) GCHandleStore();
+    GCHandleStore* store = (GCHandleStore*)malloc(sizeof(GCHandleStore));
     if (store == nullptr)
     {
         return nullptr;
     }
 
+    new (store) GCHandleStore();
+
     bool success = ::Ref_InitializeHandleTableBucket(&store->_underlyingBucket);
     if (!success)
     {
-        delete store;
+        free(store);
         return nullptr;
     }
 
@@ -106,7 +110,7 @@ IGCHandleStore* GCHandleManager::CreateHandleStore()
 
 void GCHandleManager::DestroyHandleStore(IGCHandleStore* store)
 {
-    delete store;
+    free(store);
 }
 
 OBJECTHANDLE GCHandleManager::CreateGlobalHandleOfType(Object* object, HandleType type)

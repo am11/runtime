@@ -571,7 +571,7 @@ HandleTableBucketHolder::~HandleTableBucketHolder()
                 HndDestroyHandleTable(m_bucket->pTable[n]);
             }
         }
-        delete [] m_bucket->pTable;
+        free(m_bucket->pTable);
     }
 
     // we do not own m_bucket, so we shouldn't delete it here.
@@ -591,18 +591,20 @@ bool Ref_Initialize()
     _ASSERTE(g_HandleTableMap.pBuckets == NULL);
 
     // Create an array of INITIAL_HANDLE_TABLE_ARRAY_SIZE HandleTableBuckets to hold the handle table sets
-    HandleTableBucket** pBuckets = new (nothrow) HandleTableBucket * [ INITIAL_HANDLE_TABLE_ARRAY_SIZE ];
+    HandleTableBucket** pBuckets = (HandleTableBucket**)malloc(sizeof(HandleTableBucket*) * INITIAL_HANDLE_TABLE_ARRAY_SIZE);
     if (pBuckets == NULL)
         return false;
 
     ZeroMemory(pBuckets, INITIAL_HANDLE_TABLE_ARRAY_SIZE * sizeof (HandleTableBucket *));
 
-    g_gcGlobalHandleStore = new (nothrow) GCHandleStore();
+    g_gcGlobalHandleStore = (GCHandleStore*)malloc(sizeof(GCHandleStore));
     if (g_gcGlobalHandleStore == NULL)
     {
-        delete[] pBuckets;
+        free(pBuckets);
         return false;
     }
+
+    new (g_gcGlobalHandleStore) GCHandleStore();
 
     // Initialize the bucket in the global handle store
     HandleTableBucket* pBucket = &g_gcGlobalHandleStore->_underlyingBucket;
@@ -614,7 +616,7 @@ bool Ref_Initialize()
     HandleTableBucketHolder bucketHolder(pBucket, n_slots);
 
     // create the handle table set for the first bucket
-    pBucket->pTable = new (nothrow) HHANDLETABLE[n_slots];
+    pBucket->pTable = (HHANDLETABLE*)malloc(sizeof(HHANDLETABLE) * n_slots);
     if (pBucket->pTable == NULL)
         goto CleanupAndFail;
 
@@ -638,7 +640,7 @@ bool Ref_Initialize()
 
     // Allocate contexts used during dependent handle promotion scanning. There's one of these for every GC
     // heap since they're scanned in parallel.
-    g_pDependentHandleContexts = new (nothrow) DhContext[n_slots];
+    g_pDependentHandleContexts = (DhContext*)malloc(sizeof(DhContext) * n_slots);
     if (g_pDependentHandleContexts == NULL)
         goto CleanupAndFail;
 
@@ -646,10 +648,10 @@ bool Ref_Initialize()
 
 CleanupAndFail:
     if (pBuckets != NULL)
-        delete[] pBuckets;
+        free(pBuckets);
 
     if (g_gcGlobalHandleStore != NULL)
-        delete g_gcGlobalHandleStore;
+        free(g_gcGlobalHandleStore);
 
     return false;
 }
@@ -660,7 +662,7 @@ void Ref_Shutdown()
 
     if (g_pDependentHandleContexts)
     {
-        delete [] g_pDependentHandleContexts;
+        free(g_pDependentHandleContexts);
         g_pDependentHandleContexts = NULL;
     }
 
@@ -673,7 +675,7 @@ void Ref_Shutdown()
         // destroy the handle table bucket array
         HandleTableMap *walk = &g_HandleTableMap;
         while (walk) {
-            delete [] walk->pBuckets;
+            free(walk->pBuckets);
             walk = walk->pNext;
         }
 
@@ -710,7 +712,7 @@ bool Ref_InitializeHandleTableBucket(HandleTableBucket* bucket)
 
     HandleTableBucketHolder bucketHolder(result, n_slots);
 
-    result->pTable = new (nothrow) HHANDLETABLE[n_slots];
+    result->pTable = (HHANDLETABLE*)malloc(sizeof(HHANDLETABLE) * n_slots);
     if (!result->pTable)
     {
         return false;
@@ -747,16 +749,16 @@ bool Ref_InitializeHandleTableBucket(HandleTableBucket* bucket)
 
         // No free slot.
         // Let's create a new node
-        HandleTableMap *newMap = new (nothrow) HandleTableMap;
+        HandleTableMap *newMap = (HandleTableMap*)malloc(sizeof(HandleTableMap));
         if (!newMap)
         {
             return false;
         }
 
-        newMap->pBuckets = new (nothrow) HandleTableBucket * [ INITIAL_HANDLE_TABLE_ARRAY_SIZE ];
+        newMap->pBuckets = (HandleTableBucket**)malloc(sizeof(HandleTableBucket) * INITIAL_HANDLE_TABLE_ARRAY_SIZE);
         if (!newMap->pBuckets)
         {
-            delete newMap;
+            free(newMap);
             return false;
         }
 
@@ -768,8 +770,8 @@ bool Ref_InitializeHandleTableBucket(HandleTableBucket* bucket)
         if (Interlocked::CompareExchangePointer(&last->pNext, newMap, NULL) != NULL)
         {
             // This thread loses.
-            delete [] newMap->pBuckets;
-            delete newMap;
+            free(newMap->pBuckets);
+            free(newMap);
         }
         walk = last->pNext;
         offset = last->dwMaxIndex;
@@ -815,7 +817,7 @@ void Ref_DestroyHandleTableBucket(HandleTableBucket *pBucket)
     {
         HndDestroyHandleTable(pBucket->pTable[uCPUindex]);
     }
-    delete [] pBucket->pTable;
+    free(pBucket->pTable);
 }
 
 int getSlotNumber(ScanContext* sc)

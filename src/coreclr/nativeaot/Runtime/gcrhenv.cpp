@@ -1383,7 +1383,7 @@ bool GCToEEInterface::GetStringConfigValue(const char* privateKey, const char* p
 
 void GCToEEInterface::FreeStringConfigValue(const char* value)
 {
-    delete[] value;
+    free((void*)value);
 }
 
 #endif // !DACCESS_COMPILE

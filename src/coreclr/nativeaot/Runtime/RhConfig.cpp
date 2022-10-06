@@ -160,7 +160,7 @@ void RhConfig::ReadEmbeddedSettings()
             return;
         }
 
-        ConfigPair* iniBuff = new (nothrow) ConfigPair[RCV_Count];
+        ConfigPair* iniBuff = (ConfigPair*)malloc(sizeof(ConfigPair) * RCV_Count);
         if (iniBuff == NULL)
         {
             //only set if another thread hasn't initialized the buffer yet, otherwise ignore and let the first setter win
@@ -205,7 +205,7 @@ void RhConfig::ReadEmbeddedSettings()
         //delete the iniBuff to avoid leaking memory
         if (PalInterlockedCompareExchangePointer(&g_embeddedSettings, iniBuff, NULL) != NULL)
         {
-            delete[] iniBuff;
+            free(iniBuff);
         }
     }
 

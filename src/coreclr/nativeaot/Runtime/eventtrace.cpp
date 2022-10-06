@@ -527,7 +527,7 @@ public:
         EtwGcMovementContext* pContext = *ppContext;
         if (pContext == NULL)
         {
-            pContext = new (nothrow) EtwGcMovementContext;
+            pContext = (EtwGcMovementContext*)malloc(sizeof(EtwGcMovementContext));
             *ppContext = pContext;
         }
         return pContext;
@@ -610,7 +610,7 @@ struct MovedReferenceContextForEtwAndProfapi
         // in between?
         _ASSERTE(pContext == NULL);
 
-        pContext = new (nothrow) MovedReferenceContextForEtwAndProfapi;
+        pContext = (MovedReferenceContextForEtwAndProfapi*)malloc(sizeof(MovedReferenceContextForEtwAndProfapi));
         *(MovedReferenceContextForEtwAndProfapi**)pvContext = pContext;
 
         return pContext;
@@ -844,7 +844,7 @@ void ETW::GCLog::EndMovedReferences(size_t profilingContext,
     }
 
     pCtxForEtwAndProfapi->pctxEtw = NULL;
-    delete pContext;
+    free(pContext);
 #endif // WINXP_AND_WIN2K3_BUILD_SUPPORT
 }
 
@@ -1469,7 +1469,7 @@ public:
         EtwGcHeapDumpContext* pContext = (EtwGcHeapDumpContext*)*ppvEtwContext;
         if (pContext == NULL)
         {
-            pContext = new (nothrow) EtwGcHeapDumpContext;
+            pContext = (EtwGcHeapDumpContext*)malloc(sizeof(EtwGcHeapDumpContext);
             *ppvEtwContext = pContext;
         }
         return pContext;
@@ -1945,7 +1945,7 @@ void ETW::GCLog::EndHeapDump(ProfilerWalkHeapContext* profilerWalkHeapContext)
 
     // Delete any GC state built up in the context
     profilerWalkHeapContext->pvEtwContext = NULL;
-    delete pContext;
+    freep(Context);
 #endif // WINXP_AND_WIN2K3_BUILD_SUPPORT
 }
 
@@ -2780,7 +2780,7 @@ ETW::TypeLoggingInfo ETW::TypeSystemLog::LookupOrCreateTypeLoggingInfo(TypeHandl
 
     if (s_pAllLoggedTypes == NULL)
     {
-        s_pAllLoggedTypes = new (nothrow) AllLoggedTypes;
+        s_pAllLoggedTypes = (AllLoggedTypes*)malloc(sizeof(AllLoggedTypes));
         if (s_pAllLoggedTypes == NULL)
         {
             // out of memory.  Bail on ETW stuff
@@ -2796,13 +2796,15 @@ ETW::TypeLoggingInfo ETW::TypeSystemLog::LookupOrCreateTypeLoggingInfo(TypeHandl
     LoggedTypesFromModule* pLoggedTypesFromModule = s_pAllLoggedTypes->allLoggedTypesHash.Lookup(pLoaderModule);
     if (pLoggedTypesFromModule == NULL)
     {
-        pLoggedTypesFromModule = new (nothrow) LoggedTypesFromModule(pLoaderModule);
+        pLoggedTypesFromModule = (LoggedTypesFromModule*)malloc(sizeof(LoggedTypesFromModule));
         if (pLoggedTypesFromModule == NULL)
         {
             // out of memory.  Bail on ETW stuff
             *pfCreatedNew = FALSE;
             return TypeLoggingInfo(NULL);
         }
+
+        new (pLoggedTypesFromModule) LoggedTypesFromModule(pLoaderModule);
 
         fSucceeded = FALSE;
         EX_TRY
@@ -2910,7 +2912,7 @@ void ETW::TypeSystemLog::OnModuleUnload(Module* pModule)
     }
 
     // Destruct this TypesHash we just removed
-    delete pLoggedTypesFromModule;
+    free(pLoggedTypesFromModule);
     pLoggedTypesFromModule = NULL;
 }
 
@@ -2946,12 +2948,12 @@ void ETW::TypeSystemLog::OnTypesKeywordTurnedOff()
         ++iter)
     {
         LoggedTypesFromModule* pLoggedTypesFromModule = *iter;
-        delete pLoggedTypesFromModule;
+        free(pLoggedTypesFromModule);
     }
 
     // This causes the default ~AllLoggedTypes() to be called, and thus
     // ~AllLoggedTypesHash() to be called
-    delete s_pAllLoggedTypes;
+    free(s_pAllLoggedTypes);
     s_pAllLoggedTypes = NULL;
 }
 
@@ -3287,7 +3289,7 @@ void InitializeEventTracing()
     // Register CLR providers with the OS
     if (g_pEtwTracer == NULL)
     {
-        NewHolder <ETW::CEtwTracer> tempEtwTracer(new (nothrow) ETW::CEtwTracer());
+        NewHolder <ETW::CEtwTracer> tempEtwTracer((CEtwTracer*)malloc(sizeof(ETW::CEtwTracer)));
         if (tempEtwTracer != NULL && tempEtwTracer->Register() == ERROR_SUCCESS)
             g_pEtwTracer = tempEtwTracer.Extract();
     }

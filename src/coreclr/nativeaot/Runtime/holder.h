@@ -100,7 +100,7 @@ FORCEINLINE void DoNothing(TYPE /*value*/)
 template <typename TYPE>
 FORCEINLINE void Delete(TYPE *value)
 {
-    delete value;
+    free(value);
 }
 
 // -----------------------------------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ public:
 template <typename TYPE>
 FORCEINLINE void DeleteArray(TYPE *value)
 {
-    delete [] value;
+    free(value);
     value = NULL;
 }
 

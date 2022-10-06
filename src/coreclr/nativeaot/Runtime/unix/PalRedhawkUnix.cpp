@@ -570,7 +570,7 @@ extern "C" UInt32_BOOL CloseHandle(HANDLE handle)
 
     bool success = handleBase->Destroy();
 
-    delete handleBase;
+    free(handleBase);
 
     return success ? UInt32_TRUE : UInt32_FALSE;
 }
@@ -583,13 +583,13 @@ REDHAWK_PALEXPORT HANDLE REDHAWK_PALAPI PalCreateEventW(_In_opt_ LPSECURITY_ATTR
         return INVALID_HANDLE_VALUE;
     }
 
-    EventUnixHandle* handle = new (nothrow) EventUnixHandle(event);
-
+    EventUnixHandle* handle = (EventUnixHandle*)malloc(sizeof(EventUnixHandle));
     if (handle == NULL)
     {
         return INVALID_HANDLE_VALUE;
     }
 
+    new (handle) EventUnixHandle(event);
     return handle;
 }
 
@@ -868,7 +868,9 @@ extern "C" UInt32_BOOL DuplicateHandle(
     ASSERT(hSourceProcessHandle == GetCurrentProcess());
     ASSERT(hTargetProcessHandle == GetCurrentProcess());
     ASSERT(hSourceHandle == GetCurrentThread());
-    *lpTargetHandle = new (nothrow) ThreadUnixHandle(pthread_self());
+    *lpTargetHandle = (ThreadUnixHandle*)malloc(sizeof(ThreadUnixHandle));
+
+    new (*lpTargetHandle) ThreadUnixHandle(pthread_self());
 
     return lpTargetHandle != nullptr;
 }

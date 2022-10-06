@@ -951,7 +951,10 @@ static size_t GetLogicalProcessorCacheSizeFromOS()
         // Assume L3$/CPU grows linearly from 256K to 1.5M/CPU as logicalCPUs grows from 2 to 12 CPUs
         DWORD logicalCPUs = g_totalCpuCount;
 
-        cacheSize = logicalCPUs * std::min(1536, std::max(256, (int)logicalCPUs * 128)) * 1024;
+        int cpus = (int)logicalCPUs * 128;
+        int maxVal = 256 > cpus ? cpus : 256;
+        int minVal = 1536 < maxVal ? 1536 : maxVal;
+        cacheSize = logicalCPUs * minVal * 1024;
     }
 #endif
 

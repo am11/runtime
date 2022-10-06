@@ -12,6 +12,7 @@
  #define _CRT_SECURE_NO_WARNINGS
 #endif // _CRT_SECURE_NO_WARNINGS
 
+#include <cstddef>
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>

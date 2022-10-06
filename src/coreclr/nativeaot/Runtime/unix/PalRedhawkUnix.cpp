@@ -949,29 +949,20 @@ extern "C" UInt32_BOOL ResetEvent(HANDLE event)
     return UInt32_TRUE;
 }
 
-extern CrstStatic g_EnvironmentLock;
-
 extern "C" uint32_t GetEnvironmentVariableA(const char * name, char * buffer, uint32_t size)
 {
-    g_EnvironmentLock.Enter();
-
     const char* value = getenv(name);
     if (value == NULL)
     {
-        g_EnvironmentLock.Leave();
         return 0;
     }
 
     size_t valueLen = strlen(value);
-
     if (valueLen < size)
     {
         strcpy(buffer, value);
-        g_EnvironmentLock.Leave();
         return valueLen;
     }
-
-    g_EnvironmentLock.Leave();
 
     // return required size including the null character or 0 if the size doesn't fit into uint32_t
     return (valueLen < UINT32_MAX) ? (valueLen + 1) : 0;

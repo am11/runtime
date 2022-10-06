@@ -23,7 +23,6 @@ namespace std
    const std::nothrow_t nothrow;
 }
 
-//void* operator new(size_t n) noexcept;
 void* operator new(size_t n, const std::nothrow_t&) noexcept;
 void* operator new[](size_t n, const std::nothrow_t&) noexcept;
 void operator delete(void *p) noexcept;

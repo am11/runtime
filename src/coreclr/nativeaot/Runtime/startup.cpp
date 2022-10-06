@@ -50,7 +50,6 @@ bool g_fHasFastFxsave = false;
 
 CrstStatic g_CastCacheLock;
 CrstStatic g_ThunkPoolLock;
-CrstStatic g_EnvironmentLock;
 
 #if defined(HOST_X86) || defined(HOST_AMD64) || defined(HOST_ARM64)
 // This field is inspected from the generated code to determine what intrinsics are available.
@@ -157,9 +156,6 @@ static bool InitDLL(HANDLE hPalInstance)
         return false;
 
     if (!g_ThunkPoolLock.InitNoThrow(CrstType::CrstCastCache))
-        return false;
-
-    if (!g_EnvironmentLock.InitNoThrow(CrstType::CrstEnvrionment))
         return false;
 
     return true;

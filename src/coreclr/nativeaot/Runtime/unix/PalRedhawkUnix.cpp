@@ -348,7 +348,6 @@ typedef UnixHandle<UnixHandleType::Thread, pthread_t> ThreadUnixHandle;
 
 #ifdef TARGET_LINUX
 extern "C" int __cxa_thread_atexit(void (*)(void*), void*, void *);
-extern "C" int __cxa_thread_atexit_impl(void (*)(void*), void *, void *);
 extern "C" void *__dso_handle;
 #endif
 
@@ -407,6 +406,11 @@ void InitializeCurrentProcessCpuCount()
     g_RhNumberOfProcessors = count;
 }
 
+#ifdef TARGET_LINUX
+typedef int (*AtexitFunc) (void (*)(void*), void*, void*);
+AtexitFunc g_cxa_thread_atexit_impl;
+#endif
+
 // The Redhawk PAL must be initialized before any of its exports can be called. Returns true for a successful
 // initialization and false on failure.
 REDHAWK_PALEXPORT bool REDHAWK_PALAPI PalInit()
@@ -430,6 +434,10 @@ REDHAWK_PALEXPORT bool REDHAWK_PALAPI PalInit()
     InitializeCpuCGroup();
 
     InitializeCurrentProcessCpuCount();
+
+#ifdef TARGET_LINUX
+    g_cxa_thread_atexit_impl = (AtexitFunc)dlsym(RTLD_DEFAULT, "__cxa_thread_atexit_impl");
+#endif
 
     return true;
 }
@@ -492,7 +500,13 @@ extern "C" void PalAttachThread(void* thread)
 #ifdef TARGET_LINUX
 int __cxa_thread_atexit(void (*func)(void*), void* t, void* c)
 {
-    return __cxa_thread_atexit_impl(func, t, c);
+    if (g_cxa_thread_atexit_impl)
+    {
+        return g_cxa_thread_atexit_impl(func, t, c);
+    }
+
+    func(t);
+    return 0;
 }
 #endif
 

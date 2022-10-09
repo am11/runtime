@@ -287,8 +287,19 @@ namespace ILCompiler
             });
         }
 
-        public static IEnumerable<HelpSectionDelegate> GetExtendedHelp(HelpContext _)
+        public static IEnumerable<HelpSectionDelegate> GetExtendedHelp(HelpContext context)
         {
+            string[] validArchitectures = { "arm", "arm64", "x86", "x64" };
+
+            foreach (Token token in context.ParseResult.Tokens)
+            {
+                if (token.Value == "--instruction-set")
+                {
+                    PrintInstructionSetHelp();
+                    yield break;
+                }
+            }
+
             foreach (HelpSectionDelegate sectionDelegate in HelpBuilder.Default.GetLayout())
                 yield return sectionDelegate;
 
@@ -302,47 +313,18 @@ namespace ILCompiler
                 Console.WriteLine("Use the '--' option to disambiguate between input files that have begin with -- and options. After a '--' option, all arguments are " +
                     "considered to be input files. If no input files begin with '--' then this option is not necessary.\n");
 
-                string[] ValidArchitectures = new string[] { "arm", "arm64", "x86", "x64" };
-                string[] ValidOS = new string[] { "windows", "linux", "osx" };
+                string[] validOS = { "windows", "linux", "osx" };
 
-                Console.WriteLine("Valid switches for {0} are: '{1}'. The default value is '{2}'\n", "--targetos", string.Join("', '", ValidOS), Helpers.GetTargetOS(null).ToString().ToLowerInvariant());
+                Console.WriteLine("Valid switches for {0} are: '{1}'. The default value is '{2}'\n", "--targetos", string.Join("', '", validOS), Helpers.GetTargetOS(null).ToString().ToLowerInvariant());
+                Console.WriteLine(string.Format("Valid switches for {0} are: '{1}'. The default value is '{2}'\n", "--targetarch", string.Join("', '", validArchitectures), Helpers.GetTargetArchitecture(null).ToString().ToLowerInvariant()));
 
-                Console.WriteLine(string.Format("Valid switches for {0} are: '{1}'. The default value is '{2}'\n", "--targetarch", string.Join("', '", ValidArchitectures), Helpers.GetTargetArchitecture(null).ToString().ToLowerInvariant()));
-
-                Console.WriteLine("The allowable values for the --instruction-set option are described in the table below. Each architecture has a different set of valid " +
-                    "instruction sets, and multiple instruction sets may be specified by separating the instructions sets by a ','. For example 'avx2,bmi,lzcnt'");
-
-                foreach (string arch in ValidArchitectures)
-                {
-                    Console.Write(arch);
-                    Console.Write(": ");
-
-                    TargetArchitecture targetArch = Helpers.GetTargetArchitecture(arch);
-                    bool first = true;
-                    foreach (var instructionSet in Internal.JitInterface.InstructionSetFlags.ArchitectureToValidInstructionSets(targetArch))
-                    {
-                        // Only instruction sets with are specifiable should be printed to the help text
-                        if (instructionSet.Specifiable)
-                        {
-                            if (first)
-                            {
-                                first = false;
-                            }
-                            else
-                            {
-                                Console.Write(", ");
-                            }
-                            Console.Write(instructionSet.Name);
-                        }
-                    }
-
-                    Console.WriteLine();
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("The following CPU names are predefined groups of instruction sets and can be used in --instruction-set too:");
-                Console.WriteLine(string.Join(", ", Internal.JitInterface.InstructionSetFlags.AllCpuNames));
+                PrintInstructionSetHelp();
             };
+
+            void PrintInstructionSetHelp() => Helpers.PrintInstructionSet(validArchitectures,
+                "The allowable values for the --instruction-set option are described in the table below. Each architecture has a different set of valid " +
+                "instruction sets, and multiple instruction sets may be specified by separating the instructions sets by a ','. For example 'avx2,bmi,lzcnt'",
+                "The following CPU names are predefined groups of instruction sets and can be used in --instruction-set too:");
         }
 
         private static IEnumerable<string> ILLinkify(IReadOnlyList<Token> tokens, bool setDefaultToEmpty)

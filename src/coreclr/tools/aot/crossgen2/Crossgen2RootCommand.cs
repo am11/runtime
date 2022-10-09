@@ -308,8 +308,19 @@ namespace ILCompiler
             });
         }
 
-        public static IEnumerable<HelpSectionDelegate> GetExtendedHelp(HelpContext _)
+        public static IEnumerable<HelpSectionDelegate> GetExtendedHelp(HelpContext context)
         {
+            string[] validArchitectures = { "arm", "armel", "arm64", "x86", "x64" };
+
+            foreach (Token token in context.ParseResult.Tokens)
+            {
+                if (token.Value == "--instruction-set")
+                {
+                    PrintInstructionSetHelp();
+                    yield break;
+                }
+            }
+
             foreach (HelpSectionDelegate sectionDelegate in HelpBuilder.Default.GetLayout())
                 yield return sectionDelegate;
 
@@ -320,46 +331,18 @@ namespace ILCompiler
                 Console.WriteLine(SR.DashDashHelp);
                 Console.WriteLine();
 
-                string[] ValidArchitectures = new string[] {"arm", "armel", "arm64", "x86", "x64"};
-                string[] ValidOS = new string[] {"windows", "linux", "osx"};
+                string[] validOS = { "windows", "linux", "osx" };
 
-                Console.WriteLine(String.Format(SR.SwitchWithDefaultHelp, "--targetos", String.Join("', '", ValidOS), Helpers.GetTargetOS(null).ToString().ToLowerInvariant()));
+                Console.WriteLine(string.Format(SR.SwitchWithDefaultHelp, "--targetos", string.Join("', '", validOS), Helpers.GetTargetOS(null).ToString().ToLowerInvariant()));
                 Console.WriteLine();
-                Console.WriteLine(String.Format(SR.SwitchWithDefaultHelp, "--targetarch", String.Join("', '", ValidArchitectures), Helpers.GetTargetArchitecture(null).ToString().ToLowerInvariant()));
+                Console.WriteLine(string.Format(SR.SwitchWithDefaultHelp, "--targetarch", string.Join("', '", validArchitectures), Helpers.GetTargetArchitecture(null).ToString().ToLowerInvariant()));
                 Console.WriteLine();
 
-                Console.WriteLine(SR.InstructionSetHelp);
-                foreach (string arch in ValidArchitectures)
-                {
-                    Console.Write(arch);
-                    Console.Write(": ");
-
-                    TargetArchitecture targetArch = Helpers.GetTargetArchitecture(arch);
-                    bool first = true;
-                    foreach (var instructionSet in Internal.JitInterface.InstructionSetFlags.ArchitectureToValidInstructionSets(targetArch))
-                    {
-                        // Only instruction sets with are specifiable should be printed to the help text
-                        if (instructionSet.Specifiable)
-                        {
-                            if (first)
-                            {
-                                first = false;
-                            }
-                            else
-                            {
-                                Console.Write(", ");
-                            }
-                            Console.Write(instructionSet.Name);
-                        }
-                    }
-
-                    Console.WriteLine();
-                }
-
-                Console.WriteLine();
-                Console.WriteLine(SR.CpuFamilies);
-                Console.WriteLine(string.Join(", ", Internal.JitInterface.InstructionSetFlags.AllCpuNames));
+                PrintInstructionSetHelp();
             };
+
+            void PrintInstructionSetHelp() => Helpers.PrintInstructionSetHelp(validArchitectures,
+                SR.InstructionSetHelp, SR.CpuFamilies);
         }
 
 #if DEBUG

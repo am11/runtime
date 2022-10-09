@@ -358,5 +358,40 @@ namespace System.CommandLine
             newTokens = null;
             return false;
         }
+
+        public static void PrintInstructionSetHelp(string[] validArchitectures, string instructionSetHelp, string cpuFamilies)
+        {
+            Console.WriteLine(instructionSetHelp);
+            foreach (string arch in validArchitectures)
+            {
+                Console.Write(arch);
+                Console.Write(": ");
+
+                TargetArchitecture targetArch = Helpers.GetTargetArchitecture(arch);
+                bool first = true;
+                foreach (var instructionSet in Internal.JitInterface.InstructionSetFlags.ArchitectureToValidInstructionSets(targetArch))
+                {
+                    // Only instruction sets with are specifiable should be printed to the help text
+                    if (instructionSet.Specifiable)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            Console.Write(", ");
+                        }
+                        Console.Write(instructionSet.Name);
+                    }
+                }
+
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+            Console.WriteLine(cpuFamilies);
+            Console.WriteLine(string.Join(", ", Internal.JitInterface.InstructionSetFlags.AllCpuNames));
+        }
     }
 }

@@ -226,6 +226,45 @@ namespace System.Formats.Tar.Tests
         }
 
         [ConditionalFact(typeof(MountHelper), nameof(MountHelper.CanCreateSymbolicLinks))]
+        public void WriteSymlinkTargetsInsideTheArchiveRoundtrips()
+        {
+            using TempDirectory root = new TempDirectory();
+
+            string destinationArchive = Path.Join(root.Path, "destination.tar");
+
+            string sourceDirectoryName = Path.Join(root.Path, "baseDirectory");
+            Directory.CreateDirectory(sourceDirectoryName);
+
+            string destinationDirectoryName = Path.Join(root.Path, "destinationDirectory");
+            Directory.CreateDirectory(destinationDirectoryName);
+
+            string fileAtSourceRoot = "file.txt";
+            File.Create(Path.Join(sourceDirectoryName, fileAtSourceRoot)).Dispose();
+
+            string symlinkTargetPath = $"../{fileAtSourceRoot}";
+            string subDirectory = "subDirectory";
+            string sourceSubDirectory = Path.Join(sourceDirectoryName, subDirectory);
+            Directory.CreateDirectory(sourceSubDirectory);
+            Directory.CreateSymbolicLink(Path.Join(sourceSubDirectory, "linkToFile"), symlinkTargetPath);
+
+            TarFile.CreateFromDirectory(sourceDirectoryName, destinationArchive, includeBaseDirectory: false);
+
+            using FileStream archiveStream = File.OpenRead(destinationArchive);
+            TarFile.ExtractToDirectory(archiveStream, destinationDirectoryName, overwriteFiles: true);
+
+            string destinationSubDirectory = Path.Join(destinationDirectoryName, subDirectory);
+            string symlinkPath = Path.Join(destinationSubDirectory, "linkToFile");
+            Assert.True(File.Exists(Path.Join(sourceDirectoryName, "file.txt")));
+            Assert.True(File.Exists(symlinkPath));
+
+            FileInfo? fileInfo = new(symlinkPath);
+            Assert.Equal(symlinkTargetPath, fileInfo.LinkTarget);
+
+            FileSystemInfo? symlinkTarget = File.ResolveLinkTarget(symlinkPath, returnFinalTarget: true);
+            Assert.True(File.Exists(symlinkTarget.FullName));
+        }
+
+        [ConditionalFact(typeof(MountHelper), nameof(MountHelper.CanCreateSymbolicLinks))]
         public void SkipRecursionIntoBaseDirectorySymlink()
         {
             using TempDirectory root = new TempDirectory();

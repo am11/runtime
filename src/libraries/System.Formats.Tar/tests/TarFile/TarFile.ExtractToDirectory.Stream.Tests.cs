@@ -78,11 +78,15 @@ namespace System.Formats.Tar.Tests
         [InlineData(TarEntryType.HardLink)]
         public void Extract_LinkEntry_TargetOutsideDirectory(TarEntryType entryType)
         {
+            using TempDirectory tempDirectory = new();
+            string symlinkName = tempDirectory.GenerateRandomFilePath();
+            File.WriteAllText(symlinkName, new string('x', 100));
+
             using MemoryStream archive = new MemoryStream();
             using (TarWriter writer = new TarWriter(archive, TarEntryFormat.Ustar, leaveOpen: true))
             {
                 UstarTarEntry entry = new UstarTarEntry(entryType, "link");
-                entry.LinkName = PlatformDetection.IsWindows ? @"C:\Windows\System32\notepad.exe" : "/usr/bin/nano";
+                entry.LinkName = symlinkName;
                 writer.WriteEntry(entry);
             }
 
@@ -90,9 +94,46 @@ namespace System.Formats.Tar.Tests
 
             using TempDirectory root = new TempDirectory();
 
-            Assert.Throws<IOException>(() => TarFile.ExtractToDirectory(archive, root.Path, overwriteFiles: false));
+            Exception exception = Record.Exception(() => TarFile.ExtractToDirectory(archive, root.Path, overwriteFiles: true));
+            Assert.Null(exception);
 
-            Assert.Equal(0, Directory.GetFileSystemEntries(root.Path).Count());
+            string symlinkPath = Path.Join(root.Path, "link");
+            Assert.True(File.Exists(symlinkPath));
+
+            if (entryType is TarEntryType.SymbolicLink)
+            {
+                FileInfo? fileInfo = new(symlinkPath);
+                Assert.Equal(symlinkName, fileInfo.LinkTarget);
+            }
+        }
+
+        [Theory]
+        [InlineData("foo")]
+        [InlineData("../../foo")]
+        [InlineData("/usr/tmp/foo")]
+        [InlineData(@"C:\tmp\foo")]
+        public void Extract_SymbolicLinkEntryWithExistingOrNonExistingPaths_TargetOutsideDirectoryPreservesOriginalPaths(string symlinkName)
+        {
+            using MemoryStream archive = new();
+            using (TarWriter writer = new(archive, TarEntryFormat.Ustar, leaveOpen: true))
+            {
+                UstarTarEntry entry = new UstarTarEntry(TarEntryType.SymbolicLink, "link");
+                entry.LinkName = symlinkName;
+                writer.WriteEntry(entry);
+            }
+
+            archive.Seek(0, SeekOrigin.Begin);
+
+            using TempDirectory root = new TempDirectory();
+
+            Exception exception = Record.Exception(() => TarFile.ExtractToDirectory(archive, root.Path, overwriteFiles: true));
+            Assert.Null(exception);
+
+            string symlinkPath = Path.Join(root.Path, "link");
+            Assert.True(File.Exists(symlinkPath));
+
+            FileInfo? fileInfo = new(symlinkPath);
+            Assert.Equal(symlinkName, fileInfo.LinkTarget);
         }
 
         [ConditionalTheory(typeof(MountHelper), nameof(MountHelper.CanCreateSymbolicLinks))]

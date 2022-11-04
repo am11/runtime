@@ -349,16 +349,7 @@ namespace System.Formats.Tar
                     throw new InvalidDataException(SR.TarEntryHardLinkOrSymlinkLinkNameEmpty);
                 }
 
-                linkTargetPath = GetSanitizedFullPath(destinationDirectoryPath,
-                    Path.IsPathFullyQualified(LinkName) ? LinkName : Path.Join(Path.GetDirectoryName(fileDestinationPath), LinkName));
-
-                if (linkTargetPath == null)
-                {
-                    throw new IOException(SR.Format(SR.TarExtractingResultsLinkOutside, LinkName, destinationDirectoryPath));
-                }
-
-                // after TarExtractingResultsLinkOutside validation, preserve the original
-                // symlink target path (to match behavior of other utilities).
+                // preserve the original symlink target path (to match behavior of other utilities).
                 linkTargetPath = LinkName;
             }
 

@@ -353,7 +353,7 @@ is_absolute_path (const char *path)
 }
 
 static gpointer
-lookup_pinvoke_call_impl (MonoMethod *method, MonoLookupPInvokeStatus *status_out);
+lookup_pinvoke_call_impl (MonoMethod *method, MonoLookupPInvokeStatus *status_out, gboolean is_internal);
 
 static gpointer
 pinvoke_probe_for_symbol (MonoDl *module, MonoMethodPInvoke *piinfo, const char *import);
@@ -415,7 +415,7 @@ mono_lookup_pinvoke_call (MonoMethod *method, const char **exc_class, const char
 	MONO_ENTER_GC_UNSAFE;
 	MonoLookupPInvokeStatus status;
 	memset (&status, 0, sizeof (status));
-	result = lookup_pinvoke_call_impl (method, &status);
+	result = lookup_pinvoke_call_impl (method, &status, FALSE);
 	pinvoke_probe_convert_status_for_api (&status, exc_class, exc_arg);
 	MONO_EXIT_GC_UNSAFE;
 	return result;
@@ -427,7 +427,8 @@ mono_lookup_pinvoke_call_internal (MonoMethod *method, MonoError *error)
 	gpointer result;
 	MonoLookupPInvokeStatus status;
 	memset (&status, 0, sizeof (status));
-	result = lookup_pinvoke_call_impl (method, &status);
+
+	result = lookup_pinvoke_call_impl (method, &status, TRUE);
 	if (status.err_code)
 		pinvoke_probe_convert_status_to_error (&status, error);
 	return result;
@@ -600,14 +601,14 @@ netcore_lookup_self_native_handle (void)
 	return internal_module;
 }
 
-static MonoDl* native_handle_lookup_wrapper (gpointer handle)
+static MonoDl* native_handle_lookup_wrapper (gpointer handle, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 
-	if (!internal_module)
+	if (!internal_module && !is_internal)
 		netcore_lookup_self_native_handle ();
 
-	if (internal_module->handle == handle) {
+	if (!is_internal && internal_module->handle == handle) {
 		result = internal_module;
 	}
 	else {
@@ -620,7 +621,7 @@ static MonoDl* native_handle_lookup_wrapper (gpointer handle)
 }
 
 static MonoDl *
-netcore_resolve_with_dll_import_resolver (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, guint32 flags, MonoError *error)
+netcore_resolve_with_dll_import_resolver (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, guint32 flags, MonoError *error, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 	gpointer lib = NULL;
@@ -666,19 +667,19 @@ netcore_resolve_with_dll_import_resolver (MonoAssemblyLoadContext *alc, MonoAsse
 	mono_runtime_invoke_checked (resolve, NULL, args, error);
 	goto_if_nok (error, leave);
 
-	result = native_handle_lookup_wrapper (lib);
+	result = native_handle_lookup_wrapper (lib, is_internal);
 
 leave:
 	HANDLE_FUNCTION_RETURN_VAL (result);
 }
 
 static MonoDl *
-netcore_resolve_with_dll_import_resolver_nofail (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, guint32 flags)
+netcore_resolve_with_dll_import_resolver_nofail (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, guint32 flags, is_internal)
 {
 	MonoDl *result = NULL;
 	ERROR_DECL (error);
 
-	result = netcore_resolve_with_dll_import_resolver (alc, assembly, scope, flags, error);
+	result = netcore_resolve_with_dll_import_resolver (alc, assembly, scope, flags, error, is_internal);
 	if (!is_ok (error))
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Error while invoking ALC DllImportResolver(\"%s\") delegate: '%s'", scope, mono_error_get_message (error));
 
@@ -688,7 +689,7 @@ netcore_resolve_with_dll_import_resolver_nofail (MonoAssemblyLoadContext *alc, M
 }
 
 static MonoDl *
-netcore_resolve_with_load (MonoAssemblyLoadContext *alc, const char *scope, MonoError *error)
+netcore_resolve_with_load (MonoAssemblyLoadContext *alc, const char *scope, MonoError *error, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 	gpointer lib = NULL;
@@ -721,19 +722,19 @@ netcore_resolve_with_load (MonoAssemblyLoadContext *alc, const char *scope, Mono
 	mono_runtime_invoke_checked (resolve, NULL, args, error);
 	goto_if_nok (error, leave);
 
-	result = native_handle_lookup_wrapper (lib);
+	result = native_handle_lookup_wrapper (lib, is_internal);
 
 leave:
 	HANDLE_FUNCTION_RETURN_VAL (result);
 }
 
 static MonoDl *
-netcore_resolve_with_load_nofail (MonoAssemblyLoadContext *alc, const char *scope)
+netcore_resolve_with_load_nofail (MonoAssemblyLoadContext *alc, const char *scope, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 	ERROR_DECL (error);
 
-	result = netcore_resolve_with_load (alc, scope, error);
+	result = netcore_resolve_with_load (alc, scope, error, is_internal);
 	if (!is_ok (error))
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Error while invoking ALC LoadUnmanagedDll(\"%s\") method: '%s'", scope, mono_error_get_message (error));
 
@@ -743,7 +744,7 @@ netcore_resolve_with_load_nofail (MonoAssemblyLoadContext *alc, const char *scop
 }
 
 static MonoDl *
-netcore_resolve_with_resolving_event (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, MonoError *error)
+netcore_resolve_with_resolving_event (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, MonoError *error, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 	gpointer lib = NULL;
@@ -786,19 +787,19 @@ netcore_resolve_with_resolving_event (MonoAssemblyLoadContext *alc, MonoAssembly
 	mono_runtime_invoke_checked (resolve, NULL, args, error);
 	goto_if_nok (error, leave);
 
-	result = native_handle_lookup_wrapper (lib);
+	result = native_handle_lookup_wrapper (lib, is_internal);
 
 leave:
 	HANDLE_FUNCTION_RETURN_VAL (result);
 }
 
 static MonoDl *
-netcore_resolve_with_resolving_event_nofail (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope)
+netcore_resolve_with_resolving_event_nofail (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, const char *scope, gboolean is_internal)
 {
 	MonoDl *result = NULL;
 	ERROR_DECL (error);
 
-	result = netcore_resolve_with_resolving_event (alc, assembly, scope, error);
+	result = netcore_resolve_with_resolving_event (alc, assembly, scope, error, is_internal);
 	if (!is_ok (error))
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Error while invoking ALC ResolvingUnmangedDll(\"%s\") event: '%s'", scope, mono_error_get_message (error));
 
@@ -832,7 +833,7 @@ netcore_check_alc_cache (MonoAssemblyLoadContext *alc, const char *scope)
 }
 
 static MonoDl *
-netcore_lookup_native_library (MonoAssemblyLoadContext *alc, MonoImage *image, const char *scope, guint32 flags)
+netcore_lookup_native_library (MonoAssemblyLoadContext *alc, MonoImage *image, const char *scope, guint32 flags, gboolean is_internal)
 {
 	MonoDl *module = NULL;
 	MonoDl *cached;
@@ -873,13 +874,13 @@ netcore_lookup_native_library (MonoAssemblyLoadContext *alc, MonoImage *image, c
 		goto leave;
 	}
 
-	module = (MonoDl *)netcore_resolve_with_dll_import_resolver_nofail (alc, assembly, scope, flags);
+	module = (MonoDl *)netcore_resolve_with_dll_import_resolver_nofail (alc, assembly, scope, flags, is_internal);
 	if (module) {
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Native library found via DllImportResolver: '%s'.", scope);
 		goto add_to_alc_cache;
 	}
 
-	module = (MonoDl *)netcore_resolve_with_load_nofail (alc, scope);
+	module = (MonoDl *)netcore_resolve_with_load_nofail (alc, scope, is_internal);
 	if (module) {
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Native library found via LoadUnmanagedDll: '%s'.", scope);
 		goto add_to_alc_cache;
@@ -907,7 +908,7 @@ netcore_lookup_native_library (MonoAssemblyLoadContext *alc, MonoImage *image, c
 	 * It is rather convenient here, however, because it means the global cache will only be populated by libraries
 	 * resolved via netcore_probe_for_module and not NativeLibrary, eliminating potential races/conflicts.
 	 */
-	module = netcore_resolve_with_resolving_event_nofail (alc, assembly, scope);
+	module = netcore_resolve_with_resolving_event_nofail (alc, assembly, scope, is_internal);
 	if (module)
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_DLLIMPORT, "Native library found via the Resolving event: '%s'.", scope);
 	goto leave;
@@ -990,7 +991,7 @@ default_resolve_dllimport (const char *dll, const char *func)
 #endif // NO_GLOBALIZATION_SHIM
 
 gpointer
-lookup_pinvoke_call_impl (MonoMethod *method, MonoLookupPInvokeStatus *status_out)
+lookup_pinvoke_call_impl (MonoMethod *method, MonoLookupPInvokeStatus *status_out, gboolean is_internal)
 {
 	MonoImage *image = m_class_get_image (method->klass);
 	MonoAssemblyLoadContext *alc = mono_image_get_alc (image);
@@ -1103,7 +1104,7 @@ retry_with_libcoreclr:
 	}
 	if (flags < 0)
 		flags = DLLIMPORTSEARCHPATH_ASSEMBLY_DIRECTORY;
-	module = netcore_lookup_native_library (alc, image, new_scope, flags);
+	module = netcore_lookup_native_library (alc, image, new_scope, flags, is_internal);
 
 	if (!module) {
 		mono_trace (G_LOG_LEVEL_WARNING, MONO_TRACE_DLLIMPORT,

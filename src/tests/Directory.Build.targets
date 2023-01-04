@@ -510,6 +510,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Crossgen2DependencyCopyLocal
+          Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
+          Include="$(CoreCLRArtifactsPath)crossgen2\$(OutputRid)\publish\**\*"
+          TargetDir="%(RunTimeArtifactsIncludeFolders.Identity)" />
+
       <!-- Add binary dependencies to copy-local items -->
       <RunTimeDependencyCopyLocal
           Condition="'%(RuntimeArtifactsIncludeFolders.IncludeSubFolders)' != 'True'"
@@ -519,7 +524,7 @@
 
       <RunTimeDependencyCopyLocal
           Condition="'%(RuntimeArtifactsIncludeFolders.IncludeSubFolders)' == 'True'"
-          Include="$(CoreCLRArtifactsPath)%(RunTimeArtifactsIncludeFolders.Identity)**/*"
+          Include="$(CoreCLRArtifactsPath)%(RunTimeArtifactsIncludeFolders.Identity)**\*"
           Exclude="@(RunTimeArtifactsExcludeFiles -> '$(CoreCLRArtifactsPath)%(Identity)')"
           TargetDir="%(RunTimeArtifactsIncludeFolders.Identity)" />
 
@@ -572,7 +577,23 @@
 
     <Copy
       SourceFiles="@(RunTimeDependencyCopyLocal)"
-      DestinationFiles="@(RunTimeDependencyCopyLocal -> '$(CORE_ROOT)/%(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
+      DestinationFiles="@(RunTimeDependencyCopyLocal -> '$(CORE_ROOT)\%(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+      Retries="$(CopyRetryCount)"
+      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
+    </Copy>
+
+    <MSBuild Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
+      Targets="Restore;Publish"
+      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
+
+    <Copy
+      Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
+      SourceFiles="@(Crossgen2DependencyCopyLocal)"
+      DestinationFiles="@(Crossgen2DependencyCopyLocal -> '$(CORE_ROOT)\crossgen2\%(RecursiveDir)%(Filename)%(Extension)')"
       SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
       OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
       Retries="$(CopyRetryCount)"

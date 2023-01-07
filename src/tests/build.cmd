@@ -140,6 +140,7 @@ set "__BinDir=%__RootBinDir%\bin\coreclr\%__OSPlatformConfig%"
 set "__TestRootDir=%__RootBinDir%\tests\coreclr"
 set "__TestBinDir=%__TestRootDir%\%__OSPlatformConfig%"
 set "__TestIntermediatesDir=%__TestRootDir%\obj\%__OSPlatformConfig%"
+set "CORE_ROOT=%__TestBinDir%\Tests\Core_Root"
 
 if "%__RebuildTests%" == "1" (
     echo Removing test build dir^: !__TestBinDir!
@@ -304,6 +305,12 @@ REM === All builds complete!
 REM ===
 REM =========================================================================================
 :TestBuildDone
+
+REM copy crossgen2 from temp location to destination.
+REM without going through the temp location, MSBuild
+REM fails to compute globs correctly.
+rmdir /s /q "%CORE_ROOT%\crossgen2" 2>null
+move "%CORE_ROOT%\..\crossgen2" "%CORE_ROOT%\crossgen2" 2>nul
 
 echo %__MsgPrefix%Test build succeeded.  Finished at %TIME%
 echo %__MsgPrefix%Test binaries are available at !__TestBinDir!

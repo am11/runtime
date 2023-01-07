@@ -18,6 +18,8 @@
     <CLRTestPriority Condition="'$(CLRTestPriority)' == ''">0</CLRTestPriority>
     <!-- Merged test runner assemblies might not have any non-generated sources, and that's okay -->
     <NoWarn Condition="'$(IsMergedTestRunnerAssembly)' == 'true'">$(NoWarn);CS2008</NoWarn>
+    <Crossgen2Supported Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'">true</Crossgen2Supported>
+    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true' and '$(Configuration)' != 'checked'">true</UsePublishedCrossgen2>
   </PropertyGroup>
 
   <!-- All CLRTests need to be of a certain "kind". These kinds are enumerated below.
@@ -446,6 +448,24 @@
   <Target Name="CopyDependencyToCoreRoot"
           DependsOnTargets="ResolveAssemblyReferences;ResolveRuntimeFilesFromLocalBuild">
 
+    <!--
+      Publish crossgen2 on supported platforms.
+      Publish to a temp directory to avoid msbuild glob computation problems.
+    -->
+    <MakeDir Directories="$(CORE_ROOT)" />
+
+    <MSBuild Condition="'$(Crossgen2Supported)' == 'true' and '$(UsePublishedCrossgen2)' != 'true'"
+      Targets="Restore;PublishCrossgen"
+      BuildInParallel="true"
+      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2;PublishSelfContained=true;NativeAotSupported=false;PublishSingleFile=false;PublishReadyToRun=false;SkipRunPublishedCrossgen=true"
+      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
+
+    <MSBuild Condition="'$(UsePublishedCrossgen2)' == 'true'"
+      Targets="Restore;Publish"
+      BuildInParallel="true"
+      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"
+      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
+
     <ItemGroup>
       <RunTimeDependencyExclude Include="$(CORE_ROOT)\**\*.*"  />
       <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName)%(Extension)')" />
@@ -487,11 +507,6 @@
       <!-- Used by the Crossgen comparison job -->
       <RunTimeArtifactsIncludeFolders Include="IL/" />
 
-      <!-- Used for Crossgen2 R2R tests -->
-      <RunTimeArtifactsIncludeFolders Include="crossgen2/">
-        <IncludeSubFolders>True</IncludeSubFolders>
-      </RunTimeArtifactsIncludeFolders>
-
       <!-- Used for capturing symbolic stack traces using Watson -->
       <RunTimeArtifactsIncludeFolders Include="PDB/" />
 
@@ -510,11 +525,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Crossgen2DependencyCopyLocal
-          Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-          Include="$(CoreCLRArtifactsPath)crossgen2\$(OutputRid)\publish\**\*"
-          TargetDir="%(RunTimeArtifactsIncludeFolders.Identity)" />
-
       <!-- Add binary dependencies to copy-local items -->
       <RunTimeDependencyCopyLocal
           Condition="'%(RuntimeArtifactsIncludeFolders.IncludeSubFolders)' != 'True'"
@@ -527,8 +537,6 @@
           Include="$(CoreCLRArtifactsPath)%(RunTimeArtifactsIncludeFolders.Identity)**\*"
           Exclude="@(RunTimeArtifactsExcludeFiles -> '$(CoreCLRArtifactsPath)%(Identity)')"
           TargetDir="%(RunTimeArtifactsIncludeFolders.Identity)" />
-
-
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetArchitecture)' == 'wasm'">
@@ -578,22 +586,6 @@
     <Copy
       SourceFiles="@(RunTimeDependencyCopyLocal)"
       DestinationFiles="@(RunTimeDependencyCopyLocal -> '$(CORE_ROOT)\%(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-      Retries="$(CopyRetryCount)"
-      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-
-    <MSBuild Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-      Targets="Restore;Publish"
-      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
-
-    <Copy
-      Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-      SourceFiles="@(Crossgen2DependencyCopyLocal)"
-      DestinationFiles="@(Crossgen2DependencyCopyLocal -> '$(CORE_ROOT)\crossgen2\%(RecursiveDir)%(Filename)%(Extension)')"
       SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
       OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
       Retries="$(CopyRetryCount)"

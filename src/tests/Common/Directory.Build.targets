@@ -18,6 +18,8 @@
     <CopyCoreDisToolsToCoreRoot Condition="$(GCStressDependsOnCoreDisTools) And '$(DotNetBuildFromSource)' != 'true'">true</CopyCoreDisToolsToCoreRoot>
     <!-- Non-desktop OS's use a custom dotnet host, instead of corerun -->
     <IsDesktopOS Condition="'$(TargetsBrowser)' != 'true' and '$(TargetsAndroid)' != 'true' and '$(TargetstvOS)' != 'true' and '$(TargetsiOS)' != 'true' and '$(TargetsMacCatalyst)' != 'true'">true</IsDesktopOS>
+    <Crossgen2Supported Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'">true</Crossgen2Supported>
+    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true' and '$(Configuration)' != 'checked'">true</UsePublishedCrossgen2>
   </PropertyGroup>
 
   <Import Project="$(RepositoryEngineeringDir)coredistools.targets" Condition="$(CopyCoreDisToolsToCoreRoot)" />
@@ -29,6 +31,24 @@
 
   <Target Name="CopyDependencyToCoreRoot"
           DependsOnTargets="ResolveAssemblyReferences;ResolveRuntimeFilesFromLocalBuild">
+
+    <!--
+      Publish crossgen2 on supported platforms.
+      Publish to a temp directory to avoid msbuild glob computation problems.
+    -->
+    <MakeDir Directories="$(CORE_ROOT)" />
+
+    <MSBuild Condition="'$(Crossgen2Supported)' == 'true' and '$(UsePublishedCrossgen2)' != 'true'"
+      Targets="Restore;Publish"
+      BuildInParallel="true"
+      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2;PublishSelfContained=true;NativeAotSupported=false;PublishSingleFile=false;PublishReadyToRun=false;SkipRunPublishedCrossgen=true"
+      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
+
+    <MSBuild Condition="'$(UsePublishedCrossgen2)' == 'true'"
+      Targets="Restore;Publish"
+      BuildInParallel="true"
+      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"
+      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
 
     <ItemGroup>
       <RunTimeDependencyExclude Include="$(CORE_ROOT)\**\*.*" />
@@ -92,11 +112,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Crossgen2DependencyCopyLocal
-          Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-          Include="$(CoreCLRArtifactsPath)crossgen2\$(OutputRid)\publish\**\*"
-          TargetDir="%(RunTimeArtifactsIncludeFolders.Identity)" />
-
       <!-- Add binary dependencies to copy-local items -->
       <RunTimeDependencyCopyLocal
           Condition="'%(RuntimeArtifactsIncludeFolders.IncludeSubFolders)' != 'True'"
@@ -122,7 +137,7 @@
             $(Crossgen2Dir)/clrjit_*;
             $(Crossgen2Dir)/jitinterface_*;
             $(Crossgen2Dir)/Microsoft.DiaSymReader.Native.*.dll"
-          TargetDir="crossgen2/" />
+          TargetDir="../crossgen2/" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetArchitecture)' == 'wasm'">
@@ -185,23 +200,7 @@
 
     <Copy
       SourceFiles="@(RunTimeDependencyCopyLocal)"
-      DestinationFiles="@(RunTimeDependencyCopyLocal -> '$(CORE_ROOT)/%(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-      Retries="$(CopyRetryCount)"
-      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-
-    <MSBuild Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-      Targets="Restore;Publish"
-      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
-
-    <Copy
-      Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'"
-      SourceFiles="@(Crossgen2DependencyCopyLocal)"
-      DestinationFiles="@(Crossgen2DependencyCopyLocal -> '$(CORE_ROOT)\crossgen2\%(RecursiveDir)%(Filename)%(Extension)')"
+      DestinationFiles="@(RunTimeDependencyCopyLocal -> '$(CORE_ROOT)\%(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
       SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
       OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
       Retries="$(CopyRetryCount)"

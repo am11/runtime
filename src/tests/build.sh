@@ -339,7 +339,6 @@ __Mono=0
 __MonoAot=0
 __MonoFullAot=0
 __BuildLogRootName="TestBuild"
-CORE_ROOT=
 
 source $__RepoRootDir/src/coreclr/_build-commons.sh
 
@@ -387,6 +386,7 @@ __IntermediatesDir="$__RootBinDir/obj/coreclr/$__OSPlatformConfig"
 __TestIntermediatesDir="$__RootBinDir/tests/coreclr/obj/$__OSPlatformConfig"
 __CrossCompIntermediatesDir="$__IntermediatesDir/crossgen"
 __MonoBinDir="$__RootBinDir/bin/mono/$__OSPlatformConfig"
+CORE_ROOT="$__TestBinDir/Tests/Core_Root"
 
 # CI_SPECIFIC - On CI machines, $HOME may not be set. In such a case, create a subfolder and set the variable to it.
 # This is needed by CLI to function.
@@ -416,6 +416,12 @@ fi
 
 echo "${__MsgPrefix}Test build successful."
 echo "${__MsgPrefix}Test binaries are available at ${__TestBinDir}"
+
+# copy crossgen2 from temp location to destination.
+# without going through the temp location, MSBuild
+# fails to compute globs correctly.
+rm -rf "$CORE_ROOT/crossgen2"
+mv "$CORE_ROOT/../crossgen2" "$CORE_ROOT/crossgen2" 2>/dev/null || true
 
 if [[ "$__RunTests" -ne 0 ]]; then
 

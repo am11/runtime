@@ -1,6 +1,7 @@
 /* libunwind - a platform-independent unwind library
    Copyright (C) 2001-2004 Hewlett-Packard Co
 	Contributed by David Mosberger-Tang <davidm@hpl.hp.com>
+   Copyright 2022 Blackberry Limited.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -37,6 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
 #include <ucontext.h>
 #include <unistd.h>
 #include <libunwind.h>
@@ -48,6 +50,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 
 int verbose;
 int num_errors;
+sigjmp_buf env;
 
 /* These variables are global because they
  * cause the signal stack to overflow */
@@ -165,6 +168,16 @@ bar (long v)
 }
 
 void
+segv_handler (int signal, void *siginfo UNUSED, void *context)
+{
+  if (verbose)
+    fprintf (stderr, "segv_handler: got signal %d\n", signal);
+
+  do_backtrace ();
+  siglongjmp (env, 42);
+}
+
+void
 sighandler (int signal, void *siginfo UNUSED, void *context)
 {
   ucontext_t *uc UNUSED;
@@ -189,17 +202,21 @@ sighandler (int signal, void *siginfo UNUSED, void *context)
       }
 # endif
 #elif UNW_TARGET_X86
-#if defined __linux__ || defined __sun
+# if defined __linux__ || defined __sun
       printf (" @ %lx", (unsigned long) uc->uc_mcontext.gregs[REG_EIP]);
-#elif defined __FreeBSD__
+# elif defined __FreeBSD__
       printf (" @ %lx", (unsigned long) uc->uc_mcontext.mc_eip);
-#endif
+# endif
 #elif UNW_TARGET_X86_64
-#if defined __linux__ || defined __sun
+# if defined __linux__ || defined __sun
       printf (" @ %lx", (unsigned long) uc->uc_mcontext.gregs[REG_RIP]);
-#elif defined __FreeBSD__
+# elif defined __FreeBSD__
       printf (" @ %lx", (unsigned long) uc->uc_mcontext.mc_rip);
-#endif
+# endif
+#elif UNW_TARGET_AARCH64
+# if defined(__QNXNTO__)
+      fprintf (stderr, " @ %#010lx", (unsigned long) uc->uc_mcontext.cpu.elr);
+# endif /* defined(__QNXNTO__) */
 #endif
       printf ("\n");
     }
@@ -210,7 +227,9 @@ int
 main (int argc, char **argv UNUSED)
 {
   struct sigaction act;
+#ifdef HAVE_SIGALTSTACK
   stack_t stk;
+#endif /* HAVE_SIGALTSTACK */
 
   verbose = (argc > 1);
 
@@ -230,6 +249,21 @@ main (int argc, char **argv UNUSED)
   kill (getpid (), SIGTERM);
 
   if (verbose)
+    printf ("\nBacktrace across SIGSEGV handler:\n");
+
+  act.sa_handler = (void (*)(int)) segv_handler;
+  if (sigaction (SIGSEGV, &act, NULL) < 0)
+    panic ("sigaction: %s\n", strerror (errno));
+
+  if (sigsetjmp (env, 1) == 0)
+  {
+    /* Make a bad function pointer and call it.  */
+    void (*bad_fn)(void) = (void (*)(void)) 0x123;
+    bad_fn ();
+  }
+
+#ifdef HAVE_SIGALTSTACK
+  if (verbose)
     printf ("\nBacktrace across signal handler on alternate stack:\n");
   stk.ss_sp = malloc (SIG_STACK_SIZE);
   if (!stk.ss_sp)
@@ -245,6 +279,7 @@ main (int argc, char **argv UNUSED)
   if (sigaction (SIGTERM, &act, NULL) < 0)
     panic ("sigaction: %s\n", strerror (errno));
   kill (getpid (), SIGTERM);
+#endif /* HAVE_SIGALTSTACK */
 
   if (num_errors > 0)
     {
@@ -255,9 +290,11 @@ main (int argc, char **argv UNUSED)
     printf ("SUCCESS.\n");
 
   signal (SIGTERM, SIG_DFL);
+#ifdef HAVE_SIGALTSTACK
   stk.ss_flags = SS_DISABLE;
   sigaltstack (&stk, NULL);
   free (stk.ss_sp);
+#endif /* HAVE_SIGALTSTACK */
 
   return 0;
 }

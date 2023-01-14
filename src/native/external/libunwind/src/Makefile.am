@@ -61,6 +61,7 @@ libunwind_coredump_la_SOURCES = \
 	coredump/_UCD_find_proc_info.c \
 	coredump/_UCD_get_proc_name.c \
 	coredump/_UCD_corefile_elf.c \
+	coredump/ucd_file_table.c \
 	\
 	coredump/_UPT_elf.c \
 	coredump/_UPT_access_fpreg.c \
@@ -70,7 +71,9 @@ libunwind_coredump_la_SOURCES = \
 libunwind_coredump_la_LDFLAGS = $(COMMON_SO_LDFLAGS) \
 				-version-info $(COREDUMP_SO_VERSION)
 libunwind_coredump_la_LIBADD = $(LIBLZMA) $(LIBZ)
-noinst_HEADERS += coredump/_UCD_internal.h coredump/_UCD_lib.h
+noinst_HEADERS += coredump/_UCD_internal.h \
+                  coredump/_UCD_lib.h \
+                  coredump/ucd_file_table.h
 
 ### libunwind-setjmp:
 libunwind_setjmp_la_LDFLAGS		= $(COMMON_SO_LDFLAGS)		     \

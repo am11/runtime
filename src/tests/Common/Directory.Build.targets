@@ -19,7 +19,7 @@
     <!-- Non-desktop OS's use a custom dotnet host, instead of corerun -->
     <IsDesktopOS Condition="'$(TargetsBrowser)' != 'true' and '$(TargetsAndroid)' != 'true' and '$(TargetstvOS)' != 'true' and '$(TargetsiOS)' != 'true' and '$(TargetsMacCatalyst)' != 'true'">true</IsDesktopOS>
     <Crossgen2Supported Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'">true</Crossgen2Supported>
-    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true' and '$(Configuration)' != 'checked'">true</UsePublishedCrossgen2>
+    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true'">true</UsePublishedCrossgen2>
   </PropertyGroup>
 
   <Import Project="$(RepositoryEngineeringDir)coredistools.targets" Condition="$(CopyCoreDisToolsToCoreRoot)" />

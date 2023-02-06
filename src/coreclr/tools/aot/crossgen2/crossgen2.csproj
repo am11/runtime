@@ -44,7 +44,7 @@
           Condition="'$(NativeAotSupported)' == 'true' and '$(_IsPublishing)' == 'true'" />
 
   <!-- Some asserts in CoreLib are not compatible with metadata blocking -->
-  <ItemGroup  Condition="'$(Configuration)' != 'Release'">
+  <ItemGroup>
     <IlcArg Include="--nometadatablocking" />
   </ItemGroup>
 

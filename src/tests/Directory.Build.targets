@@ -19,7 +19,6 @@
     <!-- Merged test runner assemblies might not have any non-generated sources, and that's okay -->
     <NoWarn Condition="'$(IsMergedTestRunnerAssembly)' == 'true'">$(NoWarn);CS2008</NoWarn>
     <Crossgen2Supported Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'">true</Crossgen2Supported>
-    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true'">true</UsePublishedCrossgen2>
   </PropertyGroup>
 
   <!-- All CLRTests need to be of a certain "kind". These kinds are enumerated below.
@@ -459,13 +458,7 @@
     -->
     <MakeDir Directories="$(CORE_ROOT)" />
 
-    <MSBuild Condition="'$(Crossgen2Supported)' == 'true' and '$(UsePublishedCrossgen2)' != 'true'"
-      Targets="Restore;PublishCrossgen"
-      BuildInParallel="true"
-      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2;PublishSelfContained=true;NativeAotSupported=false;PublishSingleFile=false;PublishReadyToRun=false;SkipRunPublishedCrossgen=true"
-      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
-
-    <MSBuild Condition="'$(UsePublishedCrossgen2)' == 'true'"
+    <MSBuild Condition="'$(Crossgen2Supported)' == 'true'"
       Targets="Restore;Publish"
       BuildInParallel="true"
       Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"

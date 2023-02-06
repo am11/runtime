@@ -19,7 +19,6 @@
     <!-- Non-desktop OS's use a custom dotnet host, instead of corerun -->
     <IsDesktopOS Condition="'$(TargetsBrowser)' != 'true' and '$(TargetsAndroid)' != 'true' and '$(TargetstvOS)' != 'true' and '$(TargetsiOS)' != 'true' and '$(TargetsMacCatalyst)' != 'true'">true</IsDesktopOS>
     <Crossgen2Supported Condition="'$(RuntimeFlavor)' == 'coreclr' and '$(TestBuildMode)' != 'nativeaot'">true</Crossgen2Supported>
-    <UsePublishedCrossgen2 Condition="'$(Crossgen2Supported)' == 'true'">true</UsePublishedCrossgen2>
   </PropertyGroup>
 
   <Import Project="$(RepositoryEngineeringDir)coredistools.targets" Condition="$(CopyCoreDisToolsToCoreRoot)" />
@@ -38,13 +37,7 @@
     -->
     <MakeDir Directories="$(CORE_ROOT)" />
 
-    <MSBuild Condition="'$(Crossgen2Supported)' == 'true' and '$(UsePublishedCrossgen2)' != 'true'"
-      Targets="Restore;Publish"
-      BuildInParallel="true"
-      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2;PublishSelfContained=true;NativeAotSupported=false;PublishSingleFile=false;PublishReadyToRun=false;SkipRunPublishedCrossgen=true"
-      Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
-
-    <MSBuild Condition="'$(UsePublishedCrossgen2)' == 'true'"
+    <MSBuild Condition="'$(Crossgen2Supported)' == 'true'"
       Targets="Restore;Publish"
       BuildInParallel="true"
       Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"

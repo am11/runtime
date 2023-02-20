@@ -1332,11 +1332,6 @@ GenTree* Compiler::impNormStructVal(GenTree* structVal, CORINFO_CLASS_HANDLE str
 
         case GT_LCL_VAR:
         case GT_LCL_FLD:
-            structLcl = structVal->AsLclVarCommon();
-            // Wrap it in a GT_OBJ.
-            structVal = gtNewObjNode(structHnd, gtNewOperNode(GT_ADDR, TYP_BYREF, structVal));
-            FALLTHROUGH;
-
         case GT_IND:
         case GT_OBJ:
         case GT_BLK:
@@ -1414,12 +1409,6 @@ GenTree* Compiler::impNormStructVal(GenTree* structVal, CORINFO_CLASS_HANDLE str
 
         structLcl = gtNewLclvNode(tmpNum, structType)->AsLclVarCommon();
         structVal = structLcl;
-
-        if (structType == TYP_STRUCT)
-        {
-            // Wrap it in a GT_OBJ
-            structVal = gtNewObjNode(structHnd, gtNewOperNode(GT_ADDR, TYP_BYREF, structVal));
-        }
     }
 
     if (structLcl != nullptr)
@@ -5709,7 +5698,6 @@ GenTree* Compiler::impOptimizeCastClassOrIsInst(GenTree* op1, CORINFO_RESOLVED_T
             if (isExact && !isCastClass)
             {
                 JITDUMP("Cast will fail, optimizing to return null\n");
-                GenTree* result = gtNewIconNode(0, TYP_REF);
 
                 // If the cast was fed by a box, we can remove that too.
                 if (op1->IsBoxedValue())
@@ -5718,7 +5706,11 @@ GenTree* Compiler::impOptimizeCastClassOrIsInst(GenTree* op1, CORINFO_RESOLVED_T
                     gtTryRemoveBoxUpstreamEffects(op1);
                 }
 
-                return result;
+                if (gtTreeHasSideEffects(op1, GTF_SIDE_EFFECT))
+                {
+                    impAppendTree(op1, CHECK_SPILL_ALL, impCurStmtDI);
+                }
+                return gtNewNull();
             }
             else if (isExact)
             {
@@ -6369,7 +6361,8 @@ void Compiler::impImportBlockCode(BasicBlock* block)
             //
             for (BasicBlock* const succ : block->Succs())
             {
-                fgRemoveRefPred(succ, block);
+                // We may have degenerate flow, make sure to fully remove
+                fgRemoveAllRefPreds(succ, block);
             }
 
             // Change block to BBJ_THROW so we won't trigger importation of successors.
@@ -11019,15 +11012,18 @@ GenTree* Compiler::impAssignMultiRegTypeToVar(GenTree*             op,
 {
     unsigned tmpNum = lvaGrabTemp(true DEBUGARG("Return value temp for multireg return"));
     impAssignTempGen(tmpNum, op, hClass, CHECK_SPILL_ALL);
-    GenTree* ret = gtNewLclvNode(tmpNum, lvaTable[tmpNum].lvType);
 
-    // TODO-1stClassStructs: Handle constant propagation and CSE-ing of multireg returns.
-    ret->gtFlags |= GTF_DONT_CSE;
-
-    assert(IsMultiRegReturnedType(hClass, callConv) || op->IsMultiRegNode());
+    LclVarDsc* varDsc = lvaGetDesc(tmpNum);
 
     // Set "lvIsMultiRegRet" to block promotion under "!lvaEnregMultiRegVars".
-    lvaTable[tmpNum].lvIsMultiRegRet = true;
+    varDsc->lvIsMultiRegRet = true;
+
+    GenTreeLclVar* ret = gtNewLclvNode(tmpNum, varDsc->lvType);
+
+    // TODO-1stClassStructs: Handle constant propagation and CSE-ing of multireg returns.
+    ret->SetDoNotCSE();
+
+    assert(IsMultiRegReturnedType(hClass, callConv) || op->IsMultiRegNode());
 
     return ret;
 }

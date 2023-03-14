@@ -461,11 +461,11 @@
     <MSBuild Condition="'$(Crossgen2Supported)' == 'true'"
       Targets="Restore;Publish"
       BuildInParallel="true"
-      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"
+      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2;DisableSourceLink=true"
       Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
 
     <ItemGroup>
-      <RunTimeDependencyExclude Include="$(CORE_ROOT)\**\*.*"  />
+      <RunTimeDependencyExclude Include="$(CORE_ROOT)\**\*.*" />
       <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName)%(Extension)')" />
       <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName).ni%(Extension)')" />
       <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName).pdb')" />

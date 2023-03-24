@@ -263,6 +263,7 @@
       <_MonoCMakeArgs Include="-DCMAKE_INSTALL_PREFIX=&quot;$(MonoObjDir.Replace('\','/'))out&quot;"/>
       <_MonoCMakeArgs Include="-DCMAKE_INSTALL_LIBDIR=lib"/>
       <_MonoCMakeArgs Include="-DCMAKE_BUILD_TYPE=$(Configuration)"/>
+      <_MonoCMakeArgs Include="-DCLR_CMAKE_KEEP_NATIVE_SYMBOLS=true" Condition="'$(KeepNativeSymbols)' != 'true' or '$(BuildMonoAOTCrossCompilerOnly)' == 'true'" />
       <_MonoCMakeArgs Condition="'$(CMakeArgs)' != ''" Include="$(CMakeArgs)"/>
       <_MonoCMakeArgs Condition="'$(MonoEnableLLVM)' == 'true'" Include="-DLLVM_PREFIX=$(MonoLLVMDir)\$(_MonoLLVMTargetArchitecture)" />
       <_MonoCMakeArgs Condition="'$(BuildDarwinFrameworks)' == 'true'" Include="-DBUILD_DARWIN_FRAMEWORKS=1" />
@@ -633,55 +634,6 @@
     <!-- build -->
     <Message Condition="'$(BuildMonoAOTCrossCompilerOnly)' != 'true'" Text="Running '$(_MonoCMakeBuildCommand)' in '$(MonoObjDir)'" Importance="High"/>
     <Exec Condition="'$(BuildMonoAOTCrossCompilerOnly)' != 'true'" Command="$(_MonoCMakeBuildCommand)" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
-
-    <!-- strip -->
-    <PropertyGroup>
-      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x86_64</MonoToolchainPrebuiltOS>
-      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin-x86_64</MonoToolchainPrebuiltOS>
-      <MonoToolchainPrebuiltOS Condition="'$(HostOS)' == 'windows'">windows-x86_64</MonoToolchainPrebuiltOS>
-      <_MonoRuntimeFilePath>$(MonoObjDir)out\lib\$(MonoFileName)</_MonoRuntimeFilePath>
-      <_LinuxAbi Condition="'$(TargetsAndroid)' != 'true' and '$(TargetsLinuxBionic)' != 'true' and '$(TargetsLinuxMusl)' != 'true'">linux-gnu</_LinuxAbi>
-      <_LinuxAbi Condition="'$(TargetsAndroid)' != 'true' and '$(TargetsLinuxBionic)' != 'true' and '$(TargetsLinuxMusl)' == 'true'">alpine-linux-musl</_LinuxAbi>
-      <_LinuxAbi Condition="'$(TargetsAndroid)' == 'true' or '$(TargetsLinuxBionic)' == 'true'">linux-android</_LinuxAbi>
-      <_LinuxFloatAbi Condition="'$(TargetsAndroid)' != 'true' and '$(TargetsLinuxBionic)' != 'true'">hf</_LinuxFloatAbi>
-      <_Objcopy>objcopy</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'arm'">arm-$(_LinuxAbi)eabi$(_LinuxFloatAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'armv6'">arm-$(_LinuxAbi)eabi$(_LinuxFloatAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'arm64'">aarch64-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'riscv64'">riscv64-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 's390x'">s390x-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'ppc64le'">powerpc64le-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'x64'">x86_64-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(Platform)' == 'x86'">i686-$(_LinuxAbi)-$(_Objcopy)</_Objcopy>
-      <_Objcopy Condition="'$(TargetsAndroid)' == 'true' or '$(TargetsLinuxBionic)' == 'true'">$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(MonoToolchainPrebuiltOS)/bin/llvm-objcopy</_Objcopy>
-      <_Objcopy Condition="'$(TargetsLinuxMusl)' == 'true' and '$(CrossBuild)' != 'true'">objcopy</_Objcopy>
-
-      <_ObjcopyPrefix Condition="'$(MonoCrossDir)' != '' and '$(Platform)' == 'riscv64'">llvm-objcopy-</_ObjcopyPrefix>
-    </PropertyGroup>
-    <!-- test viability of objcopy command -->
-    <Exec Condition="'$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsLinux)' == 'true' or '$(TargetsAndroid)' == 'true' or '$(TargetsLinuxBionic)' == 'true')" Command="$(_Objcopy) -V" IgnoreStandardErrorWarningFormat="true" ContinueOnError="WarnAndContinue" IgnoreExitCode="true" EchoOff="true" ConsoleToMsBuild="true">
-      <Output TaskParameter="ExitCode" PropertyName="_ObjcopyFound"/>
-    </Exec>
-    <Exec Condition="'$(_ObjcopyPrefix)' != ''" Command="find /usr/bin -name $(_ObjcopyPrefix)* | sort -V | tail -1" IgnoreStandardErrorWarningFormat="true" ContinueOnError="WarnAndContinue" IgnoreExitCode="true" EchoOff="true" ConsoleToMsBuild="true">
-      <Output TaskParameter="ExitCode" PropertyName="_ObjcopyFound"/>
-      <Output TaskParameter="ConsoleOutput" PropertyName="_Objcopy"/>
-    </Exec>
-
-    <PropertyGroup>
-      <!-- if all else fails in finding a valid objcopy, fall back to no-prefix from $PATH (used for x64 on CentOS) -->
-      <_Objcopy Condition="'$(_ObjcopyFound)' != '0'">objcopy</_Objcopy>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(KeepNativeSymbols)' != 'true'" >
-      <FilesToStrip Include="$(_MonoRuntimeFilePath)" />
-      <FilesToStrip Include="$([System.IO.Directory]::GetParent($(_MonoRuntimeFilePath)))\libmono-component-*$(LibSuffix)" />
-      <FilesToStrip Include="$([System.IO.Directory]::GetParent($(_MonoRuntimeFilePath)))\Mono*framework\**\Mono*" Exclude="$([System.IO.Directory]::GetParent($(_MonoRuntimeFilePath)))\Mono*framework\**\*.dwarf" />
-    </ItemGroup>
-    <Message Condition="'@(FilesToStrip)' != '' and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ($([MSBuild]::IsOSPlatform('OSX')) or $([MSBuild]::IsOSPlatform('Linux')))" Text="Stripping debug symbols from %(FilesToStrip.Identity)" Importance="High"/>
-    <Exec Condition="'@(FilesToStrip)' != '' and !$([System.String]::Copy(%(FilesToStrip.Identity)).EndsWith('.a')) and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsOSX)' == 'true' or '$(TargetsMacCatalyst)' == 'true' or '$(TargetsiOS)' == 'true' or '$(TargetstvOS)' == 'true')" Command="dsymutil --flat --minimize %(FilesToStrip.Identity)" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
-    <Exec Condition="'@(FilesToStrip)' != '' and !$([System.String]::Copy(%(FilesToStrip.Identity)).EndsWith('.a')) and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsOSX)' == 'true' or '$(TargetsMacCatalyst)' == 'true' or '$(TargetsiOS)' == 'true' or '$(TargetstvOS)' == 'true') and '$(Configuration)' == 'Release'" Command="strip -no_code_signature_warning -S %(FilesToStrip.Identity)" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
-    <Exec Condition="'@(FilesToStrip)' != '' and !$([System.String]::Copy(%(FilesToStrip.Identity)).EndsWith('.a')) and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsLinux)' == 'true' or '$(TargetsAndroid)' == 'true')" Command="$(_Objcopy) --only-keep-debug %(FilesToStrip.Identity) %(FilesToStrip.Identity).dbg" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
-    <Exec Condition="'@(FilesToStrip)' != '' and !$([System.String]::Copy(%(FilesToStrip.Identity)).EndsWith('.a')) and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsLinux)' == 'true' or '$(TargetsAndroid)' == 'true')" Command="$(_Objcopy) --strip-unneeded %(FilesToStrip.Identity)" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
-    <Exec Condition="'@(FilesToStrip)' != '' and !$([System.String]::Copy(%(FilesToStrip.Identity)).EndsWith('.a')) and '$(BuildMonoAOTCrossCompilerOnly)' != 'true' and ('$(TargetsLinux)' == 'true' or '$(TargetsAndroid)' == 'true')" Command="$(_Objcopy) --add-gnu-debuglink=%(FilesToStrip.Identity).dbg %(FilesToStrip.Identity)" IgnoreStandardErrorWarningFormat="true" WorkingDirectory="$(MonoObjDir)"/>
   </Target>
 
   <!-- Build AOT cross compiler (if available) -->

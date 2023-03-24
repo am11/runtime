@@ -287,7 +287,11 @@ elseif(CLR_CMAKE_HOST_UNIX_MIPS64)
     set(CLR_CMAKE_HOST_ARCH_MIPS64 1)
     set(CLR_CMAKE_HOST_ARCH "mips64")
 elseif(WIN32)
-    # CLR_CMAKE_HOST_ARCH is passed in as param to cmake
+    # CLR_CMAKE_HOST_ARCH is passed in as param to cmake, default to system host arch
+    if (NOT CLR_CMAKE_HOST_ARCH)
+        set(CLR_CMAKE_HOST_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+    endif()
+
     if (CLR_CMAKE_HOST_ARCH STREQUAL x64)
         set(CLR_CMAKE_HOST_ARCH_AMD64 1)
     elseif(CLR_CMAKE_HOST_ARCH STREQUAL x86)

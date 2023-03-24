@@ -55,7 +55,7 @@ function(create_standalone_jit)
     set(JIT_ARCH_SOURCES ${JIT_LOONGARCH64_SOURCES})
     set(JIT_ARCH_HEADERS ${JIT_LOONGARCH64_HEADERS})
   else()
-    clr_unknown_arch()
+    clr_unknown_arch("${TARGETDETAILS_ARCH}")
   endif()
 
   if (TARGETDETAILS_DESTINATIONS STREQUAL "")
@@ -466,7 +466,7 @@ elseif(CLR_CMAKE_TARGET_ARCH_LOONGARCH64)
   set(JIT_ARCH_HEADERS ${JIT_LOONGARCH64_HEADERS})
 elseif(CLR_CMAKE_TARGET_ARCH_RISCV64)
 else()
-  clr_unknown_arch()
+  clr_unknown_arch("${TARGETDETAILS_ARCH}")
 endif()
 
 

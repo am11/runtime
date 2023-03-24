@@ -664,6 +664,12 @@
       <MonoAotAbi Condition="'$(Platform)' == 'x64'">x86_64-apple-maccatalyst</MonoAotAbi>
     </PropertyGroup>
 
+    <PropertyGroup>
+      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x86_64</MonoToolchainPrebuiltOS>
+      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin-x86_64</MonoToolchainPrebuiltOS>
+      <MonoToolchainPrebuiltOS Condition="'$(HostOS)' == 'windows'">windows-x86_64</MonoToolchainPrebuiltOS>
+    </PropertyGroup>
+
     <!-- Linux specific options -->
     <ItemGroup Condition="'$(RealTargetOS)' == 'linux' or $([MSBuild]::IsOSPlatform('Linux'))">
       <_LibClang Include="$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(MonoToolchainPrebuiltOS)/lib64/libclang.so.*"/>
@@ -736,9 +742,6 @@
     <!-- Android specific options -->
     <PropertyGroup Condition="'$(TargetsAndroid)' == 'true' or '$(TargetsLinuxBionic)' == 'true'">
       <_MonoSkipInitCompiler>true</_MonoSkipInitCompiler>
-      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x86_64</MonoToolchainPrebuiltOS>
-      <MonoToolchainPrebuiltOS Condition="$([MSBuild]::IsOSPlatform('OSX'))">darwin-x86_64</MonoToolchainPrebuiltOS>
-      <MonoToolchainPrebuiltOS Condition="'$(HostOS)' == 'windows'">windows-x86_64</MonoToolchainPrebuiltOS>
 
       <MonoUseCrossTool>true</MonoUseCrossTool>
       <MonoAotCMakeSysroot Condition="Exists('$(ANDROID_NDK_ROOT)/sysroot')">$(ANDROID_NDK_ROOT)/sysroot</MonoAotCMakeSysroot>

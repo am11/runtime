@@ -9,9 +9,14 @@ set(PRERELEASE 1)
 #     - for non-windows build platform & architecture is detected using inbuilt CMAKE variables and cross target component configure
 #     - for windows we use the passed in parameter to CMAKE to determine build arch
 #----------------------------------------
+
 set(CLR_CMAKE_HOST_OS ${CMAKE_SYSTEM_NAME})
 string(TOLOWER ${CLR_CMAKE_HOST_OS} CLR_CMAKE_HOST_OS)
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" LOWERCASE_CMAKE_SYSTEM_PROCESSOR)
+if (LOWERCASE_CMAKE_SYSTEM_PROCESSOR STREQUAL amd64)
+    set(LOWERCASE_CMAKE_SYSTEM_PROCESSOR x64)
+endif()
+
 if(CLR_CMAKE_HOST_OS STREQUAL linux)
     set(CLR_CMAKE_HOST_UNIX 1)
     if(CLR_CROSS_COMPONENTS_BUILD)

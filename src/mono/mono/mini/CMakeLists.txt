@@ -566,7 +566,4 @@ if(NOT DISABLE_EXECUTABLES)
   endif()
 
   install_with_stripped_symbols(mono-sgen TARGETS bin)
-  if(HOST_WIN32)
-    install_with_stripped_symbols($<TARGET_PDB_FILE:mono-sgen> FILES bin OPTIONAL)
-  endif()
 endif()

@@ -1,11 +1,5 @@
 function(clr_unknown_arch actual)
-    if (WIN32)
-        message(FATAL_ERROR "Only AMD64, ARM64, ARM and I386 are supported. Found: ${actual}")
-    elseif(CLR_CROSS_COMPONENTS_BUILD)
-        message(FATAL_ERROR "Only AMD64, I386 host are supported for linux cross-architecture component. Found: ${actual}")
-    else()
-        message(FATAL_ERROR "'${actual}' is an unsupported architecture.")
-    endif()
+    message(FATAL_ERROR "Architecture '${actual}' is unsupported on this platform.")
 endfunction()
 
 # C to MASM include file translator

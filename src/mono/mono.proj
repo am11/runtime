@@ -582,6 +582,7 @@
     </ItemGroup>
     <ItemGroup>
       <_MonoCMakeArgs Include="-DMONO_COMPONENTS_RID=$(TargetOS)-$(TargetArchitecture)" />
+      <_MonoCMakeArgs Include="-DCLR_CMAKE_HOST_ARCH=$(_CompilerTargetArch)" />
     </ItemGroup>
 
     <PropertyGroup>

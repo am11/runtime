@@ -11,6 +11,7 @@
 #include <iterator>
 #include <cassert>
 #include <functional>
+#include <minipal/utils.h>
 
 const std::array<const pal::char_t*, deps_entry_t::asset_types::count> deps_entry_t::s_known_asset_types = {{
     _X("runtime"), _X("resources"), _X("native")
@@ -180,27 +181,47 @@ void deps_json_t::reconcile_libraries_with_targets(
     }
 }
 
+#define STR(x) #x
+#define AS_STR(x) STR(x)
+
+#define ARCH_SUFFIX "-" AS_STR(ARCH)
+#define RID_STR(OS,ARCH) _X(OS) ARCH_SUFFIX
+
+#if defined(TARGET_WINDOWS)
+#define OS1 "win"
+#elif defined(TARGET_OSX)
+#define OS1 "osx"
+#define OS2 "unix"
+#elif defined(TARGET_LINUX_MUSL)
+#define OS1 "linux-musl"
+#define OS2 "linux"
+#define OS3 "unix"
+#elif defined(TARGET_ANDROID)
+#define OS1 "linux-bionic"
+#define OS2 "linux"
+#define OS3 "unix"
+#else
+#define OS1 AS_STR(FALLBACK_HOST_OS)
+#define OS2 "unix"
+#endif
+
 namespace
 {
     const pal::char_t* s_host_rids[] =
     {
-#if defined(TARGET_WINDOWS)
-        _X("win"),
-#elif defined(TARGET_OSX)
-        _X("osx"),
-        _X("unix"),
-#elif defined(TARGET_LINUX_MUSL)
-        _X("linux-musl"),
-        _X("linux"),
-        _X("unix"),
-#elif defined(TARGET_ANDROID)
-        _X("linux-bionic"),
-        _X("linux"),
-        _X("unix"),
-#else
-        _X("linux"),
-        _X("unix"),
+#ifdef OS1
+        _X(OS1),
+        RID_STR(OS1, CURRENT_ARCH),
 #endif
+#ifdef OS2
+        _X(OS2),
+        RID_STR(OS2, CURRENT_ARCH),
+#endif
+#ifdef OS3
+        _X(OS3),
+        RID_STR(OS3, CURRENT_ARCH),
+#endif
+        "any"
     };
 
     // Returns the RID determined (computed or fallback) for the platform the host is running on.
@@ -228,29 +249,17 @@ namespace
     std::vector<pal::string_t> get_host_rid_list(const pal::string_t& host_rid)
     {
         std::vector<pal::string_t> rids;
-        rids.reserve((sizeof(s_host_rids) / sizeof(*s_host_rids)) * 2 + 3);
-
-        pal::string_t arch_suffix = _X("-");
-        arch_suffix.append(get_current_arch_name());
+        rids.reserve(ARRAY_SIZE(s_host_rids) * 2 + 3);
 
         rids.push_back(host_rid);
-        if (ends_with(host_rid, arch_suffix, true))
+        if (ends_with(host_rid, ARCH_SUFFIX, true))
         {
             // Host RID without architecture
-            rids.push_back(host_rid.substr(0, host_rid.size() - arch_suffix.size()));
+            rids.push_back(host_rid.substr(0, host_rid.size() - STRING_LENGTH(ARCH_SUFFIX)));
         }
 
         // Use our list of known portable RIDs
-        for (const pal::char_t* rid : s_host_rids)
-        {
-            // Architecture-specific RID
-            rids.push_back(rid + arch_suffix);
-
-            // RID without architecture
-            rids.push_back(rid);
-        }
-
-        rids.push_back(_X("any"));
+        rids.insert(rids.end(), s_host_rids, s_host_rids + ARRAY_SIZE(s_host_rids));
 
         if (trace::is_enabled())
         {

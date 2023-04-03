@@ -426,7 +426,6 @@ public:
                               // case of single block methods.
 #define COUNT_LOOPS 0         // Collect stats about loops, such as the total number of natural loops, a histogram of
                               // the number of loop exits, etc.
-#define DATAFLOW_ITER 0       // Count iterations in lexical CSE and constant folding dataflow.
 #define DISPLAY_SIZES 0       // Display generated code, data, and GC information sizes.
 #define MEASURE_BLOCK_SIZE 0  // Collect stats about basic block and FlowEdge node sizes and memory allocations.
 #define MEASURE_FATAL 0       // Count the number of calls to fatal(), including NYIs and noway_asserts.
@@ -435,8 +434,6 @@ public:
 #define EMITTER_STATS 0       // Collect stats on the emitter.
 #define NODEBASH_STATS 0      // Collect stats on changed gtOper values in GenTree's.
 #define COUNT_AST_OPERS 0     // Display use counts for GenTree operators.
-
-#define VERBOSE_SIZES 0 // Always display GC info sizes. If set, DISPLAY_SIZES must also be set.
 
 #ifdef DEBUG
 #define MEASURE_MEM_ALLOC 1 // Collect memory allocation stats.
@@ -447,6 +444,7 @@ public:
 #define MEASURE_MEM_ALLOC 0 // You can set this to 1 to get memory stats in retail, as well
 #define LOOP_HOIST_STATS 0  // You can set this to 1 to get loop hoist stats in retail, as well
 #define TRACK_LSRA_STATS 0  // You can set this to 1 to get LSRA stats in retail, as well
+#define TRACK_ENREG_STATS 0
 #endif
 
 // Timing calls to clr.dll is only available under certain conditions.
@@ -701,7 +699,6 @@ private:
 #define CLFLG_QMARK 0x00080
 #define CLFLG_TREETRANS 0x00100
 #define CLFLG_INLINING 0x00200
-#define CLFLG_CONSTANTFOLD 0x00800
 
 #if FEATURE_STRUCTPROMOTE
 #define CLFLG_STRUCTPROMOTE 0x00400
@@ -717,7 +714,7 @@ private:
 
 #define CLFLG_MAXOPT                                                                                                   \
     (CLFLG_CSE | CLFLG_REGVAR | CLFLG_RNGCHKOPT | CLFLG_DEADASGN | CLFLG_CODEMOTION | CLFLG_QMARK | CLFLG_TREETRANS |  \
-     CLFLG_INLINING | CLFLG_STRUCTPROMOTE | CLFLG_CONSTANTFOLD)
+     CLFLG_INLINING | CLFLG_STRUCTPROMOTE)
 
 #define CLFLG_MINOPT (CLFLG_TREETRANS)
 

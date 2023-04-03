@@ -31,30 +31,17 @@
   <Target Name="CopyDependencyToCoreRoot"
           DependsOnTargets="ResolveAssemblyReferences;ResolveRuntimeFilesFromLocalBuild">
 
-    <!--
-      Publish crossgen2 on supported platforms.
-      Publish to a temp directory to avoid msbuild glob computation problems.
-    -->
-    <MakeDir Directories="$(CORE_ROOT)" />
+    <!-- Publish crossgen2 on supported platforms. -->
 
     <MSBuild Condition="'$(Crossgen2Supported)' == 'true'"
       Targets="Restore;Publish"
       BuildInParallel="true"
-      Properties="PublishDir=$(CORE_ROOT)\..\crossgen2"
+      Properties="PublishDir=$(CORE_ROOT)\crossgen2"
       Projects="$(InstallerProjectRoot)pkg\sfx\Microsoft.NETCore.App\Microsoft.NETCore.App.Crossgen2.sfxproj" />
 
     <ItemGroup>
-      <RunTimeDependencyExclude Include="$(CORE_ROOT)\**\*.*" />
-      <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName)%(Extension)')" />
-      <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName).ni%(Extension)')" />
-      <RunTimeDependencyExcludeFiles Include="@(RunTimeDependencyExclude -> '%(FileName).pdb')" />
-
-      <AllResolvedRuntimeDependencies Include="@(RuntimeCopyLocalItems -> '%(FileName)%(Extension)');@(NativeCopyLocalItems -> '%(FileName)%(Extension)')">
-        <File>%(Identity)</File>
-      </AllResolvedRuntimeDependencies>
-
-      <RunTimeDependencyCopyLocalFile Include="@(AllResolvedRuntimeDependencies)"  Exclude="@(RunTimeDependencyExcludeFiles)"/>
-      <RunTimeDependencyCopyLocal Include="@(RunTimeDependencyCopyLocalFile -> '%(File)')"  />
+      <RunTimeDependencyCopyLocal Include="@(RuntimeCopyLocalItems)" />
+      <RunTimeDependencyCopyLocal Include="@(NativeCopyLocalItems)" />
       <RunTimeDependencyCopyLocal Include="$(TargetingPackPath)/*" />
       <RunTimeDependencyCopyLocal Include="$(TargetingPackPath)/xunit.*" TargetDir="xunit/" />
     </ItemGroup>
@@ -130,7 +117,7 @@
             $(Crossgen2Dir)/clrjit_*;
             $(Crossgen2Dir)/jitinterface_*;
             $(Crossgen2Dir)/Microsoft.DiaSymReader.Native.*.dll"
-          TargetDir="../crossgen2/" />
+          TargetDir="crossgen2/" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetArchitecture)' == 'wasm'">
@@ -170,6 +157,10 @@
 
         <RunTimeDependencyCopyLocal
           Include="$(MonoProjectRoot)\wasm\test-main.js"
+          TargetDir="runtime-test/"/>
+
+        <RunTimeDependencyCopyLocal
+          Include="$(RepoRoot)\src\tests\Common\wasm-test-runner\index.html"
           TargetDir="runtime-test/"/>
 
         <RunTimeDependencyCopyLocal

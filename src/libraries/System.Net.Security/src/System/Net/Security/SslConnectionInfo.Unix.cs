@@ -19,2708 +19,380 @@ namespace System.Net.Security
             TlsCipherSuite = cipherSuite;
             KeyExchKeySize = 0;
 
-            switch (cipherSuite)
+            int index = Array.BinarySearch(s_cipherSuites, cipherSuite);
+            Debug.Assert(index >= 0);
+
+            index *= 4;
+            KeyExchangeAlg = TlsCipherSuiteData[index];
+            DataCipherAlg = TlsCipherSuiteData[index + 1];
+            DataKeySize = TlsCipherSuiteData[index + 2];
+            DataHashAlg = TlsCipherSuiteData[index + 3];
+            DataHashKeySize = GetHashSize(DataHashAlg);
+
+            static int GetHashSize(int hash)
             {
-                case TlsCipherSuite.TLS_NULL_WITH_NULL_NULL:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_NULL_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_EXPORT_WITH_RC4_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_RC4_128_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc2;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_IDEA_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_EXPORT_WITH_RC4_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_RC4_128_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_DES_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_IDEA_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_DES_CBC_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 56;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_3DES_EDE_CBC_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_RC4_128_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_WITH_IDEA_CBC_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_RC2_CBC_40_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc2;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_RC4_40_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Des;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_RC2_CBC_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc2;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_KRB5_EXPORT_WITH_RC4_40_MD5:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 40;
-                    DataHashAlg = (int)HashAlgorithmType.Md5;
-                    DataHashKeySize = 128;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_NULL_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_SEED_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_AES_128_CCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_AES_128_CCM_8_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_anon_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_anon_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_anon_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_anon_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_RC4_128_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.TripleDes;
-                    DataKeySize = 168;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha1;
-                    DataHashKeySize = 160;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
-                    DataKeySize = 0;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_ARIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.Sha256;
-                    DataHashKeySize = 256;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_CAMELLIA_256_CBC_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.Sha384;
-                    DataHashKeySize = 384;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_128_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_256_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_128_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_WITH_AES_256_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_128_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_256_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_128_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_AES_256_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_DHE_WITH_AES_128_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_DHE_WITH_AES_256_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CCM:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECCPWD_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECCPWD_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECCPWD_WITH_AES_128_CCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECCPWD_WITH_AES_256_CCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_PSK_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes256;
-                    DataKeySize = 256;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
-                    DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
-                    DataHashAlg = (int)HashAlgorithmType.None;
-                    DataHashKeySize = 0;
-                    break;
-
-                default:
-                    Debug.Fail($"No mapping found for cipherSuite {cipherSuite}");
-                    break;
+                switch ((HashAlgorithmType)hash)
+                {
+                    case HashAlgorithmType.None:
+                        return 0;
+                    case HashAlgorithmType.Md5:
+                        return 128;
+                    case HashAlgorithmType.Sha1:
+                        return 160;
+                    case HashAlgorithmType.Sha256:
+                        return 256;
+                    case HashAlgorithmType.Sha384:
+                        return 384;
+                    case HashAlgorithmType.Sha512:
+                        return 512;
+                    default:
+                        throw new ArgumentOutOfRangeException(hash.ToString());
+                }
             }
         }
+
+        // Or just a switch from TlsCipherSuite => index
+        private static readonly TlsCipherSuite[] s_cipherSuites = Enum.GetValues<TlsCipherSuite>();
+
+        private static ReadOnlySpan<int> TlsCipherSuiteData => new[]
+        {
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Rc4, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Rc2, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Des, 56, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc2, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc4, 40, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Des, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc2, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc4, 40, (int)HashAlgorithmType.Md5,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Rc4, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.TripleDes, 168, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha1,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Null, 0, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 128, (int)HashAlgorithmType.Sha256,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.Sha384,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.None, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.RsaKeyX, (int)CipherAlgorithmType.None, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes256, 256, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+            (int)ExchangeAlgorithmType.DiffieHellman, (int)CipherAlgorithmType.Aes128, 128, (int)HashAlgorithmType.None,
+        };
     }
 }

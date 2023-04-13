@@ -23,28 +23,52 @@ namespace System.Net.Security
             TlsCipherSuite = cipherSuite;
             KeyExchKeySize = 0;
 
-            switch (cipherSuite)
+            int index = Array.BinarySearch(s_cipherSuites, cipherSuite);
+            Debug.Assert(index >= 0);
+
+            index *= 4;
+            KeyExchangeAlg = TlsCipherSuiteData[index];
+            DataCipherAlg = TlsCipherSuiteData[index + 1];
+            DataKeySize = TlsCipherSuiteData[index + 2];
+            DataHashAlg = TlsCipherSuiteData[index + 3];
+            DataHashKeySize = GetHashSize(DataHashAlg);
+
+            static int GetHashSize(int hash)
             {
+                switch ((HashAlgorithmType)hash)
+                {
+                    case HashAlgorithmType.None:
+                        return 0;
+                    case HashAlgorithmType.Md5:
+                        return 128;
+                    case HashAlgorithmType.Sha1:
+                        return 160;
+                    case HashAlgorithmType.Sha256:
+                        return 256;
+                    case HashAlgorithmType.Sha384:
+                        return 384;
+                    case HashAlgorithmType.Sha512:
+                        return 512;
+                    default:
+                        throw new ArgumentOutOfRangeException(hash.ToString());
+                }
+            }
+        }
+
+        // Or just a switch from TlsCipherSuite => index
+        private static readonly TlsCipherSuite[] s_cipherSuites = Enum.GetValues<TlsCipherSuite>();
+
+        private static ReadOnlySpan<int> TlsCipherSuiteData => new[]
+        {
 <#
 foreach (TlsCipherSuite val in enumValues)
 {
     TlsCipherSuiteData data = new CipherSuiteNameData(val.ToString()).Data;
 #>
-                case TlsCipherSuite.<#= val #>:
-                    KeyExchangeAlg = (int)ExchangeAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.KeyExchangeAlgorithm) #>;
-                    DataCipherAlg = (int)CipherAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.CipherAlgorithm) #>;
-                    DataKeySize = <#= data.CipherAlgorithmStrength #>;
-                    DataHashAlg = (int)HashAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.MACAlgorithm) #>;
-                    DataHashKeySize = <#= EnumHelpers.GetHashSize(data.MACAlgorithm) #>;
-                    break;
-
+            (int)ExchangeAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.KeyExchangeAlgorithm) #>, (int)CipherAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.CipherAlgorithm) #>, <#= data.CipherAlgorithmStrength #>, (int)HashAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.MACAlgorithm) #>,
 <#
 }
 #>
-                default:
-                    Debug.Fail($"No mapping found for cipherSuite {cipherSuite}");
-                    break;
-            }
-        }
+        };
     }
 }

@@ -21,6 +21,8 @@ namespace System.Net.Security
 
             // set defaults to most common values to reduce the IL size
             KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
+            DataCipherAlg = (int)CipherAlgorithmType.Null;
+            DataKeySize = 128;
             DataHashAlg = (int)HashAlgorithmType.None;
             DataHashKeySize = 0;
 
@@ -28,13 +30,11 @@ namespace System.Net.Security
             {
                 case TlsCipherSuite.TLS_NULL_WITH_NULL_NULL:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_NULL_MD5:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Md5;
                     DataHashKeySize = 128;
@@ -42,7 +42,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_RSA_WITH_NULL_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -59,7 +58,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_RC4_128_MD5:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Md5;
                     DataHashKeySize = 128;
                     break;
@@ -67,7 +65,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_RC4_128_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -83,7 +80,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_IDEA_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -205,7 +201,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_RC4_128_MD5:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Md5;
                     DataHashKeySize = 128;
                     break;
@@ -250,7 +245,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_KRB5_WITH_RC4_128_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -258,7 +252,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_KRB5_WITH_IDEA_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -282,7 +275,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_KRB5_WITH_RC4_128_MD5:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Md5;
                     DataHashKeySize = 128;
                     break;
@@ -290,7 +282,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_KRB5_WITH_IDEA_CBC_MD5:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Md5;
                     DataHashKeySize = 128;
                     break;
@@ -345,14 +336,12 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -360,7 +349,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -369,42 +357,36 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -454,7 +436,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_RSA_WITH_NULL_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
@@ -463,7 +444,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -478,21 +458,18 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -500,49 +477,42 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -577,7 +547,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -635,7 +604,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_RC4_128_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -651,7 +619,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -666,7 +633,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -680,7 +646,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -695,7 +660,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_RC4_128_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -711,7 +675,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -727,42 +690,36 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_SEED_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_SEED_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_SEED_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_SEED_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_SEED_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_SEED_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -770,7 +727,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384:
@@ -781,7 +737,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384:
@@ -791,7 +746,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_AES_256_GCM_SHA384:
@@ -801,7 +755,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_AES_256_GCM_SHA384:
@@ -811,7 +764,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_AES_256_GCM_SHA384:
@@ -821,7 +773,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_AES_256_GCM_SHA384:
@@ -832,7 +783,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_AES_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_WITH_AES_256_GCM_SHA384:
@@ -843,7 +793,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_GCM_SHA384:
@@ -854,7 +803,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_256_GCM_SHA384:
@@ -866,7 +814,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_AES_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -881,7 +828,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
@@ -889,7 +835,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_PSK_WITH_NULL_SHA384:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha384;
                     DataHashKeySize = 384;
@@ -897,7 +842,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -910,14 +854,12 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA256:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_NULL_SHA384:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha384;
                     DataHashKeySize = 384;
@@ -926,7 +868,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_AES_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -941,7 +882,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
@@ -949,7 +889,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_NULL_SHA384:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha384;
                     DataHashKeySize = 384;
@@ -958,42 +897,36 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1044,7 +977,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_AES_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_AES_256_GCM_SHA384:
@@ -1062,17 +994,14 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_AES_128_CCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_AES_128_CCM_8_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -1080,7 +1009,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1094,7 +1022,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1107,7 +1034,6 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -1115,7 +1041,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1129,7 +1054,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1142,7 +1066,6 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -1150,7 +1073,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1164,7 +1086,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1177,7 +1098,6 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -1185,7 +1105,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1199,7 +1118,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1212,7 +1130,6 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_anon_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
@@ -1220,7 +1137,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_anon_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1234,7 +1150,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_anon_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1273,7 +1188,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_SRP_SHA_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1281,7 +1195,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1289,7 +1202,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1320,7 +1232,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1334,7 +1245,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1348,7 +1258,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1362,7 +1271,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1376,7 +1284,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:
@@ -1386,7 +1293,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384:
@@ -1396,7 +1302,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
@@ -1406,7 +1311,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384:
@@ -1416,7 +1320,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_RC4_128_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Rc4;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1430,7 +1333,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
@@ -1444,7 +1346,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1457,21 +1358,18 @@ namespace System.Net.Security
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha1;
                     DataHashKeySize = 160;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA256:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_NULL_SHA384:
-                    DataCipherAlg = (int)CipherAlgorithmType.Null;
                     DataKeySize = 0;
                     DataHashAlg = (int)HashAlgorithmType.Sha384;
                     DataHashKeySize = 384;
@@ -1480,7 +1378,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_ARIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1495,7 +1392,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1509,7 +1405,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1523,7 +1418,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1537,7 +1431,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1551,7 +1444,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1565,7 +1457,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1579,7 +1470,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1593,7 +1483,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1607,7 +1496,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1622,7 +1510,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_ARIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_ARIA_256_GCM_SHA384:
@@ -1633,7 +1520,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384:
@@ -1643,7 +1529,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_ARIA_256_GCM_SHA384:
@@ -1653,7 +1538,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_ARIA_256_GCM_SHA384:
@@ -1663,7 +1547,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_ARIA_256_GCM_SHA384:
@@ -1673,7 +1556,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_ARIA_256_GCM_SHA384:
@@ -1683,7 +1565,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384:
@@ -1693,7 +1574,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_ARIA_256_GCM_SHA384:
@@ -1703,7 +1583,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_ARIA_256_GCM_SHA384:
@@ -1713,7 +1592,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_ARIA_256_GCM_SHA384:
@@ -1724,7 +1602,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_ARIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1739,7 +1616,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1754,7 +1630,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1770,7 +1645,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_ARIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_WITH_ARIA_256_GCM_SHA384:
@@ -1781,7 +1655,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_ARIA_256_GCM_SHA384:
@@ -1792,7 +1665,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_ARIA_256_GCM_SHA384:
@@ -1803,7 +1675,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_ARIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1817,7 +1688,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1831,7 +1701,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1845,7 +1714,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1859,7 +1727,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -1874,7 +1741,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1885,7 +1751,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1895,7 +1760,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_RSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1905,7 +1769,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_DSS_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1915,7 +1778,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_DSS_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1925,7 +1787,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DH_anon_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1935,7 +1796,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1945,7 +1805,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1955,7 +1814,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_RSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1965,7 +1823,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1976,7 +1833,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1987,7 +1843,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_256_GCM_SHA384:
@@ -1998,7 +1853,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_256_GCM_SHA384:
@@ -2010,7 +1864,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -2025,7 +1878,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -2040,7 +1892,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -2055,7 +1906,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_CAMELLIA_128_CBC_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.None;
-                    DataKeySize = 128;
                     DataHashAlg = (int)HashAlgorithmType.Sha256;
                     DataHashKeySize = 256;
                     break;
@@ -2070,7 +1920,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_AES_128_CCM:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_AES_256_CCM:
@@ -2081,7 +1930,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CCM:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CCM:
@@ -2092,7 +1940,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_RSA_WITH_AES_128_CCM_8:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.RsaKeyX;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_RSA_WITH_AES_256_CCM_8:
@@ -2103,7 +1950,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_CCM_8:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_CCM_8:
@@ -2114,7 +1960,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_AES_128_CCM:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_WITH_AES_256_CCM:
@@ -2125,7 +1970,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_128_CCM:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_DHE_PSK_WITH_AES_256_CCM:
@@ -2136,7 +1980,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_PSK_WITH_AES_128_CCM_8:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_WITH_AES_256_CCM_8:
@@ -2147,7 +1990,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_PSK_DHE_WITH_AES_128_CCM_8:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_PSK_DHE_WITH_AES_256_CCM_8:
@@ -2157,7 +1999,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CCM:
@@ -2167,7 +2008,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8:
@@ -2178,7 +2018,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_ECCPWD_WITH_AES_128_GCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECCPWD_WITH_AES_256_GCM_SHA384:
@@ -2190,7 +2029,6 @@ namespace System.Net.Security
                 case TlsCipherSuite.TLS_ECCPWD_WITH_AES_128_CCM_SHA256:
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECCPWD_WITH_AES_256_CCM_SHA384:
@@ -2238,7 +2076,6 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384:
@@ -2248,17 +2085,16 @@ namespace System.Net.Security
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CCM_8_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 case TlsCipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CCM_SHA256:
                     DataCipherAlg = (int)CipherAlgorithmType.Aes128;
-                    DataKeySize = 128;
                     break;
 
                 default:
                     Debug.Fail($"No mapping found for cipherSuite {cipherSuite}");
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
+                    DataKeySize = 0;
                     break;
             }
         }

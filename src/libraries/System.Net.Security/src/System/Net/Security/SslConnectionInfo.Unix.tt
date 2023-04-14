@@ -23,6 +23,11 @@ namespace System.Net.Security
             TlsCipherSuite = cipherSuite;
             KeyExchKeySize = 0;
 
+            // set defaults to most common values to reduce the IL size
+            KeyExchangeAlg = (int)ExchangeAlgorithmType.DiffieHellman;
+            DataHashAlg = (int)HashAlgorithmType.None;
+            DataHashKeySize = 0;
+
             switch (cipherSuite)
             {
 <#
@@ -31,11 +36,25 @@ foreach (TlsCipherSuite val in enumValues)
     TlsCipherSuiteData data = new CipherSuiteNameData(val.ToString()).Data;
 #>
                 case TlsCipherSuite.<#= val #>:
+<#
+    if (EnumHelpers.ToFrameworkName(data.KeyExchangeAlgorithm) != "DiffieHellman")
+    {
+#>
                     KeyExchangeAlg = (int)ExchangeAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.KeyExchangeAlgorithm) #>;
+<#
+    }
+#>
                     DataCipherAlg = (int)CipherAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.CipherAlgorithm) #>;
                     DataKeySize = <#= data.CipherAlgorithmStrength #>;
+<#
+    if (EnumHelpers.ToFrameworkName(data.MACAlgorithm) != "None")
+    {
+#>
                     DataHashAlg = (int)HashAlgorithmType.<#= EnumHelpers.ToFrameworkName(data.MACAlgorithm) #>;
                     DataHashKeySize = <#= EnumHelpers.GetHashSize(data.MACAlgorithm) #>;
+<#
+    }
+#>
                     break;
 
 <#
@@ -43,6 +62,7 @@ foreach (TlsCipherSuite val in enumValues)
 #>
                 default:
                     Debug.Fail($"No mapping found for cipherSuite {cipherSuite}");
+                    KeyExchangeAlg = (int)ExchangeAlgorithmType.None;
                     break;
             }
         }

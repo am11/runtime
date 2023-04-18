@@ -148,12 +148,13 @@ else()
   list(APPEND COMMON_RUNTIME_SOURCES
     unix/PalRedhawkUnix.cpp
     ${GC_DIR}/unix/gcenv.unix.cpp
+    ${GC_DIR}/unix/numasupport.cpp
     ${GC_DIR}/unix/events.cpp
     ${GC_DIR}/unix/cgroup.cpp
   )
 
   list(APPEND FULL_RUNTIME_SOURCES
-    unix/cgroup.cpp
+    unix/cgroupcpu.cpp
     unix/HardwareExceptions.cpp
     unix/UnixContext.cpp
     unix/UnixSignals.cpp
@@ -169,11 +170,11 @@ else()
   set(ASM_SUFFIX S)
 endif()
 
-if (CLR_CMAKE_TARGET_OSX)
+if (CLR_CMAKE_TARGET_APPLE)
   list(APPEND COMMON_RUNTIME_SOURCES
     interoplibinterface_objc.cpp
   )
-endif (CLR_CMAKE_TARGET_OSX)
+endif (CLR_CMAKE_TARGET_APPLE)
 
 if (CLR_CMAKE_TARGET_ARCH_AMD64 AND CLR_CMAKE_TARGET_WIN32)
   list(APPEND COMMON_RUNTIME_SOURCES
@@ -238,7 +239,9 @@ if(WIN32)
   add_definitions(-DFEATURE_SUSPEND_REDIRECTION)
   add_definitions(-DFEATURE_SPECIAL_USER_MODE_APC)
 else()
-  add_definitions(-DFEATURE_READONLY_GS_COOKIE)
+  if(NOT CLR_CMAKE_TARGET_MACCATALYST AND NOT CLR_CMAKE_TARGET_IOS AND NOT CLR_CMAKE_TARGET_TVOS)
+    add_definitions(-DFEATURE_READONLY_GS_COOKIE)
+  endif()
   add_definitions(-DNO_UI_ASSERT)
   include(unix/configure.cmake)
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -274,11 +277,3 @@ endif()
 if(FEATURE_PERFTRACING)
   add_subdirectory(eventpipe)
 endif()
-
-if (CLR_CMAKE_TARGET_UNIX)
-  add_library(numasupportdynamic STATIC ${GC_DIR}/unix/numasupport.dynamic.cpp)
-  install_static_library(numasupportdynamic aotsdk nativeaot)
-
-  add_library(numasupportstatic STATIC ${GC_DIR}/unix/numasupport.static.cpp)
-  install_static_library(numasupportstatic aotsdk nativeaot)
-endif(CLR_CMAKE_TARGET_UNIX)

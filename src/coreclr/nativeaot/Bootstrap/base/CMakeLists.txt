@@ -15,8 +15,4 @@ if (CLR_CMAKE_TARGET_WIN32)
 else()
   add_library(stdc++compat STATIC ../stdcppshim.cpp)
   install_static_library(stdc++compat aotsdk nativeaot)
-
-  add_dependencies(nativeaot version)
-  add_library(version OBJECT ${VERSION_FILE_PATH})
-  install(FILES $<TARGET_OBJECTS:version> DESTINATION aotsdk COMPONENT nativeaot)
 endif()

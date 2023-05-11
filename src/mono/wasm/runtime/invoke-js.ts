@@ -2,17 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 import { marshal_exception_to_cs, bind_arg_marshal_to_cs } from "./marshal-to-cs";
-import { get_signature_argument_count, bound_js_function_symbol, get_sig, get_signature_version, MarshalerType, get_signature_type, imported_js_function_symbol } from "./marshal";
+import { get_signature_argument_count, bound_js_function_symbol, get_sig, get_signature_version, get_signature_type, imported_js_function_symbol } from "./marshal";
 import { setI32_unchecked } from "./memory";
 import { conv_string_root, js_string_to_mono_string_root } from "./strings";
-import { mono_assert, MonoObject, MonoObjectRef, MonoString, MonoStringRef, JSFunctionSignature, JSMarshalerArguments, WasmRoot, BoundMarshalerToJs, JSFnHandle, BoundMarshalerToCs, JSHandle } from "./types";
+import { mono_assert, MonoObject, MonoObjectRef, MonoString, MonoStringRef, JSFunctionSignature, JSMarshalerArguments, WasmRoot, BoundMarshalerToJs, JSFnHandle, BoundMarshalerToCs, JSHandle, MarshalerType } from "./types";
 import { Int32Ptr } from "./types/emscripten";
-import { IMPORTS, INTERNAL, Module, runtimeHelpers } from "./imports";
+import { INTERNAL, Module, runtimeHelpers } from "./globals";
 import { bind_arg_marshal_to_js } from "./marshal-to-js";
 import { mono_wasm_new_external_root } from "./roots";
 import { mono_wasm_symbolicate_string } from "./logging";
 import { mono_wasm_get_jsobj_from_js_handle } from "./gc-handles";
 import { endMeasure, MeasuredBlock, startMeasure } from "./profiler";
+import { wrap_as_cancelable_promise } from "./cancelable-promise";
 
 const fn_wrapper_by_fn_handle: Function[] = <any>[null];// 0th slot is dummy, we never free bound functions
 
@@ -89,7 +90,7 @@ export function mono_wasm_bind_js_function(function_name: MonoStringRef, module_
         endMeasure(mark, MeasuredBlock.bindJsFunction, js_function_name);
     } catch (ex: any) {
         setI32_unchecked(function_js_handle, 0);
-        Module.printErr(ex.toString());
+        Module.err(ex.toString());
         wrap_error_root(is_exception, ex, resultRoot);
     } finally {
         resultRoot.release();
@@ -255,7 +256,7 @@ export function mono_wasm_set_module_imports(module_name: string, moduleImports:
 function mono_wasm_lookup_function(function_name: string, js_module_name: string): Function {
     mono_assert(function_name && typeof function_name === "string", "function_name must be string");
 
-    let scope: any = IMPORTS;
+    let scope: any = {};
     const parts = function_name.split(".");
     if (js_module_name) {
         scope = importedModules.get(js_module_name);
@@ -317,7 +318,7 @@ export function get_global_this(): any {
 export const importedModulesPromises: Map<string, Promise<any>> = new Map();
 export const importedModules: Map<string, Promise<any>> = new Map();
 
-export async function dynamic_import(module_name: string, module_url: string): Promise<any> {
+export function dynamic_import(module_name: string, module_url: string): Promise<any> {
     mono_assert(module_name, "Invalid module_name");
     mono_assert(module_url, "Invalid module_name");
     let promise = importedModulesPromises.get(module_name);
@@ -328,13 +329,16 @@ export async function dynamic_import(module_name: string, module_url: string): P
         promise = import(/* webpackIgnore: true */module_url);
         importedModulesPromises.set(module_name, promise);
     }
-    const module = await promise;
-    if (newPromise) {
-        importedModules.set(module_name, module);
-        if (runtimeHelpers.diagnosticTracing)
-            console.debug(`MONO_WASM: imported ES6 module '${module_name}' from '${module_url}'`);
-    }
-    return module;
+
+    return wrap_as_cancelable_promise(async () => {
+        const module = await promise;
+        if (newPromise) {
+            importedModules.set(module_name, module);
+            if (runtimeHelpers.diagnosticTracing)
+                console.debug(`MONO_WASM: imported ES6 module '${module_name}' from '${module_url}'`);
+        }
+        return module;
+    });
 }
 
 

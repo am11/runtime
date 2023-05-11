@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#pragma warning disable IDE0005
+
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -39,7 +41,7 @@ namespace ILCompiler
             }
         }
 
-        private IReadOnlyCollection<MethodDesc> CreateInitializerList(CompilerTypeSystemContext context)
+        private List<MethodDesc> CreateInitializerList(CompilerTypeSystemContext context)
         {
             List<ModuleDesc> assembliesWithInitializers = new List<ModuleDesc>();
 
@@ -164,7 +166,6 @@ namespace ILCompiler
             {
                 // Either single file, or multifile library, or multifile consumption.
                 EcmaModule entrypointModule = null;
-                bool systemModuleIsInputModule = false;
                 foreach (var inputFile in typeSystemContext.InputFilePaths)
                 {
                     EcmaModule module = typeSystemContext.GetModuleFromPath(inputFile.Value);
@@ -176,13 +177,11 @@ namespace ILCompiler
                         entrypointModule = module;
                     }
 
-                    if (module == typeSystemContext.SystemModule)
-                        systemModuleIsInputModule = true;
-
-                    compilationRoots.Add(new ExportedMethodsRootProvider(module));
+                    compilationRoots.Add(new UnmanagedEntryPointsRootProvider(module));
                 }
 
                 bool nativeLib = Get(_command.NativeLib);
+                bool SplitExeInitialization = Get(_command.SplitExeInitialization);
                 if (multiFile)
                 {
                     List<EcmaModule> inputModules = new List<EcmaModule>();
@@ -203,11 +202,9 @@ namespace ILCompiler
                 }
                 else
                 {
-                    if (entrypointModule == null && !nativeLib)
+                    if (entrypointModule == null && (!nativeLib || SplitExeInitialization))
                         throw new Exception("No entrypoint module");
 
-                    if (!systemModuleIsInputModule)
-                        compilationRoots.Add(new ExportedMethodsRootProvider((EcmaModule)typeSystemContext.SystemModule));
                     compilationGroup = new SingleFileCompilationModuleGroup();
                 }
 
@@ -219,12 +216,31 @@ namespace ILCompiler
                     compilationRoots.Add(new NativeLibraryInitializerRootProvider(typeSystemContext.GeneratedAssembly, CreateInitializerList(typeSystemContext)));
                     compilationRoots.Add(new RuntimeConfigurationRootProvider(runtimeOptions));
                     compilationRoots.Add(new ExpectedIsaFeaturesRootProvider(instructionSetSupport));
+                    if (SplitExeInitialization)
+                    {
+                        compilationRoots.Add(new MainMethodRootProvider(entrypointModule, CreateInitializerList(typeSystemContext), generateLibraryAndModuleInitializers: false));
+                    }
                 }
                 else if (entrypointModule != null)
                 {
-                    compilationRoots.Add(new MainMethodRootProvider(entrypointModule, CreateInitializerList(typeSystemContext)));
+                    compilationRoots.Add(new MainMethodRootProvider(entrypointModule, CreateInitializerList(typeSystemContext), generateLibraryAndModuleInitializers: !SplitExeInitialization));
                     compilationRoots.Add(new RuntimeConfigurationRootProvider(runtimeOptions));
                     compilationRoots.Add(new ExpectedIsaFeaturesRootProvider(instructionSetSupport));
+                    if (SplitExeInitialization)
+                    {
+                        compilationRoots.Add(new NativeLibraryInitializerRootProvider(typeSystemContext.GeneratedAssembly, CreateInitializerList(typeSystemContext)));
+                    }
+                }
+
+                foreach (var unmanagedEntryPointsAssembly in Get(_command.UnmanagedEntryPointsAssemblies))
+                {
+                    if (typeSystemContext.InputFilePaths.ContainsKey(unmanagedEntryPointsAssembly))
+                    {
+                        // Skip adding UnmanagedEntryPointsRootProvider for modules that have been already registered as an input module
+                        continue;
+                    }
+                    EcmaModule module = typeSystemContext.GetModuleForSimpleName(unmanagedEntryPointsAssembly);
+                    compilationRoots.Add(new UnmanagedEntryPointsRootProvider(module));
                 }
 
                 foreach (var rdXmlFilePath in Get(_command.RdXmlFilePaths))
@@ -254,14 +270,36 @@ namespace ILCompiler
                 // same as conditionally rooted ones and here we're fulfilling the condition ("something is used").
                 compilationRoots.Add(
                     new GenericRootProvider<ModuleDesc>(module,
-                    (ModuleDesc module, IRootingServiceProvider rooter) => rooter.AddCompilationRoot(module.GetGlobalModuleType(), "Command line root")));
+                    (ModuleDesc module, IRootingServiceProvider rooter) => rooter.AddReflectionRoot(module.GetGlobalModuleType(), "Command line root")));
+            }
+
+            // Unless explicitly opted in at the command line, we enable scanner for retail builds by default.
+            // We also don't do this for multifile because scanner doesn't simulate inlining (this would be
+            // fixable by using a CompilationGroup for the scanner that has a bigger worldview, but
+            // let's cross that bridge when we get there).
+            bool useScanner = Get(_command.UseScanner) ||
+                (_command.OptimizationMode != OptimizationMode.None && !multiFile);
+
+            useScanner &= !Get(_command.NoScanner);
+
+            bool resilient = Get(_command.Resilient);
+            if (resilient && useScanner)
+            {
+                // If we're in resilient mode (invalid IL doesn't crash the compiler) and using scanner,
+                // assume invalid code is present. Scanner may not detect all invalid code that RyuJIT detect.
+                // If they disagree, we won't know how the vtable of InvalidProgramException should look like
+                // and that would be a compiler crash.
+                MethodDesc throwInvalidProgramMethod = typeSystemContext.GetHelperEntryPoint("ThrowHelpers", "ThrowInvalidProgramException");
+                compilationRoots.Add(
+                    new GenericRootProvider<MethodDesc>(throwInvalidProgramMethod,
+                    (MethodDesc method, IRootingServiceProvider rooter) => rooter.AddCompilationRoot(method, "Invalid IL insurance")));
             }
 
             //
             // Compile
             //
 
-            CompilationBuilder builder = new RyuJitCompilationBuilder(typeSystemContext, compilationGroup);
+            var builder = new RyuJitCompilationBuilder(typeSystemContext, compilationGroup);
 
             string compilationUnitPrefix = multiFile ? Path.GetFileNameWithoutExtension(outputFilePath) : "";
             builder.UseCompilationUnitPrefix(compilationUnitPrefix);
@@ -279,6 +317,15 @@ namespace ILCompiler
 
             ILProvider ilProvider = new NativeAotILProvider();
 
+            var suppressedWarningCategories = new List<string>();
+            if (Get(_command.NoTrimWarn))
+                suppressedWarningCategories.Add(MessageSubCategory.TrimAnalysis);
+            if (Get(_command.NoAotWarn))
+                suppressedWarningCategories.Add(MessageSubCategory.AotAnalysis);
+
+            var logger = new Logger(Console.Out, ilProvider, Get(_command.IsVerbose), ProcessWarningCodes(Get(_command.SuppressedWarnings)),
+                Get(_command.SingleWarn), Get(_command.SingleWarnEnabledAssemblies), Get(_command.SingleWarnDisabledAssemblies), suppressedWarningCategories);
+
             List<KeyValuePair<string, bool>> featureSwitches = new List<KeyValuePair<string, bool>>();
             foreach (var switchPair in Get(_command.FeatureSwitches))
             {
@@ -288,16 +335,9 @@ namespace ILCompiler
                     throw new CommandLineException($"Unexpected feature switch pair '{switchPair}'");
                 featureSwitches.Add(new KeyValuePair<string, bool>(switchAndValue[0], switchValue));
             }
-            ilProvider = new FeatureSwitchManager(ilProvider, featureSwitches);
 
-            var suppressedWarningCategories = new List<string>();
-            if (Get(_command.NoTrimWarn))
-                suppressedWarningCategories.Add(MessageSubCategory.TrimAnalysis);
-            if (Get(_command.NoAotWarn))
-                suppressedWarningCategories.Add(MessageSubCategory.AotAnalysis);
+            ilProvider = new FeatureSwitchManager(ilProvider, logger, featureSwitches);
 
-            var logger = new Logger(Console.Out, ilProvider, Get(_command.IsVerbose), ProcessWarningCodes(Get(_command.SuppressedWarnings)),
-                Get(_command.SingleWarn), Get(_command.SingleWarnEnabledAssemblies), Get(_command.SingleWarnDisabledAssemblies), suppressedWarningCategories);
             CompilerGeneratedState compilerGeneratedState = new CompilerGeneratedState(ilProvider, logger);
 
             var stackTracePolicy = Get(_command.EmitStackTraceData) ?
@@ -308,10 +348,9 @@ namespace ILCompiler
             UsageBasedMetadataGenerationOptions metadataGenerationOptions = default;
             if (supportsReflection)
             {
-                mdBlockingPolicy = Get(_command.NoMetadataBlocking) ?
-                    new NoMetadataBlockingPolicy() : new BlockedInternalsBlockingPolicy(typeSystemContext);
+                mdBlockingPolicy = new NoMetadataBlockingPolicy();
 
-                resBlockingPolicy = new ManifestResourceBlockingPolicy(featureSwitches);
+                resBlockingPolicy = new ManifestResourceBlockingPolicy(logger, featureSwitches);
 
                 metadataGenerationOptions |= UsageBasedMetadataGenerationOptions.AnonymousTypeHeuristic;
                 if (Get(_command.CompleteTypesMetadata))
@@ -357,21 +396,15 @@ namespace ILCompiler
             InteropStateManager interopStateManager = new InteropStateManager(typeSystemContext.GeneratedAssembly);
             InteropStubManager interopStubManager = new UsageBasedInteropStubManager(interopStateManager, pinvokePolicy, logger);
 
-            // Unless explicitly opted in at the command line, we enable scanner for retail builds by default.
-            // We also don't do this for multifile because scanner doesn't simulate inlining (this would be
-            // fixable by using a CompilationGroup for the scanner that has a bigger worldview, but
-            // let's cross that bridge when we get there).
-            bool useScanner = Get(_command.UseScanner) ||
-                (_command.OptimizationMode != OptimizationMode.None && !multiFile);
-
-            useScanner &= !Get(_command.NoScanner);
-
             // Enable static data preinitialization in optimized builds.
             bool preinitStatics = Get(_command.PreinitStatics) ||
                 (_command.OptimizationMode != OptimizationMode.None && !multiFile);
             preinitStatics &= !Get(_command.NoPreinitStatics);
 
-            var preinitManager = new PreinitializationManager(typeSystemContext, compilationGroup, ilProvider, preinitStatics);
+            TypePreinit.TypePreinitializationPolicy preinitPolicy = preinitStatics ?
+                new TypePreinit.TypeLoaderAwarePreinitializationPolicy() : new TypePreinit.DisabledPreinitializationPolicy();
+
+            var preinitManager = new PreinitializationManager(typeSystemContext, compilationGroup, ilProvider, preinitPolicy);
             builder
                 .UseILProvider(ilProvider)
                 .UsePreinitializationManager(preinitManager);
@@ -443,6 +476,23 @@ namespace ILCompiler
                 // compilation, but before RyuJIT gets there, it might ask questions that we don't
                 // have answers for because we didn't scan the entire method.
                 builder.UseMethodImportationErrorProvider(scanResults.GetMethodImportationErrorProvider());
+
+                // If we're doing preinitialization, use a new preinitialization manager that
+                // has the whole program view.
+                if (preinitStatics)
+                {
+                    preinitManager = new PreinitializationManager(typeSystemContext, compilationGroup, ilProvider, scanResults.GetPreinitializationPolicy());
+                    builder.UsePreinitializationManager(preinitManager);
+                }
+
+                // If we have a scanner, we can inline threadstatics storage using the information
+                // we collected at scanning time.
+                // Inlined storage implies a single type manager, thus we do not do it in multifile case.
+                // This could be a command line switch if we really wanted to.
+                if (!multiFile)
+                {
+                    builder.UseInlinedThreadStatics(scanResults.GetInlinedThreadStatics());
+                }
             }
 
             string ilDump = Get(_command.IlDump);
@@ -471,9 +521,8 @@ namespace ILCompiler
                 .UseOptimizationMode(_command.OptimizationMode)
                 .UseSecurityMitigationOptions(securityMitigationOptions)
                 .UseDebugInfoProvider(debugInfoProvider)
-                .UseDwarf5(Get(_command.UseDwarf5));
-
-            builder.UseResilience(Get(_command.Resilient));
+                .UseDwarf5(Get(_command.UseDwarf5))
+                .UseResilience(resilient);
 
             ICompilation compilation = builder.ToCompilation();
 
@@ -495,7 +544,7 @@ namespace ILCompiler
                 ExportsFileWriter defFileWriter = new ExportsFileWriter(typeSystemContext, exportsFile);
                 foreach (var compilationRoot in compilationRoots)
                 {
-                    if (compilationRoot is ExportedMethodsRootProvider provider)
+                    if (compilationRoot is UnmanagedEntryPointsRootProvider provider)
                         defFileWriter.AddExportedMethods(provider.ExportedMethods);
                 }
 
@@ -589,11 +638,9 @@ namespace ILCompiler
         {
             ModuleDesc systemModule = context.SystemModule;
 
-            TypeDesc foundType = systemModule.GetTypeByCustomAttributeTypeName(typeName, false, (typeDefName, module, throwIfNotFound) =>
-            {
-                return (MetadataType)context.GetCanonType(typeDefName)
-                    ?? CustomAttributeTypeNameParser.ResolveCustomAttributeTypeDefinitionName(typeDefName, module, throwIfNotFound);
-            });
+            TypeDesc foundType = systemModule.GetTypeByCustomAttributeTypeName(typeName, false,
+                (module, typeDefName) => (MetadataType)module.Context.GetCanonType(typeDefName));
+
             if (foundType == null)
                 throw new CommandLineException($"Type '{typeName}' not found");
 

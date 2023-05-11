@@ -253,6 +253,8 @@ static SPMI_TARGET_ARCHITECTURE SpmiTargetArchitecture = SPMI_TARGET_ARCHITECTUR
 static SPMI_TARGET_ARCHITECTURE SpmiTargetArchitecture = SPMI_TARGET_ARCHITECTURE_ARM64;
 #elif defined(TARGET_LOONGARCH64)
 static SPMI_TARGET_ARCHITECTURE SpmiTargetArchitecture = SPMI_TARGET_ARCHITECTURE_LOONGARCH64;
+#elif defined(TARGET_RISCV64)
+static SPMI_TARGET_ARCHITECTURE SpmiTargetArchitecture = SPMI_TARGET_ARCHITECTURE_RISCV64;
 #else
 #error Unsupported architecture
 #endif
@@ -412,4 +414,15 @@ std::string getClassName(MethodContext* mc, CORINFO_CLASS_HANDLE clsHnd)
     return getFromPrinter([&](char* buffer, size_t bufferSize, size_t* requiredBufferSize) {
         return mc->repPrintClassName(clsHnd, buffer, bufferSize, requiredBufferSize);
         });
+}
+
+std::string ConvertToUtf8(const WCHAR* str)
+{
+    unsigned len = WszWideCharToMultiByte(CP_UTF8, 0, str, -1, nullptr, 0, nullptr, nullptr);
+    if (len == 0)
+        return{};
+
+    std::vector<char> buf(len + 1);
+    WszWideCharToMultiByte(CP_UTF8, 0, str, -1, buf.data(), len + 1, nullptr, nullptr);
+    return std::string{ buf.data() };
 }

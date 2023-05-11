@@ -74,52 +74,8 @@ namespace System
 
     public static partial class Convert
     {
-        // A typeof operation is fairly expensive (does a system call), so we'll cache these here
-        // statically.  These are exactly lined up with the TypeCode, eg. ConvertType[TypeCode.Int16]
-        // will give you the type of an short.
-        internal static readonly Type[] ConvertTypes = {
-            typeof(System.Empty),
-            typeof(object),
-            typeof(System.DBNull),
-            typeof(bool),
-            typeof(char),
-            typeof(sbyte),
-            typeof(byte),
-            typeof(short),
-            typeof(ushort),
-            typeof(int),
-            typeof(uint),
-            typeof(long),
-            typeof(ulong),
-            typeof(float),
-            typeof(double),
-            typeof(decimal),
-            typeof(DateTime),
-            typeof(object), // TypeCode is discontinuous so we need a placeholder.
-            typeof(string)
-        };
-
-        // Need to special case Enum because typecode will be underlying type, e.g. Int32
-        private static readonly Type EnumType = typeof(Enum);
-
-        internal const string Base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
         private const int Base64LineBreakPosition = 76;
         private const int Base64VectorizationLengthThreshold = 16;
-
-#if DEBUG
-        static Convert()
-        {
-            Debug.Assert(ConvertTypes != null, "[Convert.cctor]ConvertTypes!=null");
-            Debug.Assert(ConvertTypes.Length == ((int)TypeCode.String + 1), "[Convert.cctor]ConvertTypes.Length == ((int)TypeCode.String + 1)");
-            Debug.Assert(ConvertTypes[(int)TypeCode.Empty] == typeof(System.Empty),
-                            "[Convert.cctor]ConvertTypes[(int)TypeCode.Empty]==typeof(System.Empty)");
-            Debug.Assert(ConvertTypes[(int)TypeCode.String] == typeof(string),
-                            "[Convert.cctor]ConvertTypes[(int)TypeCode.String]==typeof(System.String)");
-            Debug.Assert(ConvertTypes[(int)TypeCode.Int32] == typeof(int),
-                            "[Convert.cctor]ConvertTypes[(int)TypeCode.Int32]==typeof(int)");
-        }
-#endif
 
         // Constant representing the database null value. This value is used in
         // database applications to indicate the absence of a known value. Note
@@ -225,44 +181,44 @@ namespace System
                 return value;
             }
 
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Boolean]))
+            if (ReferenceEquals(targetType, typeof(bool)))
                 return value.ToBoolean(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Char]))
+            if (ReferenceEquals(targetType, typeof(char)))
                 return value.ToChar(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.SByte]))
+            if (ReferenceEquals(targetType, typeof(sbyte)))
                 return value.ToSByte(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Byte]))
+            if (ReferenceEquals(targetType, typeof(byte)))
                 return value.ToByte(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Int16]))
+            if (ReferenceEquals(targetType, typeof(short)))
                 return value.ToInt16(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.UInt16]))
+            if (ReferenceEquals(targetType, typeof(ushort)))
                 return value.ToUInt16(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Int32]))
+            if (ReferenceEquals(targetType, typeof(int)))
                 return value.ToInt32(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.UInt32]))
+            if (ReferenceEquals(targetType, typeof(uint)))
                 return value.ToUInt32(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Int64]))
+            if (ReferenceEquals(targetType, typeof(long)))
                 return value.ToInt64(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.UInt64]))
+            if (ReferenceEquals(targetType, typeof(ulong)))
                 return value.ToUInt64(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Single]))
+            if (ReferenceEquals(targetType, typeof(float)))
                 return value.ToSingle(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Double]))
+            if (ReferenceEquals(targetType, typeof(double)))
                 return value.ToDouble(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Decimal]))
+            if (ReferenceEquals(targetType, typeof(decimal)))
                 return value.ToDecimal(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.DateTime]))
+            if (ReferenceEquals(targetType, typeof(DateTime)))
                 return value.ToDateTime(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.String]))
+            if (ReferenceEquals(targetType, typeof(string)))
                 return value.ToString(provider);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Object]))
+            if (ReferenceEquals(targetType, typeof(object)))
                 return (object)value;
             // Need to special case Enum because typecode will be underlying type, e.g. Int32
-            if (ReferenceEquals(targetType, EnumType))
+            if (ReferenceEquals(targetType, typeof(Enum)))
                 return (Enum)value;
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.DBNull]))
+            if (ReferenceEquals(targetType, typeof(DBNull)))
                 throw new InvalidCastException(SR.InvalidCast_DBNull);
-            if (ReferenceEquals(targetType, ConvertTypes[(int)TypeCode.Empty]))
+            if (ReferenceEquals(targetType, typeof(Empty)))
                 throw new InvalidCastException(SR.InvalidCast_Empty);
 
             throw new InvalidCastException(SR.Format(SR.InvalidCast_FromTo, value.GetType().FullName, targetType.FullName));
@@ -297,37 +253,37 @@ namespace System
                 throw new InvalidCastException(SR.InvalidCast_IConvertible);
             }
 
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Boolean]))
+            if (ReferenceEquals(conversionType, typeof(bool)))
                 return ic.ToBoolean(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Char]))
+            if (ReferenceEquals(conversionType, typeof(char)))
                 return ic.ToChar(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.SByte]))
+            if (ReferenceEquals(conversionType, typeof(sbyte)))
                 return ic.ToSByte(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Byte]))
+            if (ReferenceEquals(conversionType, typeof(byte)))
                 return ic.ToByte(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Int16]))
+            if (ReferenceEquals(conversionType, typeof(short)))
                 return ic.ToInt16(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.UInt16]))
+            if (ReferenceEquals(conversionType, typeof(ushort)))
                 return ic.ToUInt16(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Int32]))
+            if (ReferenceEquals(conversionType, typeof(int)))
                 return ic.ToInt32(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.UInt32]))
+            if (ReferenceEquals(conversionType, typeof(uint)))
                 return ic.ToUInt32(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Int64]))
+            if (ReferenceEquals(conversionType, typeof(long)))
                 return ic.ToInt64(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.UInt64]))
+            if (ReferenceEquals(conversionType, typeof(ulong)))
                 return ic.ToUInt64(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Single]))
+            if (ReferenceEquals(conversionType, typeof(float)))
                 return ic.ToSingle(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Double]))
+            if (ReferenceEquals(conversionType, typeof(double)))
                 return ic.ToDouble(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Decimal]))
+            if (ReferenceEquals(conversionType, typeof(decimal)))
                 return ic.ToDecimal(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.DateTime]))
+            if (ReferenceEquals(conversionType, typeof(DateTime)))
                 return ic.ToDateTime(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.String]))
+            if (ReferenceEquals(conversionType, typeof(string)))
                 return ic.ToString(provider);
-            if (ReferenceEquals(conversionType, ConvertTypes[(int)TypeCode.Object]))
+            if (ReferenceEquals(conversionType, typeof(object)))
                 return (object)value;
 
             return ic.ToType(conversionType, provider);
@@ -2101,7 +2057,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
 
             if (value == null)
@@ -2124,7 +2080,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
 
             if (value == null)
@@ -2149,7 +2105,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
 
             if (value == null)
@@ -2175,7 +2131,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
 
             if (value == null)
@@ -2197,7 +2153,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
             return value != null ?
                 ParseNumbers.StringToInt(value.AsSpan(), fromBase, ParseNumbers.IsTight) :
@@ -2213,7 +2169,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
             return value != null ?
                 (uint)ParseNumbers.StringToInt(value.AsSpan(), fromBase, ParseNumbers.TreatAsUnsigned | ParseNumbers.IsTight) :
@@ -2228,7 +2184,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
             return value != null ?
                 ParseNumbers.StringToLong(value.AsSpan(), fromBase, ParseNumbers.IsTight) :
@@ -2244,7 +2200,7 @@ namespace System
         {
             if (fromBase != 2 && fromBase != 8 && fromBase != 10 && fromBase != 16)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                ThrowInvalidBase();
             }
             return value != null ?
                 (ulong)ParseNumbers.StringToLong(value.AsSpan(), fromBase, ParseNumbers.TreatAsUnsigned | ParseNumbers.IsTight) :
@@ -2252,43 +2208,111 @@ namespace System
         }
 
         // Convert the byte value to a string in base fromBase
-        public static string ToString(byte value, int toBase)
-        {
-            if (toBase != 2 && toBase != 8 && toBase != 10 && toBase != 16)
-            {
-                throw new ArgumentException(SR.Arg_InvalidBase);
-            }
-            return ParseNumbers.IntToString((int)value, toBase, -1, ' ', ParseNumbers.PrintAsI1);
-        }
+        public static string ToString(byte value, int toBase) =>
+            ToString((int)value, toBase);
 
         // Convert the Int16 value to a string in base fromBase
         public static string ToString(short value, int toBase)
         {
-            if (toBase != 2 && toBase != 8 && toBase != 10 && toBase != 16)
+            string format = "d";
+
+            switch (toBase)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
-            }
-            return ParseNumbers.IntToString((int)value, toBase, -1, ' ', ParseNumbers.PrintAsI2);
+                case 2:
+                    format = "b";
+                    break;
+
+                case 8:
+                    return ToOctalString((ushort)value);
+
+                case 10:
+                    break;
+
+                case 16:
+                    format = "x";
+                    break;
+
+                default:
+                    ThrowInvalidBase();
+                    break;
+            };
+
+            return value.ToString(format, CultureInfo.InvariantCulture);
         }
 
         // Convert the Int32 value to a string in base toBase
         public static string ToString(int value, int toBase)
         {
-            if (toBase != 2 && toBase != 8 && toBase != 10 && toBase != 16)
+            string format = "d";
+
+            switch (toBase)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
-            }
-            return ParseNumbers.IntToString(value, toBase, -1, ' ', 0);
+                case 2:
+                    format = "b";
+                    break;
+
+                case 8:
+                    return ToOctalString((uint)value);
+
+                case 10:
+                    break;
+
+                case 16:
+                    format = "x";
+                    break;
+
+                default:
+                    ThrowInvalidBase();
+                    break;
+            };
+
+            return value.ToString(format, CultureInfo.InvariantCulture);
         }
 
         // Convert the Int64 value to a string in base toBase
         public static string ToString(long value, int toBase)
         {
-            if (toBase != 2 && toBase != 8 && toBase != 10 && toBase != 16)
+            string format = "d";
+
+            switch (toBase)
             {
-                throw new ArgumentException(SR.Arg_InvalidBase);
+                case 2:
+                    format = "b";
+                    break;
+
+                case 8:
+                    return ToOctalString((ulong)value);
+
+                case 10:
+                    break;
+
+                case 16:
+                    format = "x";
+                    break;
+
+                default:
+                    ThrowInvalidBase();
+                    break;
+            };
+
+            return value.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        private static void ThrowInvalidBase() => throw new ArgumentException(SR.Arg_InvalidBase);
+
+        private static string ToOctalString(ulong value)
+        {
+            Span<char> chars = stackalloc char[22]; // max length of a ulong in octal
+
+            int i = chars.Length;
+            do
+            {
+                chars[--i] = (char)('0' + (value & 7));
+                value >>= 3;
             }
-            return ParseNumbers.LongToString(value, toBase, -1, ' ', 0);
+            while (value != 0);
+
+            return chars.Slice(i).ToString();
         }
 
         public static string ToBase64String(byte[] inArray)
@@ -2463,7 +2487,7 @@ namespace System
             OperationStatus status = Base64.EncodeToUtf8(bytes, MemoryMarshal.AsBytes(chars), out _, out int bytesWritten);
             Debug.Assert(status == OperationStatus.Done && charLengthRequired == bytesWritten);
 
-            // Now widen the ASCII bytes in-place to chars (if the vectorized ASCIIUtility.WidenAsciiToUtf16 is ever updated
+            // Now widen the ASCII bytes in-place to chars (if the vectorized Ascii.WidenAsciiToUtf16 is ever updated
             // to support in-place updates, it should be used here instead). Since the base64 bytes are all valid ASCII, the byte
             // data is guaranteed to be 1/2 as long as the char data, and we can widen in-place.
             ref ushort dest = ref Unsafe.As<char, ushort>(ref MemoryMarshal.GetReference(chars));
@@ -2514,7 +2538,7 @@ namespace System
             {
                 dest = ref Unsafe.Subtract(ref dest, 4);
                 src = ref Unsafe.Subtract(ref src, 4);
-                ASCIIUtility.WidenFourAsciiBytesToUtf16AndWriteToBuffer(ref Unsafe.As<ushort, char>(ref dest), Unsafe.ReadUnaligned<uint>(ref src));
+                Ascii.WidenFourAsciiBytesToUtf16AndWriteToBuffer(ref Unsafe.As<ushort, char>(ref dest), Unsafe.ReadUnaligned<uint>(ref src));
             }
 
             // The length produced by Base64 encoding is always a multiple of 4, so we don't need to handle
@@ -2535,8 +2559,8 @@ namespace System
             // Convert three bytes at a time to base64 notation.  This will consume 4 chars.
             int i;
 
-            // get a pointer to the Base64Table to avoid unnecessary range checking
-            fixed (char* base64 = Base64Table)
+            // get a pointer to the base64 table to avoid unnecessary range checking
+            fixed (byte* base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="u8)
             {
                 for (i = offset; i < calcLength; i += 3)
                 {
@@ -2550,10 +2574,10 @@ namespace System
                         }
                         charcount += 4;
                     }
-                    outChars[j] = base64[(inData[i] & 0xfc) >> 2];
-                    outChars[j + 1] = base64[((inData[i] & 0x03) << 4) | ((inData[i + 1] & 0xf0) >> 4)];
-                    outChars[j + 2] = base64[((inData[i + 1] & 0x0f) << 2) | ((inData[i + 2] & 0xc0) >> 6)];
-                    outChars[j + 3] = base64[inData[i + 2] & 0x3f];
+                    outChars[j] = (char)base64[(inData[i] & 0xfc) >> 2];
+                    outChars[j + 1] = (char)base64[((inData[i] & 0x03) << 4) | ((inData[i + 1] & 0xf0) >> 4)];
+                    outChars[j + 2] = (char)base64[((inData[i + 1] & 0x0f) << 2) | ((inData[i + 2] & 0xc0) >> 6)];
+                    outChars[j + 3] = (char)base64[inData[i + 2] & 0x3f];
                     j += 4;
                 }
 
@@ -2569,17 +2593,17 @@ namespace System
                 switch (lengthmod3)
                 {
                     case 2: // One character padding needed
-                        outChars[j] = base64[(inData[i] & 0xfc) >> 2];
-                        outChars[j + 1] = base64[((inData[i] & 0x03) << 4) | ((inData[i + 1] & 0xf0) >> 4)];
-                        outChars[j + 2] = base64[(inData[i + 1] & 0x0f) << 2];
-                        outChars[j + 3] = base64[64]; // Pad
+                        outChars[j] = (char)base64[(inData[i] & 0xfc) >> 2];
+                        outChars[j + 1] = (char)base64[((inData[i] & 0x03) << 4) | ((inData[i + 1] & 0xf0) >> 4)];
+                        outChars[j + 2] = (char)base64[(inData[i + 1] & 0x0f) << 2];
+                        outChars[j + 3] = (char)base64[64]; // Pad
                         j += 4;
                         break;
                     case 1: // Two character padding needed
-                        outChars[j] = base64[(inData[i] & 0xfc) >> 2];
-                        outChars[j + 1] = base64[(inData[i] & 0x03) << 4];
-                        outChars[j + 2] = base64[64]; // Pad
-                        outChars[j + 3] = base64[64]; // Pad
+                        outChars[j] = (char)base64[(inData[i] & 0xfc) >> 2];
+                        outChars[j + 1] = (char)base64[(inData[i] & 0x03) << 4];
+                        outChars[j + 2] = (char)base64[64]; // Pad
+                        outChars[j + 3] = (char)base64[64]; // Pad
                         j += 4;
                         break;
                 }

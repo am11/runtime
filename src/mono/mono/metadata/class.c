@@ -4242,11 +4242,11 @@ mono_class_is_assignable_from_general (MonoClass *klass, MonoClass *oklass, gboo
 		}
 
 		if (m_class_get_byval_arg (klass)->type == MONO_TYPE_FNPTR) {
-			/*
-			 * if both klass and oklass are fnptr, and they're equal, we would have returned at the
-			 * beginning.
-			 */
-			/* Is this right? or do we need to look at signature compatibility? */
+			if (mono_metadata_signature_equal (klass_byval_arg->data.method, oklass_byval_arg->data.method)) {
+				*result = TRUE;
+				return;
+			}
+
 			*result = FALSE;
 			return;
 		}
@@ -5913,7 +5913,7 @@ mono_class_get_method_from_name_checked (MonoClass *klass, const char *name,
 
 	mono_class_init_internal (klass);
 
-	if (mono_class_is_ginst (klass) && !m_class_get_methods (klass)) {
+	if (mono_class_is_ginst (klass) && (!m_class_get_methods (klass) || m_class_get_image (klass)->has_updates)) {
 		res = mono_class_get_method_from_name_checked (mono_class_get_generic_class (klass)->container_class, name, param_count, flags, error);
 
 		if (res)

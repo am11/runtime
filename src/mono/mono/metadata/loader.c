@@ -486,9 +486,16 @@ find_method_in_class (MonoClass *klass, const char *name, const char *qname, con
 		return NULL;
 	}
 	int mcount = mono_class_get_method_count (klass);
-	MonoMethod **klass_methods = m_class_get_methods (klass);
-	for (i = 0; i < mcount; ++i) {
-		MonoMethod *m = klass_methods [i];
+	i = -1;
+	gpointer iter = NULL;
+	MonoMethod *m = NULL;
+	gboolean matched = FALSE;
+	/* FIXME: metadata-update iterating using
+	 * mono_class_get_methods will break if `m` is NULL.  Need to
+	 * reconcile with the `if (!m)` "we must cope" comment below.
+	 */
+	while ((m = mono_class_get_methods (klass, &iter))) {
+		++i;
 		MonoMethodSignature *msig;
 
 		/* We must cope with failing to load some of the types. */
@@ -507,16 +514,33 @@ find_method_in_class (MonoClass *klass, const char *name, const char *qname, con
 			continue;
 
 		if (sig->call_convention == MONO_CALL_VARARG) {
-			if (mono_metadata_signature_vararg_match (sig, msig))
+			if (mono_metadata_signature_vararg_match (sig, msig)) {
+				matched = TRUE;
 				break;
+			}
 		} else {
-			if (mono_metadata_signature_equal (sig, msig))
+			if (mono_metadata_signature_equal (sig, msig)) {
+				matched = TRUE;
 				break;
+			}
 		}
 	}
 
-	if (i < mcount)
-		return mono_class_get_method_by_index (from_class, i);
+	if (matched) {
+		if (i < mcount)
+			return mono_class_get_method_by_index (from_class, i);
+		else if (m != NULL) {
+			// FIXME: metadata-update: hack
+			// it's from a metadata-update, probably
+			m = mono_class_inflate_generic_method_full_checked (
+				m, from_class, mono_class_get_context (from_class), error);
+			mono_error_assert_ok (error);
+			g_assert (m != NULL);
+			g_assert (m->klass == from_class);
+			g_assert (m->is_inflated);
+			return m;
+		}
+	}
 	return NULL;
 }
 
@@ -777,16 +801,21 @@ mono_method_get_signature_checked (MonoMethod *method, MonoImage *image, guint32
 	}
 
 	if (context) {
-		MonoMethodSignature *cached;
+		MonoMethodSignature *cached, *inflated;
 
 		/* This signature is not owned by a MonoMethod, so need to cache */
-		sig = inflate_generic_signature_checked (image, sig, context, error);
+		inflated = inflate_generic_signature_checked (image, sig, context, error);
 		if (!is_ok (error))
 			return NULL;
 
-		cached = mono_metadata_get_inflated_signature (sig, context);
-		if (cached != sig)
-			mono_metadata_free_inflated_signature (sig);
+		if (mono_metadata_signature_equal (sig, inflated)) {
+			mono_metadata_free_inflated_signature (inflated);
+			return sig;
+		}
+
+		cached = mono_metadata_get_inflated_signature (inflated, context);
+		if (cached != inflated)
+			mono_metadata_free_inflated_signature (inflated);
 		else
 			mono_atomic_fetch_add_i32 (&inflated_signatures_size, mono_metadata_signature_size (cached));
 		sig = cached;
@@ -1406,6 +1435,17 @@ mono_free_method  (MonoMethod *method)
  */
 void
 mono_method_get_param_names (MonoMethod *method, const char **names)
+{
+	MONO_ENTER_GC_UNSAFE;
+	mono_method_get_param_names_internal (method, names);
+	MONO_EXIT_GC_UNSAFE;
+}
+
+/**
+ * mono_method_get_param_names_internal:
+ */
+void
+mono_method_get_param_names_internal (MonoMethod *method, const char **names)
 {
 	int i, lastp;
 	MonoClass *klass;

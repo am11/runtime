@@ -575,7 +575,7 @@ namespace Mono.Linker.Steps
 
 		/// <summary>
 		/// Handles marking of interface implementations, and the marking of methods that implement interfaces
-		/// once the linker knows whether a type is instantiated or relevant to variant casting,
+		/// once ILLink knows whether a type is instantiated or relevant to variant casting,
 		/// and after interfaces and interface methods have been marked.
 		/// </summary>
 		void ProcessMarkedTypesWithInterfaces ()
@@ -671,7 +671,7 @@ namespace Mono.Linker.Steps
 
 				foreach (var iface in type.Interfaces) {
 					if (Annotations.IsMarked (iface.InterfaceType)) {
-						// We only need to mark the type definition because the linker will ensure that all marked implemented interfaces and used method implementations
+						// We only need to mark the type definition because ILLink will ensure that all marked implemented interfaces and used method implementations
 						// will be marked on this type as well.
 						MarkType (type, new DependencyInfo (DependencyKind.DynamicInterfaceCastableImplementation, iface.InterfaceType), new MessageOrigin (Context.TryResolve (iface.InterfaceType)));
 
@@ -710,11 +710,12 @@ namespace Mono.Linker.Steps
 		/// <summary>
 		/// Returns true if the Override in <paramref name="overrideInformation"/> should be marked because it is needed by the base method.
 		/// Does not take into account if the base method is in a preserved scope.
-		/// Assumes the base method is marked.
+		/// Assumes the base method is marked or comes from a preserved scope.
 		/// </summary>
 		// TODO: Move interface method marking logic here https://github.com/dotnet/linker/issues/3090
 		bool ShouldMarkOverrideForBase (OverrideInformation overrideInformation)
 		{
+			Debug.Assert (Annotations.IsMarked (overrideInformation.Base) || IgnoreScope (overrideInformation.Base.DeclaringType.Scope));
 			if (!Annotations.IsMarked (overrideInformation.Override.DeclaringType))
 				return false;
 			if (overrideInformation.IsOverrideOfInterfaceMember) {
@@ -725,8 +726,9 @@ namespace Mono.Linker.Steps
 			if (!Context.IsOptimizationEnabled (CodeOptimizations.OverrideRemoval, overrideInformation.Override))
 				return true;
 
-			// Methods on instantiated types that override a ov.Override from a base type (not an interface) should be marked
-			// Interface ov.Overrides should only be marked if the interfaceImplementation is marked, which is handled below
+			// In this context, an override needs to be kept if
+			// a) it's an override on an instantiated type (of a marked base) or
+			// b) it's an override of an abstract base (required for valid IL)
 			if (Annotations.IsInstantiated (overrideInformation.Override.DeclaringType))
 				return true;
 
@@ -744,6 +746,7 @@ namespace Mono.Linker.Steps
 		// TODO: Take into account a base method in preserved scope
 		void MarkOverrideForBaseMethod (OverrideInformation overrideInformation)
 		{
+			Debug.Assert (ShouldMarkOverrideForBase (overrideInformation));
 			if (Context.IsOptimizationEnabled (CodeOptimizations.OverrideRemoval, overrideInformation.Override) && Annotations.IsInstantiated (overrideInformation.Override.DeclaringType)) {
 				MarkMethod (overrideInformation.Override, new DependencyInfo (DependencyKind.OverrideOnInstantiatedType, overrideInformation.Override.DeclaringType), ScopeStack.CurrentScope.Origin);
 			} else {
@@ -1085,7 +1088,7 @@ namespace Mono.Linker.Steps
 					continue;
 
 				if (signature == null) {
-					MarkIndirectlyCalledMethod (m, reason, ScopeStack.CurrentScope.Origin);
+					MarkMethodVisibleToReflection (m, reason, ScopeStack.CurrentScope.Origin);
 					marked = true;
 					continue;
 				}
@@ -1104,7 +1107,7 @@ namespace Mono.Linker.Steps
 				if (!matched)
 					continue;
 
-				MarkIndirectlyCalledMethod (m, reason, ScopeStack.CurrentScope.Origin);
+				MarkMethodVisibleToReflection (m, reason, ScopeStack.CurrentScope.Origin);
 				marked = true;
 			}
 
@@ -1607,7 +1610,7 @@ namespace Mono.Linker.Steps
 				Debug.Assert (reason.Kind == DependencyKind.FieldAccess || reason.Kind == DependencyKind.Ldtoken);
 				// Blame the field reference (without actually marking) on the original reason.
 				Tracer.AddDirectDependency (reference, reason, marked: false);
-				MarkType (reference.DeclaringType, new DependencyInfo (DependencyKind.DeclaringType, reference), new MessageOrigin (Context.TryResolve (reference)));
+				MarkType (reference.DeclaringType, new DependencyInfo (DependencyKind.DeclaringType, reference));
 
 				// Blame the field definition that we will resolve on the field reference.
 				reason = new DependencyInfo (DependencyKind.FieldOnGenericInstance, reference);
@@ -1653,7 +1656,7 @@ namespace Mono.Linker.Steps
 			// When marking override methods via DynamicallyAccessedMembers, we should only issue a warning for the base method.
 			bool skipWarningsForOverride = member is MethodDefinition m && m.IsVirtual && Annotations.GetBaseMethods (m) != null;
 
-			bool isReflectionAccessCoveredByRUC = Annotations.DoesMemberRequireUnreferencedCode (member, out RequiresUnreferencedCodeAttribute? requiresUnreferencedCodeAttribute);
+			bool isReflectionAccessCoveredByRUC = Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (member, out RequiresUnreferencedCodeAttribute? requiresUnreferencedCodeAttribute);
 			if (isReflectionAccessCoveredByRUC && !skipWarningsForOverride) {
 				var id = reportOnMember ? DiagnosticId.DynamicallyAccessedMembersOnTypeReferencesMemberWithRequiresUnreferencedCode : DiagnosticId.DynamicallyAccessedMembersOnTypeReferencesMemberOnBaseWithRequiresUnreferencedCode;
 				Context.LogWarning (origin, id, type.GetDisplayName (),
@@ -1772,16 +1775,26 @@ namespace Mono.Linker.Steps
 					(origin.Provider is MethodDefinition originMethod && CompilerGeneratedState.IsNestedFunctionOrStateMachineMember (originMethod)));
 			}
 
-			if (dependencyKind == DependencyKind.DynamicallyAccessedMemberOnType) {
+			switch (dependencyKind) {
+			// Marked through things like descriptor - don't want to warn as it's intentional choice
+			case DependencyKind.AlreadyMarked:
+			case DependencyKind.TypePreserve:
+			case DependencyKind.PreservedMethod:
+				return;
+
+			case DependencyKind.DynamicallyAccessedMemberOnType:
 				ReportWarningsForTypeHierarchyReflectionAccess (field, origin);
 				return;
+
+			default:
+				break;
 			}
 
-			if (Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (origin.Provider))
+			if (Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (origin.Provider, out _))
 				return;
 
 			bool isReflectionAccessCoveredByRUC;
-			if (isReflectionAccessCoveredByRUC = Annotations.DoesFieldRequireUnreferencedCode (field, out RequiresUnreferencedCodeAttribute? requiresUnreferencedCodeAttribute))
+			if (isReflectionAccessCoveredByRUC = Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (field, out RequiresUnreferencedCodeAttribute? requiresUnreferencedCodeAttribute))
 				ReportRequiresUnreferencedCode (field.GetDisplayName (), requiresUnreferencedCodeAttribute!, new DiagnosticContext (origin, diagnosticsEnabled: true, Context));
 
 			bool isReflectionAccessCoveredByDAM = false;
@@ -1790,6 +1803,7 @@ namespace Mono.Linker.Steps
 			case DependencyKind.DynamicDependency:
 			case DependencyKind.DynamicallyAccessedMember:
 			case DependencyKind.InteropMethodDependency:
+			case DependencyKind.Ldtoken:
 				if (isReflectionAccessCoveredByDAM = Annotations.FlowAnnotations.ShouldWarnWhenAccessedForReflection (field))
 					Context.LogWarning (origin, DiagnosticId.DynamicallyAccessedMembersFieldAccessedViaReflection, field.GetDisplayName ());
 
@@ -1857,13 +1871,16 @@ namespace Mono.Linker.Steps
 			return MarkType (type, reason, origin);
 		}
 
-		internal void MarkMethodVisibleToReflection (MethodDefinition method, in DependencyInfo reason, in MessageOrigin origin)
+		internal void MarkMethodVisibleToReflection (MethodReference method, in DependencyInfo reason, in MessageOrigin origin)
 		{
-			MarkIndirectlyCalledMethod (method, reason, origin);
-			Annotations.MarkReflectionUsed (method);
+			MarkMethod (method, reason, origin);
+			if (Context.Resolve (method) is MethodDefinition methodDefinition) {
+				Annotations.MarkReflectionUsed (methodDefinition);
+				Annotations.MarkIndirectlyCalledMethod (methodDefinition);
+			}
 		}
 
-		internal void MarkFieldVisibleToReflection (FieldDefinition field, in DependencyInfo reason, in MessageOrigin origin)
+		internal void MarkFieldVisibleToReflection (FieldReference field, in DependencyInfo reason, in MessageOrigin origin)
 		{
 			MarkField (field, reason, origin);
 		}
@@ -1962,7 +1979,7 @@ namespace Mono.Linker.Steps
 
 			MarkType (type.BaseType, new DependencyInfo (DependencyKind.BaseType, type));
 
-			// The DynamicallyAccessedMembers hiearchy processing must be done after the base type was marked
+			// The DynamicallyAccessedMembers hierarchy processing must be done after the base type was marked
 			// (to avoid inconsistencies in the cache), but before anything else as work done below
 			// might need the results of the processing here.
 			DynamicallyAccessedMembersTypeHierarchy.ProcessMarkedTypeForDynamicallyAccessedMembersHierarchy (type);
@@ -2034,12 +2051,14 @@ namespace Mono.Linker.Steps
 				_typesWithInterfaces.Add ((type, ScopeStack.CurrentScope));
 
 			if (type.HasMethods) {
-				// TODO: MarkMethodIfNeededByBaseMethod should include logic for IsMethodNeededBytTypeDueToPreservedScope
+				// TODO: MarkMethodIfNeededByBaseMethod should include logic for IsMethodNeededByTypeDueToPreservedScope: https://github.com/dotnet/linker/issues/3090
 				foreach (var method in type.Methods) {
 					MarkMethodIfNeededByBaseMethod (method);
+					if (IsMethodNeededByTypeDueToPreservedScope (method)) {
+						// For methods that must be preserved, blame the declaring type.
+						MarkMethod (method, new DependencyInfo (DependencyKind.VirtualNeededDueToPreservedScope, type), ScopeStack.CurrentScope.Origin);
+					}
 				}
-				// For methods that must be preserved, blame the declaring type.
-				MarkMethodsIf (type.Methods, IsMethodNeededByTypeDueToPreservedScope, new DependencyInfo (DependencyKind.VirtualNeededDueToPreservedScope, type), ScopeStack.CurrentScope.Origin);
 				if (ShouldMarkTypeStaticConstructor (type) && reason.Kind != DependencyKind.TriggersCctorForCalledMethod) {
 					using (ScopeStack.PopToParent ())
 						MarkStaticConstructor (type, new DependencyInfo (DependencyKind.CctorForType, type), ScopeStack.CurrentScope.Origin);
@@ -2097,7 +2116,7 @@ namespace Mono.Linker.Steps
 
 				if (property.Name == "TargetTypeName") {
 					string targetTypeName = (string) property.Argument.Value;
-					TypeName typeName = TypeParser.ParseTypeName (targetTypeName);
+					TypeName? typeName = TypeParser.ParseTypeName (targetTypeName);
 					if (typeName is AssemblyQualifiedTypeName assemblyQualifiedTypeName) {
 						AssemblyDefinition? assembly = Context.TryResolve (assemblyQualifiedTypeName.AssemblyName.Name);
 						return assembly == null ? null : Context.TryResolve (assembly, targetTypeName);
@@ -2166,7 +2185,11 @@ namespace Mono.Linker.Steps
 			}
 		}
 
-		static readonly Regex DebuggerDisplayAttributeValueRegex = new Regex ("{[^{}]+}", RegexOptions.Compiled);
+		[GeneratedRegex ("{[^{}]+}")]
+		private static partial Regex DebuggerDisplayAttributeValueRegex ();
+
+		[GeneratedRegex (@".+,\s*nq")]
+		private static partial Regex ContainsNqSuffixRegex ();
 
 		void MarkTypeWithDebuggerDisplayAttribute (TypeDefinition type, CustomAttribute attribute)
 		{
@@ -2180,13 +2203,13 @@ namespace Mono.Linker.Steps
 				if (string.IsNullOrEmpty (displayString))
 					return;
 
-				foreach (Match match in DebuggerDisplayAttributeValueRegex.Matches (displayString)) {
+				foreach (Match match in DebuggerDisplayAttributeValueRegex ().Matches (displayString)) {
 					// Remove '{' and '}'
 					string realMatch = match.Value.Substring (1, match.Value.Length - 2);
 
 					// Remove ",nq" suffix if present
 					// (it asks the expression evaluator to remove the quotes when displaying the final value)
-					if (Regex.IsMatch (realMatch, @".+,\s*nq")) {
+					if (ContainsNqSuffixRegex ().IsMatch (realMatch)) {
 						realMatch = realMatch.Substring (0, realMatch.LastIndexOf (','));
 					}
 
@@ -2547,7 +2570,7 @@ namespace Mono.Linker.Steps
 						continue;
 
 					//
-					// Instead of trying to guess where to find the interface declaration linker walks
+					// Instead of trying to guess where to find the interface declaration ILLink walks
 					// the list of implemented interfaces and resolve the declaration from there
 					//
 					var tdef = Context.Resolve (iface_type);
@@ -2894,12 +2917,6 @@ namespace Mono.Linker.Steps
 				MarkMethod (method, reason, ScopeStack.CurrentScope.Origin);
 		}
 
-		protected internal void MarkIndirectlyCalledMethod (MethodDefinition method, in DependencyInfo reason, in MessageOrigin origin)
-		{
-			MarkMethod (method, reason, origin);
-			Annotations.MarkIndirectlyCalledMethod (method);
-		}
-
 		protected virtual MethodDefinition? MarkMethod (MethodReference reference, DependencyInfo reason, in MessageOrigin origin)
 		{
 			DependencyKind originalReasonKind = reason.Kind;
@@ -2929,11 +2946,37 @@ namespace Mono.Linker.Steps
 			if (Annotations.GetAction (method) == MethodAction.Nothing)
 				Annotations.SetAction (method, MethodAction.Parse);
 
-			EnqueueMethod (method, reason, origin);
 
 			// Use the original reason as it's important to correctly generate warnings
 			// the updated reason is only useful for better tracking of dependencies.
 			ProcessAnalysisAnnotationsForMethod (method, originalReasonKind, origin);
+
+			// Record the reason for marking a method on each call.
+			switch (reason.Kind) {
+			case DependencyKind.AlreadyMarked:
+				Debug.Assert (Annotations.IsMarked (method));
+				break;
+			default:
+				Annotations.Mark (method, reason, origin);
+				break;
+			}
+
+			bool markedForCall =
+				reason.Kind == DependencyKind.DirectCall ||
+				reason.Kind == DependencyKind.VirtualCall ||
+				reason.Kind == DependencyKind.Newobj;
+			if (markedForCall) {
+				// Record declaring type of a called method up-front as a special case so that we may
+				// track at least some method calls that trigger a cctor.
+				// Temporarily switch to the original source for marking this method
+				// this is for the same reason as for tracking, but this time so that we report potential
+				// warnings from a better place.
+				MarkType (method.DeclaringType, new DependencyInfo (DependencyKind.DeclaringTypeOfCalledMethod, method), new MessageOrigin (reason.Source as IMemberDefinition ?? method));
+			}
+
+			// We will only enqueue a method to be processed if it hasn't been processed yet.
+			if (!CheckProcessed (method))
+				EnqueueMethod (method, reason, origin);
 
 			return method;
 		}
@@ -3009,6 +3052,13 @@ namespace Mono.Linker.Steps
 			// since in those cases the warnings are desirable (potential access through reflection).
 			case DependencyKind.MemberOfType:
 
+			// Used when marking a cctor because a type or field is kept. This should not warn because we already warn
+			// on access to members of the type which could trigger the cctor.
+			case DependencyKind.CctorForType:
+			case DependencyKind.CctorForField:
+			case DependencyKind.TriggersCctorThroughFieldAccess:
+			case DependencyKind.TriggersCctorForCalledMethod:
+
 			// We should not be generating code which would produce warnings
 			case DependencyKind.UnreachableBodyRequirement:
 
@@ -3032,15 +3082,30 @@ namespace Mono.Linker.Steps
 				break;
 			};
 
-			if (Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (origin.Provider))
+			if (Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (origin.Provider, out _))
 				return;
 
-			// All override methods should have the same annotations as their base methods
-			// (else we will produce warning IL2046 or IL2092 or some other warning).
-			// When marking override methods via DynamicallyAccessedMembers, we should only issue a warning for the base method.
-			bool skipWarningsForOverride = dependencyKind == DependencyKind.DynamicallyAccessedMember && method.IsVirtual && Annotations.GetBaseMethods (method) != null;
+			bool skipWarningsForOverride;
+			bool isReflectionAccessCoveredByRUC;
+			RequiresUnreferencedCodeAttribute? requiresUnreferencedCode;
+			if (dependencyKind == DependencyKind.AttributeProperty) {
+				// Property assignment in an attribute instance.
+				// This case is more like a direct method call than reflection, and should
+				// be logically similar to what is done in ReflectionMethodBodyScanner for method calls.
+				skipWarningsForOverride = false;
+				isReflectionAccessCoveredByRUC = Annotations.DoesMethodRequireUnreferencedCode (method, out requiresUnreferencedCode);
+			} else {
+				// All override methods should have the same annotations as their base methods
+				// (else we will produce warning IL2046 or IL2092 or some other warning).
+				// When marking override methods via DynamicallyAccessedMembers, we should only issue a warning for the base method.
+				skipWarningsForOverride = dependencyKind == DependencyKind.DynamicallyAccessedMember && method.IsVirtual && Annotations.GetBaseMethods (method) != null;
+				// If the method being accessed has warnings suppressed due to Requires attributes,
+				// we need to issue a warning for the reflection access. This is true even for instance
+				// methods, which can be reflection-invoked without ever calling a constructor of the
+				// accessed type.
+				isReflectionAccessCoveredByRUC = Annotations.ShouldSuppressAnalysisWarningsForRequiresUnreferencedCode (method, out requiresUnreferencedCode);
+			}
 
-			bool isReflectionAccessCoveredByRUC = Annotations.DoesMethodRequireUnreferencedCode (method, out RequiresUnreferencedCodeAttribute? requiresUnreferencedCode);
 			if (isReflectionAccessCoveredByRUC && !skipWarningsForOverride)
 				ReportRequiresUnreferencedCode (method.GetDisplayName (), requiresUnreferencedCode!, new DiagnosticContext (origin, diagnosticsEnabled: true, Context));
 
@@ -3106,32 +3171,10 @@ namespace Mono.Linker.Steps
 			using var parentScope = ScopeStack.PushScope (new MarkScopeStack.Scope (origin));
 			using var methodScope = ScopeStack.PushScope (new MessageOrigin (method));
 
-			// Record the reason for marking a method on each call. The logic under CheckProcessed happens
-			// only once per method.
-			switch (reason.Kind) {
-			case DependencyKind.AlreadyMarked:
-				Debug.Assert (Annotations.IsMarked (method));
-				break;
-			default:
-				Annotations.Mark (method, reason, ScopeStack.CurrentScope.Origin);
-				break;
-			}
-
 			bool markedForCall =
 				reason.Kind == DependencyKind.DirectCall ||
 				reason.Kind == DependencyKind.VirtualCall ||
 				reason.Kind == DependencyKind.Newobj;
-			if (markedForCall) {
-				// Record declaring type of a called method up-front as a special case so that we may
-				// track at least some method calls that trigger a cctor.
-				// Temporarily switch to the original source for marking this method
-				// this is for the same reason as for tracking, but this time so that we report potential
-				// warnings from a better place.
-				MarkType (method.DeclaringType, new DependencyInfo (DependencyKind.DeclaringTypeOfCalledMethod, method), new MessageOrigin (reason.Source as IMemberDefinition ?? method));
-			}
-
-			if (CheckProcessed (method))
-				return;
 
 			foreach (Action<MethodDefinition> handleMarkMethod in MarkContext.MarkMethodActions)
 				handleMarkMethod (method);
@@ -3153,9 +3196,10 @@ namespace Mono.Linker.Steps
 				if (!Annotations.ProcessSatelliteAssemblies && KnownMembers.IsSatelliteAssemblyMarker (method))
 					Annotations.ProcessSatelliteAssemblies = true;
 			} else if (method.TryGetProperty (out PropertyDefinition? property))
-				MarkProperty (property, new DependencyInfo (DependencyKind.PropertyOfPropertyMethod, method));
-			else if (method.TryGetEvent (out EventDefinition? @event))
-				MarkEvent (@event, new DependencyInfo (DependencyKind.EventOfEventMethod, method));
+				MarkProperty (property, new DependencyInfo (PropagateDependencyKindToAccessors (reason.Kind, DependencyKind.PropertyOfPropertyMethod), method));
+			else if (method.TryGetEvent (out EventDefinition? @event)) {
+				MarkEvent (@event, new DependencyInfo (PropagateDependencyKindToAccessors(reason.Kind, DependencyKind.EventOfEventMethod), method));
+			}
 
 			if (method.HasMetadataParameters ()) {
 #pragma warning disable RS0030 // MethodReference.Parameters is banned. It's easiest to leave the code as is for now
@@ -3168,11 +3212,15 @@ namespace Mono.Linker.Steps
 			}
 
 			if (method.HasOverrides) {
+				var assembly = Context.Resolve (method.DeclaringType.Scope);
+				// If this method is in a Copy or CopyUsed assembly, .overrides won't get swept and we need to keep all of them
+				bool markAllOverrides = assembly != null && Annotations.GetAction (assembly) is AssemblyAction.Copy or AssemblyAction.CopyUsed;
 				foreach (MethodReference @base in method.Overrides) {
 					// Method implementing a static interface method will have an override to it - note instance methods usually don't unless they're explicit.
 					// Calling the implementation method directly has no impact on the interface, and as such it should not mark the interface or its method.
 					// Only if the interface method is referenced, then all the methods which implemented must be kept, but not the other way round.
-					if (Context.Resolve (@base) is MethodDefinition baseDefinition
+					if (!markAllOverrides &&
+						Context.Resolve (@base) is MethodDefinition baseDefinition
 						&& new OverrideInformation.OverridePair (baseDefinition, method).IsStaticInterfaceMethodPair ())
 						continue;
 					MarkMethod (@base, new DependencyInfo (DependencyKind.MethodImplOverride, method), ScopeStack.CurrentScope.Origin);
@@ -3190,7 +3238,7 @@ namespace Mono.Linker.Steps
 			MarkBaseMethods (method);
 
 			if (Annotations.GetOverrides (method) is IEnumerable<OverrideInformation> overrides) {
-				foreach (var @override in overrides) {
+				foreach (var @override in overrides.Where (ov => Annotations.IsMarked (ov.Base) || IgnoreScope (ov.Base.DeclaringType.Scope))) {
 					if (ShouldMarkOverrideForBase (@override))
 						MarkOverrideForBaseMethod (@override);
 				}
@@ -3228,6 +3276,20 @@ namespace Mono.Linker.Steps
 		// Allow subclassers to mark additional things when marking a method
 		protected virtual void DoAdditionalMethodProcessing (MethodDefinition method)
 		{
+		}
+
+		static DependencyKind PropagateDependencyKindToAccessors(DependencyKind parentDependencyKind, DependencyKind kind)
+		{
+			switch (parentDependencyKind) {
+			// If the member is marked due to descriptor or similar, propagate the original reason to suppress some warnings correctly
+			case DependencyKind.AlreadyMarked:
+			case DependencyKind.TypePreserve:
+			case DependencyKind.PreservedMethod:
+				return parentDependencyKind;
+
+			default:
+				return kind;
+			}
 		}
 
 		void MarkImplicitlyUsedFields (TypeDefinition type)
@@ -3466,9 +3528,12 @@ namespace Mono.Linker.Steps
 			using var eventScope = ScopeStack.PushScope (new MessageOrigin (evt));
 
 			MarkCustomAttributes (evt, new DependencyInfo (DependencyKind.CustomAttribute, evt));
-			MarkMethodIfNotNull (evt.AddMethod, new DependencyInfo (DependencyKind.EventMethod, evt), ScopeStack.CurrentScope.Origin);
-			MarkMethodIfNotNull (evt.InvokeMethod, new DependencyInfo (DependencyKind.EventMethod, evt), ScopeStack.CurrentScope.Origin);
-			MarkMethodIfNotNull (evt.RemoveMethod, new DependencyInfo (DependencyKind.EventMethod, evt), ScopeStack.CurrentScope.Origin);
+
+			DependencyKind dependencyKind = PropagateDependencyKindToAccessors(reason.Kind, DependencyKind.EventMethod);
+			MarkMethodIfNotNull (evt.AddMethod, new DependencyInfo (dependencyKind, evt), ScopeStack.CurrentScope.Origin);
+			MarkMethodIfNotNull (evt.InvokeMethod, new DependencyInfo (dependencyKind, evt), ScopeStack.CurrentScope.Origin);
+			MarkMethodIfNotNull (evt.RemoveMethod, new DependencyInfo (dependencyKind, evt), ScopeStack.CurrentScope.Origin);
+
 			DoAdditionalEventProcessing (evt);
 		}
 
@@ -3624,21 +3689,28 @@ namespace Mono.Linker.Steps
 				break;
 
 			case OperandType.InlineMethod: {
-					DependencyKind dependencyKind = instruction.OpCode.Code switch {
-						Code.Jmp => DependencyKind.DirectCall,
-						Code.Call => DependencyKind.DirectCall,
-						Code.Callvirt => DependencyKind.VirtualCall,
-						Code.Newobj => DependencyKind.Newobj,
-						Code.Ldvirtftn => DependencyKind.Ldvirtftn,
-						Code.Ldftn => DependencyKind.Ldftn,
+					(DependencyKind dependencyKind, bool markForReflectionAccess) = instruction.OpCode.Code switch {
+						Code.Jmp => (DependencyKind.DirectCall, false),
+						Code.Call => (DependencyKind.DirectCall, false),
+						Code.Callvirt => (DependencyKind.VirtualCall, false),
+						Code.Newobj => (DependencyKind.Newobj, false),
+						Code.Ldvirtftn => (DependencyKind.Ldvirtftn, true),
+						Code.Ldftn => (DependencyKind.Ldftn, true),
 						_ => throw new InvalidOperationException ($"unexpected opcode {instruction.OpCode}")
 					};
 
+					MethodReference methodReference = (MethodReference) instruction.Operand;
+
 					requiresReflectionMethodBodyScanner |=
-						ReflectionMethodBodyScanner.RequiresReflectionMethodBodyScannerForCallSite (Context, (MethodReference) instruction.Operand);
+						ReflectionMethodBodyScanner.RequiresReflectionMethodBodyScannerForCallSite (Context, methodReference);
 
 					ScopeStack.UpdateCurrentScopeInstructionOffset (instruction.Offset);
-					MarkMethod ((MethodReference) instruction.Operand, new DependencyInfo (dependencyKind, method), ScopeStack.CurrentScope.Origin);
+					if (markForReflectionAccess) {
+						MarkMethodVisibleToReflection (methodReference, new DependencyInfo (dependencyKind, method), ScopeStack.CurrentScope.Origin);
+					}
+					else {
+						MarkMethod (methodReference, new DependencyInfo (dependencyKind, method), ScopeStack.CurrentScope.Origin);
+					}
 					break;
 				}
 
@@ -3653,9 +3725,9 @@ namespace Mono.Linker.Steps
 						if (Context.TryResolve (typeReference) is TypeDefinition type)
 							MarkTypeVisibleToReflection (typeReference, type, reason, ScopeStack.CurrentScope.Origin);
 					} else if (token is MethodReference methodReference) {
-						MarkMethod (methodReference, reason, ScopeStack.CurrentScope.Origin);
+						MarkMethodVisibleToReflection (methodReference, reason, ScopeStack.CurrentScope.Origin);
 					} else {
-						MarkField ((FieldReference) token, reason, ScopeStack.CurrentScope.Origin);
+						MarkFieldVisibleToReflection ((FieldReference) token, reason, ScopeStack.CurrentScope.Origin);
 					}
 					break;
 				}

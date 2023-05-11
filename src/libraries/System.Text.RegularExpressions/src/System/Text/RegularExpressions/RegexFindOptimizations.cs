@@ -66,7 +66,7 @@ namespace System.Text.RegularExpressions
             }
 
             // If there's a leading substring, just use IndexOf and inherit all of its optimizations.
-            string prefix = RegexPrefixAnalyzer.FindPrefix(root);
+            string? prefix = RegexPrefixAnalyzer.FindPrefix(root);
             if (prefix.Length > 1)
             {
                 LeadingPrefix = prefix;
@@ -123,6 +123,16 @@ namespace System.Text.RegularExpressions
                         _asciiLookups = new uint[1][];
                     }
                 }
+                return;
+            }
+
+            // We're now left-to-right only.
+
+            prefix = RegexPrefixAnalyzer.FindPrefixOrdinalCaseInsensitive(root);
+            if (prefix is { Length: > 1 })
+            {
+                LeadingPrefix = prefix;
+                FindMode = FindNextStartingPositionMode.LeadingString_OrdinalIgnoreCase_LeftToRight;
                 return;
             }
 
@@ -241,12 +251,16 @@ namespace System.Text.RegularExpressions
 
             /// <summary>The character class description.</summary>
             public string Set;
+            /// <summary>Whether the <see cref="Set"/> is negated.</summary>
+            public bool Negated;
             /// <summary>Small list of all of the characters that make up the set, if known; otherwise, null.</summary>
             public char[]? Chars;
             /// <summary>The distance of the set from the beginning of the match.</summary>
             public int Distance;
             /// <summary>As an alternative to <see cref="Chars"/>, a description of the single range the set represents, if it does.</summary>
-            public (char LowInclusive, char HighInclusive, bool Negated)? Range;
+            public (char LowInclusive, char HighInclusive)? Range;
+            /// <summary>As an alternative to <see cref="Chars"/>, a description of the set of ASCII characters it represents, if it does.</summary>
+            public char[]? AsciiSet;
         }
 
         /// <summary>When in literal after set loop node, gets the literal to search for and the RegexNode representing the leading loop.</summary>
@@ -271,7 +285,7 @@ namespace System.Text.RegularExpressions
                 for (int i = 0; i < fixedDistanceSets.Count + 1; i++)
                 {
                     char[]? chars = i < fixedDistanceSets.Count ? fixedDistanceSets[i].Chars : null;
-                    bool invalidChars = chars is not { Length: 1 };
+                    bool invalidChars = chars is not { Length: 1 } || fixedDistanceSets[i].Negated;
 
                     // If the current set ends a sequence (or we've walked off the end), see whether
                     // what we've gathered constitues a valid string, and if it's better than the
@@ -543,6 +557,21 @@ namespace System.Text.RegularExpressions
                         return false;
                     }
 
+                // There's a case-insensitive prefix.  Search for it with ordinal case-insensitive IndexOf.
+
+                case FindNextStartingPositionMode.LeadingString_OrdinalIgnoreCase_LeftToRight:
+                    {
+                        int i = textSpan.Slice(pos).IndexOf(LeadingPrefix.AsSpan(), StringComparison.OrdinalIgnoreCase);
+                        if (i >= 0)
+                        {
+                            pos += i;
+                            return true;
+                        }
+
+                        pos = textSpan.Length;
+                        return false;
+                    }
+
                 // There's a set at the beginning of the pattern.  Search for it.
 
                 case FindNextStartingPositionMode.LeadingSet_LeftToRight:
@@ -772,6 +801,8 @@ namespace System.Text.RegularExpressions
         LeadingString_LeftToRight,
         /// <summary>A multi-character substring at the beginning of the right-to-left pattern.</summary>
         LeadingString_RightToLeft,
+        /// <summary>A multi-character ordinal case-insensitive substring at the beginning of the pattern.</summary>
+        LeadingString_OrdinalIgnoreCase_LeftToRight,
 
         /// <summary>A set starting the pattern.</summary>
         LeadingSet_LeftToRight,

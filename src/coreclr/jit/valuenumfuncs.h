@@ -41,8 +41,6 @@ ValueNumFuncDef(ReadyToRunIsInstanceOf, 2, false, false, false)       // Args: 0
 ValueNumFuncDef(TypeHandleToRuntimeType, 1, false, false, false)      // Args: 0: TypeHandle to translate
 ValueNumFuncDef(TypeHandleToRuntimeTypeHandle, 1, false, false, false)      // Args: 0: TypeHandle to translate
 
-ValueNumFuncDef(AreTypesEquivalent, 2, false, false, false) // Args: 0: first TypeHandle, 1: second TypeHandle
-
 ValueNumFuncDef(LdElemA, 3, false, false, false)            // Args: 0: array value; 1: index value; 2: type handle of element.
 
 ValueNumFuncDef(ByrefExposedLoad, 3, false, false, false)      // Args: 0: type handle/id, 1: pointer value; 2: ByrefExposed heap value
@@ -128,6 +126,7 @@ ValueNumFuncDef(GetsharedGcthreadstaticBase, 2, false, true, true)
 ValueNumFuncDef(GetsharedNongcthreadstaticBase, 2, false, true, true)
 ValueNumFuncDef(GetsharedGcthreadstaticBaseNoctor, 2, false, true, true)
 ValueNumFuncDef(GetsharedNongcthreadstaticBaseNoctor, 2, false, true, true)
+ValueNumFuncDef(GetsharedNongcthreadstaticBaseNoctorOptimized, 1, false, true, true)
 ValueNumFuncDef(GetsharedGcthreadstaticBaseDynamicclass, 2, false, true, true)
 ValueNumFuncDef(GetsharedNongcthreadstaticBaseDynamicclass, 2, false, true, true)
 
@@ -168,11 +167,6 @@ ValueNumFuncDef(MUL_UN_OVF, 2, true, false, false)
 ValueNumFuncDef(SimdType, 2, false, false, false)  // A value number function to compose a SIMD type
 #endif
 
-#define SIMD_INTRINSIC(m, i, id, n, r, argCount, arg1, arg2, arg3, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10) \
-ValueNumFuncDef(SIMD_##id, argCount, false, false, false)   // All of the SIMD intrinsic  (Consider isCommutativeSIMDIntrinsic)
-#include "simdintrinsiclist.h"
-#define VNF_SIMD_FIRST VNF_SIMD_None
-
 #if defined(TARGET_XARCH)
 #define HARDWARE_INTRINSIC(isa, name, size, argCount, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, category, flag) \
 ValueNumFuncDef(HWI_##isa##_##name, argCount, false, false, false)   // All of the HARDWARE_INTRINSICS for x86/x64
@@ -190,6 +184,9 @@ ValueNumFuncDef(HWI_##isa##_##name, argCount, false, false, false)   // All of t
 
 #elif defined (TARGET_LOONGARCH64)
     //TODO-LOONGARCH64-CQ: add LoongArch64's Hardware Intrinsics Instructions if supported.
+
+#elif defined (TARGET_RISCV64)
+    //TODO-RISCV64-CQ: add RISCV64's Hardware Intrinsics Instructions if supported.
 
 #else
 #error Unsupported platform

@@ -60,6 +60,11 @@ namespace System
     public struct RuntimeMethodHandle { }
     public struct RuntimeFieldHandle { }
 
+    public class Type
+    {
+        public static Type GetTypeFromHandle(RuntimeTypeHandle handle) => null;
+    }
+
     public class Attribute { }
     public class AttributeUsageAttribute : Attribute
     {
@@ -159,9 +164,14 @@ namespace System.Runtime.CompilerServices
     {
     }
 
+    public class CallConvCdecl { }
+    public class CallConvStdcall { }
+    public class CallConvSuppressGCTransition { }
+
     public static class RuntimeFeature
     {
         public const string ByRefFields = nameof(ByRefFields);
+        public const string UnmanagedSignatureCallingConvention = nameof(UnmanagedSignatureCallingConvention);
         public const string VirtualStaticsInInterfaces = nameof(VirtualStaticsInInterfaces);
     }
 
@@ -181,5 +191,23 @@ namespace System.Runtime.Intrinsics
         // This also allows the debug view to work https://github.com/dotnet/runtime/issues/9495)
         private readonly ulong _00;
         private readonly ulong _01;
+    }
+
+    [Intrinsic]
+    [StructLayout(LayoutKind.Sequential, Size = 32)]
+    public readonly struct Vector256<T>
+        where T : struct
+    {
+        private readonly Vector128<T> _lower;
+        private readonly Vector128<T> _upper;
+    }
+
+    [Intrinsic]
+    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    public readonly struct Vector512<T>
+        where T : struct
+    {
+        private readonly Vector256<T> _lower;
+        private readonly Vector256<T> _upper;
     }
 }

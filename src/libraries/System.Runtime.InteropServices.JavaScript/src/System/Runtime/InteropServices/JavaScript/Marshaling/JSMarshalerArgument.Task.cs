@@ -44,7 +44,7 @@ namespace System.Runtime.InteropServices.JavaScript
 
             GCHandle gcHandle = (GCHandle)slot.GCHandle;
             JSHostImplementation.TaskCallback? holder = (JSHostImplementation.TaskCallback?)gcHandle.Target;
-            if (holder == null) throw new NullReferenceException("JSHostImplementation.TaskCallback");
+            if (holder == null) throw new InvalidOperationException(SR.FailedToMarshalTaskCallback);
 
             TaskCompletionSource tcs = new TaskCompletionSource(gcHandle);
             JSHostImplementation.ToManagedCallback callback = (JSMarshalerArgument* arguments_buffer) =>
@@ -83,7 +83,7 @@ namespace System.Runtime.InteropServices.JavaScript
 
             GCHandle gcHandle = (GCHandle)slot.GCHandle;
             JSHostImplementation.TaskCallback? holder = (JSHostImplementation.TaskCallback?)gcHandle.Target;
-            if (holder == null) throw new NullReferenceException("JSHostImplementation.TaskCallback");
+            if (holder == null) throw new InvalidOperationException(SR.FailedToMarshalTaskCallback);
 
             TaskCompletionSource<T> tcs = new TaskCompletionSource<T>(gcHandle);
             JSHostImplementation.ToManagedCallback callback = (JSMarshalerArgument* arguments_buffer) =>
@@ -93,7 +93,7 @@ namespace System.Runtime.InteropServices.JavaScript
                 if (arg_2.slot.Type != MarshalerType.None)
                 {
                     arg_2.ToManaged(out Exception? fail);
-                    if (fail == null) throw new NullReferenceException("Exception");
+                    if (fail == null) throw new InvalidOperationException(SR.FailedToMarshalException);
                     tcs.SetException(fail);
                 }
                 else
@@ -168,7 +168,7 @@ namespace System.Runtime.InteropServices.JavaScript
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidProgramException(ex.Message, ex);
+                    throw new InvalidOperationException(ex.Message, ex);
                 }
                 finally
                 {
@@ -228,6 +228,10 @@ namespace System.Runtime.InteropServices.JavaScript
 
             void Complete()
             {
+#if FEATURE_WASM_THREADS
+                JSObject.AssertThreadAffinity(promise);
+#endif
+
                 // When this task was never resolved/rejected
                 // promise (held by this lambda) would be collected by GC after the Task is collected
                 // and would also allow the JS promise to be collected
@@ -245,7 +249,7 @@ namespace System.Runtime.InteropServices.JavaScript
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidProgramException(ex.Message, ex);
+                    throw new InvalidOperationException(ex.Message, ex);
                 }
                 finally
                 {
@@ -304,6 +308,9 @@ namespace System.Runtime.InteropServices.JavaScript
 
             void Complete()
             {
+#if FEATURE_WASM_THREADS
+                JSObject.AssertThreadAffinity(promise);
+#endif
                 // When this task was never resolved/rejected
                 // promise (held by this lambda) would be collected by GC after the Task is collected
                 // and would also allow the JS promise to be collected
@@ -322,7 +329,7 @@ namespace System.Runtime.InteropServices.JavaScript
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidProgramException(ex.Message, ex);
+                    throw new InvalidOperationException(ex.Message, ex);
                 }
                 finally
                 {
@@ -374,10 +381,7 @@ namespace System.Runtime.InteropServices.JavaScript
 
         private static void FailPromise(JSObject promise, Exception ex)
         {
-            if (promise.IsDisposed)
-            {
-                throw new ObjectDisposedException(nameof(promise));
-            }
+            ObjectDisposedException.ThrowIf(promise.IsDisposed, promise);
 
             Span<JSMarshalerArgument> args = stackalloc JSMarshalerArgument[4];
             ref JSMarshalerArgument exc = ref args[0];
@@ -423,10 +427,7 @@ namespace System.Runtime.InteropServices.JavaScript
 
         private static void ResolveVoidPromise(JSObject promise)
         {
-            if (promise.IsDisposed)
-            {
-                throw new ObjectDisposedException(nameof(promise));
-            }
+            ObjectDisposedException.ThrowIf(promise.IsDisposed, promise);
 
             Span<JSMarshalerArgument> args = stackalloc JSMarshalerArgument[4];
             ref JSMarshalerArgument exc = ref args[0];
@@ -448,10 +449,7 @@ namespace System.Runtime.InteropServices.JavaScript
 
         private static void ResolvePromise<T>(JSObject promise, T value, ArgumentToJSCallback<T> marshaler)
         {
-            if (promise.IsDisposed)
-            {
-                throw new ObjectDisposedException(nameof(promise));
-            }
+            ObjectDisposedException.ThrowIf(promise.IsDisposed, promise);
 
             Span<JSMarshalerArgument> args = stackalloc JSMarshalerArgument[4];
             ref JSMarshalerArgument exc = ref args[0];

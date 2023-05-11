@@ -88,7 +88,7 @@ namespace System.IO
         // Tests whether a file exists. The result is true if the file
         // given by the specified path exists; otherwise, the result is
         // false.  Note that if path describes a directory,
-        // Exists will return true.
+        // Exists will return false.
         public static bool Exists([NotNullWhen(true)] string? path)
         {
             try
@@ -758,7 +758,7 @@ namespace System.IO
             InternalWriteAllLines(new StreamWriter(path, false, encoding), contents);
         }
 
-        private static void InternalWriteAllLines(TextWriter writer, IEnumerable<string> contents)
+        private static void InternalWriteAllLines(StreamWriter writer, IEnumerable<string> contents)
         {
             Debug.Assert(writer != null);
             Debug.Assert(contents != null);
@@ -1069,7 +1069,7 @@ namespace System.IO
                 : InternalWriteAllLinesAsync(AsyncStreamWriter(path, encoding, append: false), contents, cancellationToken);
         }
 
-        private static async Task InternalWriteAllLinesAsync(TextWriter writer, IEnumerable<string> contents, CancellationToken cancellationToken)
+        private static async Task InternalWriteAllLinesAsync(StreamWriter writer, IEnumerable<string> contents, CancellationToken cancellationToken)
         {
             Debug.Assert(writer != null);
             Debug.Assert(contents != null);
@@ -1078,12 +1078,10 @@ namespace System.IO
             {
                 foreach (string line in contents)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await writer.WriteLineAsync(line).ConfigureAwait(false);
+                    await writer.WriteLineAsync(line.AsMemory(), cancellationToken).ConfigureAwait(false);
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
-                await writer.FlushAsync().ConfigureAwait(false);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 

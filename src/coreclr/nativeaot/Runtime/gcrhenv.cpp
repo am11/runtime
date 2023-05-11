@@ -28,7 +28,6 @@
 #include "thread.h"
 
 #include "shash.h"
-#include "RWLock.h"
 #include "TypeManager.h"
 #include "RuntimeInstance.h"
 #include "objecthandle.h"
@@ -144,7 +143,6 @@ uint32_t EtwCallback(uint32_t IsEnabled, RH_ETW_CONTEXT * pContext)
 // success or false if a subsystem failed to initialize.
 
 #ifndef DACCESS_COMPILE
-CrstStatic g_SuspendEELock;
 #ifdef _MSC_VER
 #pragma warning(disable:4815) // zero-sized array in stack object will have no elements
 #endif // _MSC_VER
@@ -168,9 +166,6 @@ bool RedhawkGCInterface::InitializeSubsystems()
     // Initialize the special MethodTable used to mark free list entries in the GC heap.
     g_FreeObjectEEType.InitializeAsGcFreeType();
     g_pFreeObjectEEType = &g_FreeObjectEEType;
-
-    if (!g_SuspendEELock.InitNoThrow(CrstSuspendEE))
-        return false;
 
 #ifdef FEATURE_SVR_GC
     g_heap_type = (g_pRhConfig->GetgcServer() && PalGetProcessCpuCount() > 1) ? GC_HEAP_SVR : GC_HEAP_WKS;
@@ -212,6 +207,7 @@ bool RedhawkGCInterface::InitializeSubsystems()
 Object* GcAllocInternal(MethodTable *pEEType, uint32_t uFlags, uintptr_t numElements, Thread* pThread)
 {
     ASSERT(!pThread->IsDoNotTriggerGcSet());
+    ASSERT(pThread->IsCurrentThreadInCooperativeMode());
 
     size_t cbSize = pEEType->get_BaseSize();
 
@@ -297,12 +293,38 @@ Object* GcAllocInternal(MethodTable *pEEType, uint32_t uFlags, uintptr_t numElem
 //  pEEType         -  type of the object
 //  uFlags          -  GC type flags (see gc.h GC_ALLOC_*)
 //  numElements     -  number of array elements
-//  pTransitionFrame-  transition frame to make stack crawable
+//  pTransitionFrame-  transition frame to make stack crawlable
 // Returns a pointer to the object allocated or NULL on failure.
 
 COOP_PINVOKE_HELPER(void*, RhpGcAlloc, (MethodTable* pEEType, uint32_t uFlags, uintptr_t numElements, PInvokeTransitionFrame* pTransitionFrame))
 {
     Thread* pThread = ThreadStore::GetCurrentThread();
+
+    // The allocation fast path is an asm helper that runs in coop mode and handles most allocation cases.
+    // The helper can also be tail-called. That is desirable for the fast path.
+    //
+    // Here we are on the slow(er) path when we need to call into GC. The fast path pushes a frame and calls here.
+    // In extremely rare cases the caller of the asm helper is hijacked and the helper is tail-called.
+    // As a result the asm helper may capture a hijacked return address into the transition frame.
+    // We do not want to put the burden of preventing such scenario on the fast path. Instead we will
+    // check for "hijacked frame" here and un-hijack m_RIP.
+    // We do not need to re-hijack when we are done, since m_RIP is discarded in POP_COOP_PINVOKE_FRAME
+#if defined(TARGET_X86) || defined(TARGET_AMD64)
+    if (Thread::IsHijackTarget(pTransitionFrame->m_RIP))
+    {
+        ASSERT(pThread->IsHijacked());
+        pTransitionFrame->m_RIP = pThread->GetHijackedReturnAddress();
+    }
+#else
+
+    // NOTE: The x64 fixup above would not be sufficient on ARM64 and similar architectures since
+    //       m_RIP is used to restore LR in POP_COOP_PINVOKE_FRAME.
+    //       However, this entire scenario is not a problem on architectures where the return address is
+    //       in a register as that makes tail-calling methods not hijackable.
+    //       (see:GetReturnAddressHijackInfo for detailed reasons in the context of ARM64)
+    ASSERT(!Thread::IsHijackTarget(pTransitionFrame->m_RIP));
+
+#endif
 
     pThread->SetDeferredTransitionFrame(pTransitionFrame);
 
@@ -642,10 +664,8 @@ void GCToEEInterface::SuspendEE(SUSPEND_REASON reason)
 
     FireEtwGCSuspendEEBegin_V1(Info.SuspendEE.Reason, Info.SuspendEE.GcCount, GetClrInstanceId());
 
-    g_SuspendEELock.Enter();
-
+    GetThreadStore()->LockThreadStore();
     GCHeapUtilities::GetGCHeap()->SetGCInProgress(TRUE);
-
     GetThreadStore()->SuspendAllThreads(true);
 
     FireEtwGCSuspendEEEnd_V1(GetClrInstanceId());
@@ -669,8 +689,7 @@ void GCToEEInterface::RestartEE(bool /*bFinishedGC*/)
 
     GetThreadStore()->ResumeAllThreads(true);
     GCHeapUtilities::GetGCHeap()->SetGCInProgress(FALSE);
-
-    g_SuspendEELock.Leave();
+    GetThreadStore()->UnlockThreadStore();
 
     FireEtwGCRestartEEEnd_V1(GetClrInstanceId());
 }
@@ -1356,7 +1375,7 @@ bool GCToEEInterface::GetBooleanConfigValue(const char* privateKey, const char* 
     const TCHAR* pKey = privateKey;
 #endif
 
-    uint32_t uiValue;
+    uint64_t uiValue;
     if (!g_pRhConfig->ReadConfigValue(pKey, &uiValue))
         return false;
 
@@ -1375,7 +1394,7 @@ bool GCToEEInterface::GetIntConfigValue(const char* privateKey, const char* publ
     const TCHAR* pKey = privateKey;
 #endif
 
-    uint32_t uiValue;
+    uint64_t uiValue;
     if (!g_pRhConfig->ReadConfigValue(pKey, &uiValue))
         return false;
 

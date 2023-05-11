@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Authentication;
@@ -46,11 +47,12 @@ namespace System.Net.Security
             EncryptionPolicy = sslClientAuthenticationOptions.EncryptionPolicy;
             IsServer = false;
             RemoteCertRequired = true;
-            // RFC 6066 section 3 says to exclude trailing dot from fully qualified DNS hostname
-            if (sslClientAuthenticationOptions.TargetHost != null)
-            {
-                TargetHost = sslClientAuthenticationOptions.TargetHost.TrimEnd('.');
-            }
+            CertificateContext = sslClientAuthenticationOptions.ClientCertificateContext;
+
+            // RFC 6066 forbids IP literals
+            TargetHost = TargetHostNameHelper.IsValidAddress(sslClientAuthenticationOptions.TargetHost)
+                ? string.Empty
+                : sslClientAuthenticationOptions.TargetHost ?? string.Empty;
 
             // Client specific options.
             CertificateRevocationCheckMode = sslClientAuthenticationOptions.CertificateRevocationCheckMode;
@@ -120,7 +122,7 @@ namespace System.Net.Security
                 if (certificateWithKey != null && certificateWithKey.HasPrivateKey)
                 {
                     // given cert is X509Certificate2 with key. We can use it directly.
-                    CertificateContext = SslStreamCertificateContext.Create(certificateWithKey, null);
+                    CertificateContext = SslStreamCertificateContext.Create(certificateWithKey, additionalCertificates: null, offline: false, trust: null, noOcspFetch: true);
                 }
                 else
                 {
@@ -181,5 +183,9 @@ namespace System.Net.Security
         internal object? UserState { get; set; }
         internal ServerOptionsSelectionCallback? ServerOptionDelegate { get; set; }
         internal X509ChainPolicy? CertificateChainPolicy { get; set; }
+
+#if TARGET_ANDROID
+        internal SslStream.JavaProxy? SslStreamProxy { get; set; }
+#endif
     }
 }

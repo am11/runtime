@@ -2076,9 +2076,9 @@ namespace System.Text.RegularExpressions
             // '  a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  p  q  r  s  t  u  v  w  x  y  z  {  |  }  ~
                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Q, S, 0, 0, 0};
 
-#if NET7_0_OR_GREATER
-        private static readonly IndexOfAnyValues<char> s_metachars =
-            IndexOfAnyValues.Create("\t\n\f\r #$()*+.?[\\^{|");
+#if NET8_0_OR_GREATER
+        private static readonly SearchValues<char> s_metachars =
+            SearchValues.Create("\t\n\f\r #$()*+.?[\\^{|");
 
         private static int IndexOfMetachar(ReadOnlySpan<char> input) =>
             input.IndexOfAny(s_metachars);

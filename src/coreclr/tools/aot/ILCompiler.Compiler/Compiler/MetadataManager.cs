@@ -63,6 +63,8 @@ namespace ILCompiler
         private readonly SortedSet<DefType> _typesWithDelegateMarshalling = new SortedSet<DefType>(TypeSystemComparer.Instance);
         private readonly SortedSet<DefType> _typesWithStructMarshalling = new SortedSet<DefType>(TypeSystemComparer.Instance);
         private HashSet<NativeLayoutTemplateMethodSignatureVertexNode> _templateMethodEntries = new HashSet<NativeLayoutTemplateMethodSignatureVertexNode>();
+        private readonly SortedSet<TypeDesc> _typeTemplates = new SortedSet<TypeDesc>(TypeSystemComparer.Instance);
+        private readonly SortedSet<MetadataType> _typesWithGenericStaticBaseInfo = new SortedSet<MetadataType>(TypeSystemComparer.Instance);
 
         private List<(DehydratableObjectNode Node, ObjectNode.ObjectData Data)> _dehydratableData = new List<(DehydratableObjectNode Node, ObjectNode.ObjectData data)>();
 
@@ -144,6 +146,15 @@ namespace ILCompiler
             var arrayMapNode = new ArrayMapNode(commonFixupsTableNode);
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.ArrayMap), arrayMapNode, arrayMapNode, arrayMapNode.EndSymbol);
 
+            var byRefMapNode = new ByRefTypeMapNode(commonFixupsTableNode);
+            header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.ByRefTypeMap), byRefMapNode, byRefMapNode, byRefMapNode.EndSymbol);
+
+            var pointerMapNode = new PointerTypeMapNode(commonFixupsTableNode);
+            header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.PointerTypeMap), pointerMapNode, pointerMapNode, pointerMapNode.EndSymbol);
+
+            var functionPointerMapNode = new FunctionPointerMapNode(commonFixupsTableNode);
+            header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.FunctionPointerTypeMap), functionPointerMapNode, functionPointerMapNode, functionPointerMapNode.EndSymbol);
+
             var fieldMapNode = new ReflectionFieldMapNode(commonFixupsTableNode);
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.FieldAccessMap), fieldMapNode, fieldMapNode, fieldMapNode.EndSymbol);
 
@@ -171,17 +182,11 @@ namespace ILCompiler
             var genericTypesTemplatesMapNode = new GenericTypesTemplateMap(commonFixupsTableNode);
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.TypeTemplateMap), genericTypesTemplatesMapNode, genericTypesTemplatesMapNode, genericTypesTemplatesMapNode.EndSymbol);
 
-            var blockReflectionTypeMapNode = new BlockReflectionTypeMapNode(commonFixupsTableNode);
-            header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.BlockReflectionTypeMap), blockReflectionTypeMapNode, blockReflectionTypeMapNode, blockReflectionTypeMapNode.EndSymbol);
-
             var staticsInfoHashtableNode = new StaticsInfoHashtableNode(nativeReferencesTableNode, nativeStaticsTableNode);
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.StaticsInfoHashtable), staticsInfoHashtableNode, staticsInfoHashtableNode, staticsInfoHashtableNode.EndSymbol);
 
             var virtualInvokeMapNode = new ReflectionVirtualInvokeMapNode(commonFixupsTableNode);
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.VirtualInvokeMap), virtualInvokeMapNode, virtualInvokeMapNode, virtualInvokeMapNode.EndSymbol);
-
-            var defaultConstructorMapNode = new DefaultConstructorMapNode(commonFixupsTableNode);
-            header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.DefaultConstructorMap), defaultConstructorMapNode, defaultConstructorMapNode, defaultConstructorMapNode.EndSymbol);
 
             var stackTraceMethodMappingNode = new StackTraceMethodMappingNode();
             header.Add(BlobIdToReadyToRunSection(ReflectionMapBlob.BlobIdStackTraceMethodRvaToTokenMapping), stackTraceMethodMappingNode, stackTraceMethodMappingNode, stackTraceMethodMappingNode.EndSymbol);
@@ -233,14 +238,14 @@ namespace ILCompiler
                 return;
             }
 
-            var reflectableMethodNode = obj as ReflectableMethodNode;
-            if (reflectableMethodNode != null)
+            var reflectedMethodNode = obj as ReflectedMethodNode;
+            if (reflectedMethodNode != null)
             {
-                _reflectableMethods.Add(reflectableMethodNode.Method);
+                _reflectableMethods.Add(reflectedMethodNode.Method);
             }
 
             var nonGcStaticSectionNode = obj as NonGCStaticsNode;
-            if (nonGcStaticSectionNode != null && nonGcStaticSectionNode.HasCCtorContext)
+            if (nonGcStaticSectionNode != null && nonGcStaticSectionNode.HasLazyStaticConstructor)
             {
                 _cctorContextsGenerated.Add(nonGcStaticSectionNode);
             }
@@ -255,9 +260,6 @@ namespace ILCompiler
             if (dictionaryNode != null)
             {
                 _genericDictionariesGenerated.Add(dictionaryNode);
-
-                if (dictionaryNode.OwningEntity is MethodDesc method && AllMethodsCanBeReflectable)
-                    _reflectableMethods.Add(method);
             }
 
             if (obj is InterfaceDispatchCellNode dispatchCell)
@@ -280,6 +282,11 @@ namespace ILCompiler
                 _templateMethodEntries.Add(templateMethodEntry);
             }
 
+            if (obj is NativeLayoutTemplateTypeLayoutVertexNode typeTemplate)
+            {
+                _typeTemplates.Add(typeTemplate.CanonType);
+            }
+
             if (obj is FrozenObjectNode frozenObj)
             {
                 _frozenObjects.Add(frozenObj);
@@ -288,6 +295,11 @@ namespace ILCompiler
             if (obj is FrozenStringNode frozenStr)
             {
                 _frozenObjects.Add(frozenStr);
+            }
+
+            if (obj is GenericStaticBaseInfoNode genericStaticBaseInfo)
+            {
+                _typesWithGenericStaticBaseInfo.Add(genericStaticBaseInfo.Type);
             }
         }
 
@@ -437,7 +449,7 @@ namespace ILCompiler
         /// <summary>
         /// This method is an extension point that can provide additional metadata-based dependencies to generated EETypes.
         /// </summary>
-        public void GetDependenciesDueToReflectability(ref DependencyList dependencies, NodeFactory factory, TypeDesc type)
+        public virtual void GetDependenciesDueToEETypePresence(ref DependencyList dependencies, NodeFactory factory, TypeDesc type)
         {
             MetadataCategory category = GetMetadataCategory(type);
 
@@ -514,13 +526,9 @@ namespace ILCompiler
                 ExactMethodInstantiationsNode.GetExactMethodInstantiationDependenciesForMethod(ref dependencies, factory, method);
             }
 
-            GetDependenciesDueToMethodCodePresenceInternal(ref dependencies, factory, method, methodIL);
-        }
+            InlineableStringsResourceNode.AddDependenciesDueToResourceStringUse(ref dependencies, factory, method);
 
-        public virtual void GetConditionalDependenciesDueToMethodGenericDictionary(ref CombinedDependencyList dependencies, NodeFactory factory, MethodDesc method)
-        {
-            // MetadataManagers can override this to provide additional dependencies caused by the presence of
-            // method generic dictionary.
+            GetDependenciesDueToMethodCodePresenceInternal(ref dependencies, factory, method, methodIL);
         }
 
         public virtual void GetConditionalDependenciesDueToMethodCodePresence(ref CombinedDependencyList dependencies, NodeFactory factory, MethodDesc method)
@@ -711,9 +719,19 @@ namespace ILCompiler
             return _reflectableMethods;
         }
 
+        public IEnumerable<TypeDesc> GetTypeTemplates()
+        {
+            return _typeTemplates;
+        }
+
         public IEnumerable<EmbeddedObjectNode> GetFrozenObjects()
         {
             return _frozenObjects;
+        }
+
+        public IEnumerable<MetadataType> GetTypesWithGenericStaticBaseInfos()
+        {
+            return _typesWithGenericStaticBaseInfo;
         }
 
         internal IEnumerable<IMethodBodyNode> GetCompiledMethodBodies()
@@ -817,9 +835,17 @@ namespace ILCompiler
             return _blockingPolicy.IsBlocked(typicalMethodDefinition);
         }
 
-        public bool IsManifestResourceBlocked(ModuleDesc module, string resourceName)
+        public bool IsManifestResourceBlocked(NodeFactory factory, Internal.TypeSystem.Ecma.EcmaModule module, string resourceName)
         {
-            return _resourceBlockingPolicy.IsManifestResourceBlocked(module, resourceName);
+            if (_resourceBlockingPolicy.IsManifestResourceBlocked(module, resourceName))
+                return true;
+
+            // If this is a resource strings resource but we don't actually need it, block it.
+            if (InlineableStringsResourceNode.IsInlineableStringsResource(module, resourceName)
+                && !factory.InlineableStringResource(module).Marked)
+                return true;
+
+            return false;
         }
 
         public bool CanGenerateMetadata(MetadataType type)
@@ -869,14 +895,6 @@ namespace ILCompiler
         public virtual DependencyList GetDependenciesForCustomAttribute(NodeFactory factory, MethodDesc attributeCtor, CustomAttributeValue decodedValue, TypeSystemEntity parent)
         {
             return null;
-        }
-
-        public virtual void GetDependenciesForGenericDictionary(ref DependencyList dependencies, NodeFactory factory, MethodDesc method)
-        {
-        }
-
-        public virtual void GetDependenciesForGenericDictionary(ref DependencyList dependencies, NodeFactory factory, TypeDesc type)
-        {
         }
 
         public virtual void NoteOverridingMethod(MethodDesc baseMethod, MethodDesc overridingMethod)

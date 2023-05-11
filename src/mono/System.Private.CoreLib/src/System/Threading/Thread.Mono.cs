@@ -37,6 +37,7 @@ namespace System.Threading
         private int interruption_requested;
         private IntPtr longlived;
         internal bool threadpool_thread;
+        internal bool external_eventloop; // browser-wasm: thread will return to the JS eventloop
         /* These are used from managed code */
         internal byte apartment_state;
         internal int managed_id;
@@ -65,7 +66,7 @@ namespace System.Threading
         private StartHelper? _startHelper;
         internal ExecutionContext? _executionContext;
         internal SynchronizationContext? _synchronizationContext;
-#if TARGET_UNIX || TARGET_BROWSER
+#if TARGET_UNIX || TARGET_BROWSER || TARGET_WASI
         internal WaitSubsystem.ThreadWaitInfo? _waitInfo;
 #endif
 
@@ -138,7 +139,7 @@ namespace System.Threading
                 return 7;
             }
         }
-#if TARGET_UNIX || TARGET_BROWSER
+#if TARGET_UNIX || TARGET_BROWSER || TARGET_WASI
         internal WaitSubsystem.ThreadWaitInfo WaitInfo
         {
             get
@@ -181,22 +182,9 @@ namespace System.Threading
             // no-op
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private static extern int GetCurrentProcessorNumber();
-
-        public static int GetCurrentProcessorId()
-        {
-            int id = GetCurrentProcessorNumber();
-
-            if (id < 0)
-                id = Environment.CurrentManagedThreadId;
-
-            return id;
-        }
-
         public void Interrupt()
         {
-#if TARGET_UNIX || TARGET_BROWSER // TODO: https://github.com/dotnet/runtime/issues/49521
+#if TARGET_UNIX || TARGET_BROWSER || TARGET_WASI // TODO: https://github.com/dotnet/runtime/issues/49521
             WaitSubsystem.Interrupt(this);
 #endif
             InterruptInternal(this);
@@ -208,7 +196,7 @@ namespace System.Threading
             return JoinInternal(this, millisecondsTimeout);
         }
 
-#if TARGET_UNIX || TARGET_BROWSER
+#if TARGET_UNIX || TARGET_BROWSER || TARGET_WASI
         [DynamicDependency(nameof(OnThreadExiting))]
 #endif
         private void Initialize()
@@ -300,7 +288,7 @@ namespace System.Threading
 
         private static void OnThreadExiting(Thread thread)
         {
-#if TARGET_UNIX || TARGET_BROWSER
+#if TARGET_UNIX || TARGET_BROWSER || TARGET_WASI
             thread.WaitInfo.OnThreadExiting();
 #endif
         }
@@ -363,5 +351,19 @@ namespace System.Threading
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         private static extern void SetPriority(Thread thread, int priority);
+
+        internal int GetSmallId() => small_id;
+
+        internal bool HasExternalEventLoop
+        {
+            get
+            {
+                return external_eventloop;
+            }
+            set
+            {
+                external_eventloop = value;
+            }
+        }
     }
 }

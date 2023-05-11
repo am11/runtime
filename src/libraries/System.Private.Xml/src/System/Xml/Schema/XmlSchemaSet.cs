@@ -218,7 +218,7 @@ namespace System.Xml.Schema
         /// </summary>
         public XmlSchema? Add(string? targetNamespace, string schemaUri)
         {
-            if (schemaUri == null || schemaUri.Length == 0)
+            if (string.IsNullOrEmpty(schemaUri))
             {
                 throw new ArgumentNullException(nameof(schemaUri));
             }
@@ -665,8 +665,9 @@ namespace System.Xml.Schema
         {
             ArgumentNullException.ThrowIfNull(schemas);
 
-            if (index < 0 || index > schemas.Length - 1)
-                throw new ArgumentOutOfRangeException(nameof(index));
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, schemas.Length - 1);
+
             _schemas.Values.CopyTo(schemas, index);
         }
 

@@ -14,11 +14,13 @@
 
 #define READYTORUN_SIGNATURE 0x00525452 // 'RTR'
 
-// Keep these in sync with src/coreclr/tools/Common/Internal/Runtime/ModuleHeaders.cs
-#define READYTORUN_MAJOR_VERSION 0x0008
-#define READYTORUN_MINOR_VERSION 0x0000
+// Keep these in sync with
+//  src/coreclr/tools/Common/Internal/Runtime/ModuleHeaders.cs
+//  src/coreclr/nativeaot/Runtime/inc/ModuleHeaders.h
+#define READYTORUN_MAJOR_VERSION 0x0009
+#define READYTORUN_MINOR_VERSION 0x0001
 
-#define MINIMUM_READYTORUN_MAJOR_VERSION 0x008
+#define MINIMUM_READYTORUN_MAJOR_VERSION 0x009
 
 // R2R Version 2.1 adds the InliningInfo section
 // R2R Version 2.2 adds the ProfileDataInfo section
@@ -27,6 +29,8 @@
 // R2R Version 6.0 changes managed layout for sequential types with any unmanaged non-blittable fields.
 //     R2R 6.0 is not backward compatible with 5.x or earlier.
 // R2R Version 8.0 Changes the alignment of the Int128 type
+// R2R Version 9.0 adds support for the Vector512 type
+// R2R Version 9.1 adds new helpers to allocate objects on frozen segments
 
 struct READYTORUN_CORE_HEADER
 {
@@ -332,6 +336,8 @@ enum ReadyToRunHelper
     READYTORUN_HELPER_GenericNonGcTlsBase       = 0x67,
     READYTORUN_HELPER_VirtualFuncPtr            = 0x68,
     READYTORUN_HELPER_IsInstanceOfException     = 0x69,
+    READYTORUN_HELPER_NewMaybeFrozenArray       = 0x6A,
+    READYTORUN_HELPER_NewMaybeFrozenObject      = 0x6B,
 
     // Long mul/div/shift ops
     READYTORUN_HELPER_LMul                      = 0xC0,

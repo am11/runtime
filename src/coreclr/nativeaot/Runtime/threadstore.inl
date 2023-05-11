@@ -1,7 +1,18 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-EXTERN_C DECLSPEC_THREAD ThreadBuffer tls_CurrentThread;
+#ifdef _MSC_VER
+// a workaround to prevent tls_CurrentThread from becoming dynamically checked/initialized.
+EXTERN_C __declspec(selectany) __declspec(thread) ThreadBuffer tls_CurrentThread;
+
+// the root of inlined threadstatics storage
+// there is only one now,
+// eventually this will be emitted by ILC and we may have more than one such variable
+EXTERN_C __declspec(selectany) __declspec(thread) InlinedThreadStaticRoot tls_InlinedThreadStatics;
+#else
+EXTERN_C __thread ThreadBuffer tls_CurrentThread;
+EXTERN_C __thread InlinedThreadStaticRoot tls_InlinedThreadStatics;
+#endif
 
 // static
 inline Thread * ThreadStore::RawGetCurrentThread()

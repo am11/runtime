@@ -59,11 +59,9 @@ The best way to create a minimal reproduction is gradually removing code and dep
 
 ## Contributing Changes
 
-Project maintainers will merge changes that improve the product significantly and broadly align with the [.NET Roadmap](https://github.com/dotnet/core/blob/master/roadmap.md).
+Project maintainers will merge changes that improve the product significantly.
 
-Maintainers will not merge changes that have narrowly-defined benefits, due to compatibility risk. .NET is used by several Microsoft products (for example, ASP.NET Core, .NET Framework 4.x, Windows Universal Apps) to enable execution of managed code. Other companies are building products on top of .NET, too. We may revert changes if they are found to be breaking.
-
-Contributions must also satisfy the other published guidelines defined in this document as well as in [pr-guide docs](docs/pr-guide.md).
+The [Pull Request Guide](docs/workflow/ci/pr-guide.md) and [Copyright](docs/project/copyright.md) docs define additional guidance.
 
 ### DOs and DON'Ts
 
@@ -115,7 +113,7 @@ We use and recommend the following workflow:
     - Make sure that the tests are all passing, including your new tests.
 7. Create a pull request (PR) against the dotnet/runtime repository's **main** branch.
     - State in the description what issue or improvement your change is addressing.
-    - Check if all the Continuous Integration checks are passing.
+    - Check if all the Continuous Integration checks are passing. Refer to [triaging failures in CI](docs/workflow/ci/failure-analysis.md) to check if any outstanding errors are known.
 8. Wait for feedback or approval of your changes from the [area owners](docs/area-owners.md).
     - Details about the pull request [review procedure](docs/pr-guide.md).
 9. When area owners have signed off, and all checks are green, your PR will be merged.
@@ -167,9 +165,9 @@ The following file header is the used for files in this repo. Please use it for 
 
 ### PR - CI Process
 
-The [dotnet continuous integration](https://dev.azure.com/dnceng/public/) (CI) system will automatically perform the required builds and run tests (including the ones you are expected to run) for PRs. Builds and test runs must be clean.
+The [dotnet continuous integration](https://dev.azure.com/dnceng-public/public/_build) (CI) system will automatically perform the required builds and run tests (including the ones you are expected to run) for PRs. Builds and test runs must be clean or have bugs properly filed against flaky/unexpected failures that are unrelated to your change.
 
-If the CI build fails for any reason, the PR issue will be updated with a link that can be used to determine the cause of the failure.
+If the CI build fails for any reason, the PR issue will link to the `Azure DevOps` build with further information on the failure.
 
 ### PR Feedback
 

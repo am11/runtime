@@ -3,8 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 using ILCompiler.DependencyAnalysisFramework;
@@ -957,6 +958,17 @@ namespace ILCompiler.DependencyAnalysis
                 else
                 {
                     managedCodeSection = ObjectNodeSection.ManagedCodeUnixContentSection;
+                    objectWriter.SetSection(ObjectNodeSection.CommentSection);
+                    byte[] runtimeVersionBytes = objectWriter._sb.Clear().Append(".NET AOT ")
+                        .Append(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion)
+                        .Append('\0').UnderlyingArray;
+                    unsafe
+                    {
+                        fixed (byte* bytes = &runtimeVersionBytes[0])
+                        {
+                            objectWriter.EmitBytes((IntPtr)bytes, runtimeVersionBytes.Length);
+                        }
+                    }
                     // TODO 2916: managed code section has to be created here, switch is not necessary.
                     objectWriter.SetSection(ObjectNodeSection.ManagedCodeUnixContentSection);
                     objectWriter.SetSection(LsdaSection);

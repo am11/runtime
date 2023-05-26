@@ -25,7 +25,7 @@ elseif(HOST_ANDROID)
 set(OS_LIBS m dl log)
 elseif(HOST_LINUX)
 set(OS_LIBS pthread m dl gcc_s)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") # gcc also requires libc_nonshared.a
+  if(NOT CLR_CMAKE_HOST_LINUX_MUSL) # glibc build also requires libc_nonshared.a for atexit(3) usage
     set(OS_LIBS ${OS_LIBS} -l:libc_nonshared.a)
   endif()
 elseif(HOST_WIN32)

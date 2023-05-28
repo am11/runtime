@@ -19,7 +19,6 @@ Revision History:
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
-#include <new>
 #include <assert.h>
 
 #define FASTLOOP
@@ -29,6 +28,8 @@ Revision History:
 #else
 #define W(str) u##str
 #endif
+
+inline void *operator new(size_t, void *p) throw () { return p; }
 
 struct CharUnicodeInfo
 {

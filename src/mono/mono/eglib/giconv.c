@@ -345,7 +345,11 @@ g_utf8_to_utf16_impl (const gchar *str, glong len, glong *items_read, glong *ite
 {
 	errno = 0;
 	gunichar2* lpDestStr = NULL;
-	int ret = minipal_utf8_to_utf16_allocate (str, len, &lpDestStr, dwFlags, treatAsLE);
+	int ret = minipal_utf8_to_utf16_allocate (str, len, &lpDestStr, dwFlags
+#ifdef BIGENDIAN
+        , treatAsLE
+#endif
+);
 	if (items_written)
 		*items_written = errno == 0 ? ret : 0;
 	map_error(err);
@@ -356,7 +360,11 @@ static gunichar2 *
 g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_read, glong *items_written, GCustomAllocator custom_alloc_func, gpointer custom_alloc_data, GError **err, bool treatAsLE)
 {
 	errno = 0;
-	int ret = minipal_utf8_to_utf16_preallocated (str, len, 0, 0, 0, /* treatAsLE */ treatAsLE);
+	int ret = minipal_utf8_to_utf16_preallocated (str, len, 0, 0, 0
+#ifdef BIGENDIAN
+	, /* treatAsLE */ treatAsLE
+#endif
+    );
 	map_error(err);
 
 	if (items_written)
@@ -366,7 +374,11 @@ g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_r
 		return NULL;
 
 	gunichar2* lpDestStr = custom_alloc_func((ret + 1) * sizeof (gunichar2), custom_alloc_data);
-	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, MB_ERR_INVALID_CHARS, /* treatAsLE */ treatAsLE);
+	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, MB_ERR_INVALID_CHARS
+#ifdef BIGENDIAN
+	, /* treatAsLE */ treatAsLE
+#endif
+	);
 	map_error(err);
 	return lpDestStr;
 }
@@ -478,7 +490,11 @@ g_utf16_to_utf8_impl (const gunichar2 *str, glong len, glong *items_read, glong 
 {
 	errno = 0;
 	gchar* lpDestStr = NULL;
-	int ret = minipal_utf16_to_utf8_allocate (str, len, &lpDestStr, treatAsLE);
+	int ret = minipal_utf16_to_utf8_allocate (str, len, &lpDestStr
+#ifdef BIGENDIAN
+	, /* treatAsLE */ treatAsLE
+#endif
+	);
 
 	if (items_written)
 		*items_written = errno == 0 ? ret : 0;
@@ -514,6 +530,7 @@ g_utf16_to_utf8_custom_alloc (const gunichar2 *str, glong len, glong *items_read
 
 	gchar* lpDestStr = custom_alloc_func((ret + 1) * sizeof (gunichar2), custom_alloc_data);
 	ret = minipal_utf16_to_utf8_preallocated (str, len, &lpDestStr, ret);
+
 	map_error(err);
 	return lpDestStr;
 }

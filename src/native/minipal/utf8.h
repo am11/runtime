@@ -24,13 +24,25 @@ typedef wchar_t CHAR16_T;
 typedef unsigned short CHAR16_T;
 #endif
 
-int minipal_utf8_to_utf16_preallocated(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, int cchDest, unsigned int dwFlags, bool treatAsLE);
+int minipal_utf8_to_utf16_preallocated(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, int cchDest, unsigned int dwFlags
+#if BIGENDIAN
+    bool treatAsLE
+#endif
+);
 
 int minipal_utf16_to_utf8_preallocated(const CHAR16_T* lpSrcStr, int cchSrc, char** lpDestStr, int cchDest);
 
-int minipal_utf8_to_utf16_allocate(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, unsigned int dwFlags, bool treatAsLE);
+int minipal_utf8_to_utf16_allocate(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, unsigned int dwFlags
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+);
 
-int minipal_utf16_to_utf8_allocate(const CHAR16_T* lpSrcStr, int cchSrc, char** lpDestStr, bool treatAsLE);
+int minipal_utf16_to_utf8_allocate(const CHAR16_T* lpSrcStr, int cchSrc, char** lpDestStr
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+);
 
 #ifdef __cplusplus
 }

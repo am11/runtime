@@ -10,12 +10,6 @@
 
 #define FASTLOOP
 
-#ifdef TARGET_WINDOWS
-#define W(str) L ## str
-#else
-#define W(str) u##str
-#endif
-
 #define HIGH_SURROGATE_START 0xd800
 #define HIGH_SURROGATE_END 0xdbff
 #define LOW_SURROGATE_START 0xdc00
@@ -112,7 +106,7 @@ static CHAR16_T DecoderReplacementFallbackBuffer_GetNextChar(DecoderBuffer* self
 }
 
 // Fallback Methods
-static bool DecoderReplacementFallbackBuffer_Fallback(DecoderBuffer* self, unsigned char bytesUnknown[], int index, int size)
+static bool DecoderReplacementFallbackBuffer_Fallback(DecoderBuffer* self)
 {
     // We expect no previous fallback in our buffer
     // We can't call recursively but others might (note, we don't test on last char!!!)
@@ -128,15 +122,6 @@ static bool DecoderReplacementFallbackBuffer_Fallback(DecoderBuffer* self, unsig
     return true;
 }
 
-// This version just counts the fallback and doesn't actually copy anything.
-static int DecoderReplacementFallbackBuffer_InternalFallback(DecoderBuffer* self, unsigned char bytes[], unsigned char* pBytes, int size)
-    // Right now this has both bytes and bytes[], since we might have extra bytes, hence the
-    // array, and we might need the index, hence the byte*
-{
-    // return our replacement string Length
-    return self->strDefaultLength;
-}
-
 // Fallback the current byte by sticking it into the remaining char buffer.
 // This can only be called by our encodings (other have to use the public fallback methods), so
 // we can use our DecoderNLS here too (except we don't).
@@ -145,11 +130,11 @@ static int DecoderReplacementFallbackBuffer_InternalFallback(DecoderBuffer* self
 // Right now this has both bytes and bytes[], since we might have extra bytes, hence the
 // array, and we might need the index, hence the byte*
 // Don't touch ref chars unless we succeed
-static bool DecoderReplacementFallbackBuffer_InternalFallback_Copy(DecoderBuffer* self, unsigned char bytes[], unsigned char* pBytes, CHAR16_T** chars, int size)
+static bool DecoderReplacementFallbackBuffer_InternalFallback_Copy(DecoderBuffer* self, CHAR16_T** chars)
 {
     ContractAssert(self->byteStart != NULL)
 
-    bool fallbackResult = DecoderReplacementFallbackBuffer_Fallback(self, bytes, (int)(pBytes - self->byteStart - size), size);
+    bool fallbackResult = DecoderReplacementFallbackBuffer_Fallback(self);
     if (errno) return false;
 
     // See if there's a fallback character and we have an output buffer then copy our string.
@@ -286,7 +271,7 @@ static CHAR16_T EncoderReplacementFallbackBuffer_InternalGetNextChar(EncoderBuff
 }
 
 // Fallback Methods
-static bool EncoderReplacementFallbackBuffer_Fallback(EncoderBuffer* self, CHAR16_T charUnknown, int index)
+static bool EncoderReplacementFallbackBuffer_Fallback(EncoderBuffer* self)
 {
     // If we had a buffer already we're being recursive, throw, it's probably at the suspect
     // character in our array.
@@ -300,7 +285,7 @@ static bool EncoderReplacementFallbackBuffer_Fallback(EncoderBuffer* self, CHAR1
     return self->fallbackCount != 0;
 }
 
-static bool EncoderReplacementFallbackBuffer_Fallback_Unknown(EncoderBuffer* self, CHAR16_T charUnknownHigh, CHAR16_T charUnknownLow, int index)
+static bool EncoderReplacementFallbackBuffer_Fallback_Unknown(EncoderBuffer* self, CHAR16_T charUnknownHigh, CHAR16_T charUnknownLow)
 {
     // Double check input surrogate pair
     ContractAssert(IsHighSurrogate(charUnknownHigh))
@@ -330,9 +315,6 @@ static bool EncoderReplacementFallbackBuffer_InternalFallback(EncoderBuffer* sel
     // Shouldn't have null charStart
     ContractAssert(self->charStart != NULL)
 
-    // Get our index, remember chars was preincremented to point at next char, so have to -1
-    int index = (int)(*chars - self->charStart) - 1;
-
     // See if it was a high surrogate
     if (IsHighSurrogate(ch))
     {
@@ -353,7 +335,7 @@ static bool EncoderReplacementFallbackBuffer_InternalFallback(EncoderBuffer* sel
 
                 // Next is a surrogate, add it as surrogate pair, and increment chars
                 (*chars)++;
-                self->bFallingBack = EncoderReplacementFallbackBuffer_Fallback_Unknown(self, ch, cNext, index);
+                self->bFallingBack = EncoderReplacementFallbackBuffer_Fallback_Unknown(self, ch, cNext);
                 return self->bFallingBack;
             }
 
@@ -365,7 +347,7 @@ static bool EncoderReplacementFallbackBuffer_InternalFallback(EncoderBuffer* sel
     ContractAssert(!self->bFallingBack || self->iRecursionCount++ <= MAX_RECURSION)
 
     // Fall back our char
-    self->bFallingBack = EncoderReplacementFallbackBuffer_Fallback(self, ch, index);
+    self->bFallingBack = EncoderReplacementFallbackBuffer_Fallback(self);
 
     return self->bFallingBack;
 }
@@ -420,91 +402,16 @@ static bool InRange(int c, int begin, int end)
     return begin <= c && c <= end;
 }
 
-static int GetBytesUnknown(unsigned char* pSrc, int ch, unsigned char* bytesUnknown)
-{
-    int size;
-
-    // See if it was a plain char
-    // (have to check >= 0 because we have all sorts of weird bit flags)
-    if (ch < 0x100 && ch >= 0)
-    {
-        pSrc--;
-        bytesUnknown[0] = (unsigned char)ch;
-        size =  1;
-    }
-    // See if its an unfinished 2 byte sequence
-    else if ((ch & (SupplimentarySeq | ThreeByteSeq)) == 0)
-    {
-        pSrc--;
-        bytesUnknown[0] = (unsigned char)((ch & 0x1F) | 0xc0);
-        size = 1;
-    }
-    // So now we're either 2nd byte of 3 or 4 byte sequence or
-    // we hit a non-trail byte or we ran out of space for 3rd byte of 4 byte sequence
-    // 1st check if its a 4 byte sequence
-    else if ((ch & SupplimentarySeq) != 0)
-    {
-        //  3rd byte of 4 byte sequence?
-        if ((ch & (FinalByte >> 6)) != 0)
-        {
-            // 3rd byte of 4 byte sequence
-            pSrc -= 3;
-            bytesUnknown[0] = (unsigned char)(((ch >> 12) & 0x07) | 0xF0);
-            bytesUnknown[1] = (unsigned char)(((ch >> 6) & 0x3F) | 0x80);
-            bytesUnknown[2] = (unsigned char)(((ch)& 0x3F) | 0x80);
-            size = 3;
-        }
-        else if ((ch & (FinalByte >> 12)) != 0)
-        {
-            // 2nd byte of a 4 byte sequence
-            pSrc -= 2;
-            bytesUnknown[0] = (unsigned char)(((ch >> 6) & 0x07) | 0xF0);
-            bytesUnknown[1] = (unsigned char)(((ch)& 0x3F) | 0x80);
-            size = 2;
-        }
-        else
-        {
-            // 4th byte of a 4 byte sequence
-            pSrc--;
-            bytesUnknown[0] = (unsigned char)(((ch)& 0x07) | 0xF0);
-            size = 1;
-        }
-    }
-    else
-    {
-        // 2nd byte of 3 byte sequence?
-        if ((ch & (FinalByte >> 6)) != 0)
-        {
-            // So its 2nd byte of a 3 byte sequence
-            pSrc -= 2;
-            bytesUnknown[0] = (unsigned char)(((ch >> 6) & 0x0F) | 0xE0);
-            bytesUnknown[1] = (unsigned char)(((ch)& 0x3F) | 0x80);
-            size = 2;
-        }
-        else
-        {
-            // 1st byte of a 3 byte sequence
-            pSrc--;
-            bytesUnknown[0] = (unsigned char)(((ch)& 0x0F) | 0xE0);
-            size = 1;
-        }
-    }
-
-    return size;
-}
-
 // During GetChars we had an invalid byte sequence
 // pSrc is backed up to the start of the bad sequence if we didn't have room to
 // fall it back.  Otherwise pSrc remains where it is.
-static bool FallbackInvalidByteSequence_Copy(UTF8Encoding* self, unsigned char** pSrc, int ch, CHAR16_T** pTarget)
+static bool FallbackInvalidByteSequence_Copy(UTF8Encoding* self, unsigned char** pSrc, CHAR16_T** pTarget)
 {
     ContractAssert(self->useFallback)
 
     // Get our byte[]
     unsigned char* pStart = *pSrc;
-    unsigned char bytesUnknown[3];
-    int size = GetBytesUnknown(pStart, ch, bytesUnknown);
-    bool fallbackResult = DecoderReplacementFallbackBuffer_InternalFallback_Copy(&self->buffer.decoderBuffer, bytesUnknown, *pSrc, pTarget, size);
+    bool fallbackResult = DecoderReplacementFallbackBuffer_InternalFallback_Copy(&self->buffer.decoderBuffer, pTarget);
     RETURN_ON_ERROR(DecoderReplacementFallbackBuffer_Reset, &self->buffer.decoderBuffer)
 
     // Do the actual fallback
@@ -517,23 +424,6 @@ static bool FallbackInvalidByteSequence_Copy(UTF8Encoding* self, unsigned char**
 
     // It worked
     return true;
-}
-
-static int FallbackInvalidByteSequence(UTF8Encoding* self, unsigned char* pSrc, int ch)
-{
-    ContractAssert(self->useFallback)
-
-    // Get our byte[]
-    unsigned char bytesUnknown[3];
-    int size = GetBytesUnknown(pSrc, ch, bytesUnknown);
-
-    // Do the actual fallback
-    int count = DecoderReplacementFallbackBuffer_InternalFallback(&self->buffer.decoderBuffer, bytesUnknown, pSrc, size);
-
-    // # of fallback chars expected.
-    // Note that we only get here for "long" sequences, and have already unreserved
-    // the count that we prereserved for the input bytes
-    return count;
 }
 
 static int GetCharCount(UTF8Encoding* self, unsigned char* bytes, int count)
@@ -625,7 +515,7 @@ static int GetCharCount(UTF8Encoding* self, unsigned char* bytes, int count)
             fallbackUsed = true;
             if (self->useFallback) DecoderBuffer_InternalInitialize(&self->buffer.decoderBuffer, bytes, NULL);
         }
-        charCount += FallbackInvalidByteSequence(self, pSrc, ch);
+        charCount += self->buffer.decoderBuffer.strDefaultLength;
 
         ch = 0;
         continue;
@@ -896,7 +786,7 @@ static int GetCharCount(UTF8Encoding* self, unsigned char* bytes, int count)
             fallbackUsed = true;
             if (self->useFallback) DecoderBuffer_InternalInitialize(&self->buffer.decoderBuffer, bytes, NULL);
         }
-        charCount += FallbackInvalidByteSequence(self, pSrc, ch);
+        charCount += self->buffer.decoderBuffer.strDefaultLength;
     }
 
     // Shouldn't have anything in fallback buffer for GetCharCount
@@ -993,7 +883,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
             // let the range check for the second char throw the exception
             if (pTarget < pAllocatedBufferEnd) {
                 *pTarget = (CHAR16_T)(((ch >> 10) & 0x7FF) +
-                    (short)((HIGH_SURROGATE_START - (0x10000 >> 10))));
+                    (HIGH_SURROGATE_START - (0x10000 >> 10)));
                 pTarget++;
 
                 ch = (ch & 0x3FF) +
@@ -1013,7 +903,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
         }
 
         // That'll back us up the appropriate # of bytes if we didn't get anywhere
-        if (!FallbackInvalidByteSequence_Copy(self, &pSrc, ch, &pTarget))
+        if (!FallbackInvalidByteSequence_Copy(self, &pSrc, &pTarget))
         {
             // Ran out of buffer space
             // Need to throw an exception?
@@ -1329,11 +1219,10 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
                     ch = (chc << 6) | (ch & 0x3F);
 
                     *pTarget = (CHAR16_T)(((ch >> 10) & 0x7FF) +
-                        (short)(HIGH_SURROGATE_START - (0x10000 >> 10)));
+                        (HIGH_SURROGATE_START - (0x10000 >> 10)));
                     pTarget++;
 
-                    ch = (ch & 0x3FF) +
-                        (short)(LOW_SURROGATE_START);
+                    ch = (ch & 0x3FF) + (LOW_SURROGATE_START);
 
                     // extra byte, we're already planning 2 chars for 2 of these bytes,
                     // but the big loop is testing the target against pStop, so we need
@@ -1409,7 +1298,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
         }
 
         // This'll back us up the appropriate # of bytes if we didn't get anywhere
-        if (!FallbackInvalidByteSequence(self, pSrc, ch))
+        if (!self->useFallback)
         {
             ContractAssertReset(pSrc >= bytes || pTarget == chars, DecoderReplacementFallbackBuffer_Reset, &self->buffer.decoderBuffer)
 
@@ -2161,14 +2050,17 @@ int minipal_utf8_to_utf16_preallocated(
     int cchSrc,
     CHAR16_T** lpDestStr,
     int cchDest,
-    unsigned int dwFlags,
-    bool treatAsLE)
+    unsigned int dwFlags
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+)
 {
     int ret;
     errno = 0;
 
     if (cchSrc < 0)
-        cchSrc = strlen(lpSrcStr) + 1;
+        cchSrc = (int)strlen(lpSrcStr) + 1;
 
     UTF8Encoding enc =
     {
@@ -2199,14 +2091,17 @@ static int utf16_to_utf8_preallocated(
     const CHAR16_T* lpSrcStr,
     int cchSrc,
     char** lpDestStr,
-    int cchDest,
-    bool treatAsLE)
+    int cchDest
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+)
 {
     int ret;
     errno = 0;
 
     if (cchSrc < 0)
-        cchSrc = minipal_wcslen(lpSrcStr) + 1;
+        cchSrc = (int)minipal_wcslen(lpSrcStr) + 1;
 
     UTF8Encoding enc =
     {
@@ -2240,21 +2135,36 @@ int minipal_utf16_to_utf8_preallocated(
     char** lpDestStr,
     int cchDest)
 {
-    return utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest, false);
+    return utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest
+#if BIGENDIAN
+        , bool treatAsLE
+#endif
+    );
 }
 
 int minipal_utf8_to_utf16_allocate(
     const char* lpSrcStr,
     int cchSrc,
     CHAR16_T** lpDestStr,
-    unsigned int dwFlags,
-    bool treatAsLE)
+    unsigned int dwFlags
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+)
 {
-    int cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, NULL, 0, dwFlags, treatAsLE);
+    int cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, NULL, 0, dwFlags
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+    );
     if (cchDest > 0)
     {
         *lpDestStr = (CHAR16_T*)malloc((cchDest + 1) * sizeof(CHAR16_T));
-        cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest, dwFlags, treatAsLE);
+        cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest, dwFlags
+#if BIGENDIAN
+            , bool treatAsLE
+#endif
+        );
         (*lpDestStr)[cchDest] = '\0';
     }
     return cchDest;
@@ -2263,14 +2173,25 @@ int minipal_utf8_to_utf16_allocate(
 int minipal_utf16_to_utf8_allocate(
     const CHAR16_T* lpSrcStr,
     int cchSrc,
-    char** lpDestStr,
-    bool treatAsLE)
+    char** lpDestStr
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+)
 {
-    int cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, NULL, 0, treatAsLE);
+    int cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, NULL, 0
+#if BIGENDIAN
+    , bool treatAsLE
+#endif
+    );
     if (cchDest > 0)
     {
         *lpDestStr = (char*)malloc((cchDest + 1) * sizeof(char));
-        cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest, treatAsLE);
+        cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest
+#if BIGENDIAN
+            , bool treatAsLE
+#endif
+        );
         (*lpDestStr)[cchDest] = '\0';
     }
     return cchDest;

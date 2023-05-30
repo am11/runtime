@@ -257,7 +257,11 @@ MultiByteToWideChar(
     // invalid characters and Core Foundation doesn't do that.
     if (CodePage == CP_UTF8 || CodePage == CP_ACP)
     {
-        retval = minipal_utf8_to_utf16_preallocated(lpMultiByteStr, cbMultiByte, (CHAR16_T**)&lpWideCharStr, cchWideChar, dwFlags, /* treatAsLE */ false);
+        retval = minipal_utf8_to_utf16_preallocated(lpMultiByteStr, cbMultiByte, (CHAR16_T**)&lpWideCharStr, cchWideChar, dwFlags
+#ifdef BIGENDIAN
+            , /* treatAsLE */ false
+#endif
+        );
         goto EXIT;
     }
 

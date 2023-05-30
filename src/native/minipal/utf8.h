@@ -21,7 +21,7 @@ extern "C"
 #ifdef TARGET_WINDOWS
 typedef wchar_t CHAR16_T;
 #else
-typedef uint16_t CHAR16_T;
+typedef unsigned short CHAR16_T;
 #endif
 
 int minipal_utf8_to_utf16_preallocated(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, int cchDest, unsigned int dwFlags, bool treatAsLE);

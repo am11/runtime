@@ -1,19 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-/*++
-
-Module Name:
-
-    unicode/utf8.c
-
-Abstract:
-    Functions to encode and decode UTF-8 strings. This is a port of the C# version from Utf8Encoding.cs.
-
-Revision History:
-
---*/
-
 #include <minipal/utf8.h>
 
 #include <errno.h>
@@ -2276,13 +2263,10 @@ int minipal_utf8_to_utf16_preallocated(
 
     bool isThrowException = dwFlags & MB_ERR_INVALID_CHARS;
 
-    const CHAR16_T c1[1] = { 0xFFFD };
-    const CHAR16_T c2[2] = { 0xFFFD, 0xFFFD };
+    const CHAR16_T replacement[1] = { 0xFFFD };
     UTF8Encoding enc = {
-        .decoderBuffer = isThrowException ? NULL : DecoderReplacementFallbackBuffer_Create(c1),
-
-        // 2X in case we're a surrogate pair
-        .encoderBuffer = isThrowException ? NULL : EncoderReplacementFallbackBuffer_Create(c2),
+        .decoderBuffer = isThrowException ? NULL : DecoderReplacementFallbackBuffer_Create(replacement),
+        .encoderBuffer = NULL,
 
 #if BIGENDIAN
         .treatAsLE = treatAsLE
@@ -2320,13 +2304,11 @@ static int utf16_to_utf8_preallocated(
     if (cchSrc < 0)
         cchSrc = wcslen(lpSrcStr) + 1;
 
-    const CHAR16_T c1[1] = { 0xFFFD };
-    const CHAR16_T c2[2] = { 0xFFFD, 0xFFFD };
+    // 2X in case we're a surrogate pair
+    const CHAR16_T replacement[2] = { 0xFFFD, 0xFFFD };
     UTF8Encoding enc = {
-        .decoderBuffer = DecoderReplacementFallbackBuffer_Create(c1),
-
-        // 2X in case we're a surrogate pair
-        .encoderBuffer = EncoderReplacementFallbackBuffer_Create(c2),
+        .decoderBuffer = NULL,
+        .encoderBuffer = EncoderReplacementFallbackBuffer_Create(replacement),
 
 #if BIGENDIAN
         .treatAsLE = treatAsLE

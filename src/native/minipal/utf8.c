@@ -2212,7 +2212,7 @@ int minipal_utf8_to_utf16_preallocated(
 
     bool isThrowException = dwFlags & MB_ERR_INVALID_CHARS;
 
-    const CHAR16_T replacement[1] = { 0xFFFD };
+    const CHAR16_T replacement[2] = { 0xFFFD, 0 };
     UTF8Encoding enc = {
         .decoderBuffer = isThrowException ? NULL : DecoderReplacementFallbackBuffer_Create(replacement),
         .encoderBuffer = NULL,
@@ -2254,7 +2254,7 @@ static int utf16_to_utf8_preallocated(
         cchSrc = minipal_wcslen(lpSrcStr) + 1;
 
     // 2X in case we're a surrogate pair
-    const CHAR16_T replacement[2] = { 0xFFFD, 0xFFFD };
+    const CHAR16_T replacement[3] = { 0xFFFD, 0xFFFD, 0 };
     UTF8Encoding enc = {
         .decoderBuffer = NULL,
         .encoderBuffer = EncoderReplacementFallbackBuffer_Create(replacement),

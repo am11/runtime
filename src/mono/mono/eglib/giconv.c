@@ -28,6 +28,15 @@
 #include <errno.h>
 #include "../utils/mono-errno.h"
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define decode_utf16 decode_utf16le
+#else
+#ifndef BIGENDIAN
+#define BIGENDIAN 1
+#endif
+#define decode_utf16 decode_utf16be
+#endif
+
 #include <minipal/utf8.h>
 
 #ifdef _MSC_VER
@@ -39,15 +48,6 @@
 #define UNROLL_DECODE_UTF8 0
 
 static FORCE_INLINE (int) decode_utf8 (char *inbuf, size_t inleft, gunichar *outchar);
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define decode_utf16 decode_utf16le
-#else
-#ifndef BIGENDIAN
-#define BIGENDIAN
-#endif
-#define decode_utf16 decode_utf16be
-#endif
 
 static FORCE_INLINE (uint16_t)
 read_uint16_endian (unsigned char *inptr, unsigned endian)

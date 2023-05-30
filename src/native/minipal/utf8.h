@@ -26,7 +26,7 @@ typedef unsigned short CHAR16_T;
 
 int minipal_utf8_to_utf16_preallocated(const char* lpSrcStr, int cchSrc, CHAR16_T** lpDestStr, int cchDest, unsigned int dwFlags
 #if BIGENDIAN
-    bool treatAsLE
+    , bool treatAsLE
 #endif
 );
 

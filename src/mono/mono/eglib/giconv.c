@@ -28,7 +28,6 @@
 #include <errno.h>
 #include "../utils/mono-errno.h"
 
-typedef gunichar2 char16_t;
 #include <minipal/utf8.h>
 
 #ifdef _MSC_VER

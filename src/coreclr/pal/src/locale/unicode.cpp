@@ -257,7 +257,7 @@ MultiByteToWideChar(
     // invalid characters and Core Foundation doesn't do that.
     if (CodePage == CP_UTF8 || CodePage == CP_ACP)
     {
-        retval = minipal_utf8_to_utf16_preallocated(lpMultiByteStr, cbMultiByte, &lpWideCharStr, cchWideChar, dwFlags, /* treatAsLE */ false);
+        retval = minipal_utf8_to_utf16_preallocated(lpMultiByteStr, cbMultiByte, (CHAR16_T**)&lpWideCharStr, cchWideChar, dwFlags, /* treatAsLE */ false);
         goto EXIT;
     }
 
@@ -337,7 +337,7 @@ WideCharToMultiByte(
     // UTF8ToUnicode in MultiByteToWideChar() on all systems.
     if (CodePage == CP_UTF8 || CodePage == CP_ACP)
     {
-        retval = minipal_utf16_to_utf8_preallocated(lpWideCharStr, cchWideChar, &lpMultiByteStr, cbMultiByte);
+        retval = minipal_utf16_to_utf8_preallocated((CHAR16_T*)lpWideCharStr, cchWideChar, &lpMultiByteStr, cbMultiByte);
         goto EXIT;
     }
 

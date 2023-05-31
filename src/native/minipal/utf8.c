@@ -40,26 +40,26 @@ static size_t minipal_wcslen(const CHAR16_T* str)
     return nChar;
 }
 
-#define ContractAssert(cond)             \
-    if (!(cond))                         \
-    {                                    \
-        errno = ERROR_INVALID_PARAMETER; \
-        return 0;                        \
+#define ContractAssert(cond)                     \
+    if (!(cond))                                 \
+    {                                            \
+        errno = MINIPAL_ERROR_INVALID_PARAMETER; \
+        return 0;                                \
     }
 
-#define ContractAssertVoid(cond)         \
-    if (!(cond))                         \
-    {                                    \
-        errno = ERROR_INVALID_PARAMETER; \
-        return;                          \
+#define ContractAssertVoid(cond)                 \
+    if (!(cond))                                 \
+    {                                            \
+        errno = MINIPAL_ERROR_INVALID_PARAMETER; \
+        return;                                  \
     }
 
-#define ContractAssertReset(cond, f, a)  \
-    if (!(cond))                         \
-    {                                    \
-        errno = ERROR_INVALID_PARAMETER; \
-        if (a) f(a);                     \
-        return 0;                        \
+#define ContractAssertReset(cond, f, a)          \
+    if (!(cond))                                 \
+    {                                            \
+        errno = MINIPAL_ERROR_INVALID_PARAMETER; \
+        if (a) f(a);                             \
+        return 0;                                \
     }
 
 #define RETURN_ON_ERROR(f, a) \
@@ -911,7 +911,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
             if (self->useFallback) DecoderReplacementFallbackBuffer_Reset(&self->buffer.decoder);
             if (pTarget == chars)
             {
-                errno = ERROR_INSUFFICIENT_BUFFER;
+                errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
                 return 0;
             }
             ch = 0;
@@ -1005,7 +1005,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
             ContractAssert(pSrc >= bytes || pTarget == chars)
             if (pTarget == chars)
             {
-                errno = ERROR_INSUFFICIENT_BUFFER;
+                errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
                 return 0;
             }
 
@@ -1307,7 +1307,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
             if (self->useFallback) DecoderReplacementFallbackBuffer_Reset(&self->buffer.decoder);
             if (pTarget == chars)
             {
-                errno = ERROR_INSUFFICIENT_BUFFER;
+                errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
                 return 0;
             }
         }
@@ -1482,7 +1482,7 @@ static int GetBytes(UTF8Encoding* self, CHAR16_T* chars, int charCount, unsigned
             ContractAssertReset(pSrc >= chars || pTarget == bytes, EncoderReplacementFallbackBuffer_Reset, &self->buffer.encoder);
             if (pTarget == bytes)  // Throw if we must
             {
-                errno = ERROR_INSUFFICIENT_BUFFER;
+                errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
                 return 0;
             }
             ch = 0;                                         // Nothing left over (we backed up to start of pair if supplimentary)
@@ -2046,10 +2046,10 @@ static int GetByteCount(UTF8Encoding* self, CHAR16_T *chars, int count)
 }
 
 int minipal_utf8_to_utf16_preallocated(
-    const char* lpSrcStr,
-    int cchSrc,
-    CHAR16_T** lpDestStr,
-    int cchDest,
+    const char* source,
+    size_t sourceLength,
+    CHAR16_T** destination,
+    size_t destinationLength,
     unsigned int dwFlags
 #if BIGENDIAN
     , bool treatAsLE
@@ -2059,28 +2059,28 @@ int minipal_utf8_to_utf16_preallocated(
     int ret;
     errno = 0;
 
-    if (cchSrc < 0)
-        cchSrc = (int)strlen(lpSrcStr) + 1;
+    if ((int)sourceLength < 0)
+        sourceLength = (int)strlen(source) + 1;
 
     UTF8Encoding enc =
     {
         .buffer = { .decoder = { .fallbackCount = -1, .fallbackIndex = -1, .strDefault = { 0xFFFD, 0 }, .strDefaultLength = 1 } },
-        .useFallback = !(dwFlags & MB_ERR_INVALID_CHARS),
+        .useFallback = !(dwFlags & MINIPAL_MB_ERR_INVALID_CHARS),
 #if BIGENDIAN
         .treatAsLE = treatAsLE
 #endif
     };
 
-    ret = GetCharCount(&enc, (unsigned char*)lpSrcStr, cchSrc);
-    if (cchDest)
+    ret = GetCharCount(&enc, (unsigned char*)source, sourceLength);
+    if (destinationLength)
     {
-        if (ret > cchDest)
+        if ((size_t)ret > destinationLength)
         {
-            errno = ERROR_INSUFFICIENT_BUFFER;
+            errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
             ret = 0;
         }
 
-        GetChars(&enc, (unsigned char*)lpSrcStr, cchSrc, (CHAR16_T*)*lpDestStr, ret);
+        GetChars(&enc, (unsigned char*)source, sourceLength, (CHAR16_T*)*destination, ret);
         if (errno) ret = 0;
     }
 
@@ -2088,10 +2088,10 @@ int minipal_utf8_to_utf16_preallocated(
 }
 
 static int utf16_to_utf8_preallocated(
-    const CHAR16_T* lpSrcStr,
-    int cchSrc,
-    char** lpDestStr,
-    int cchDest
+    const CHAR16_T* source,
+    size_t sourceLength,
+    char** destination,
+    size_t destinationLength
 #if BIGENDIAN
     , bool treatAsLE
 #endif
@@ -2100,8 +2100,8 @@ static int utf16_to_utf8_preallocated(
     int ret;
     errno = 0;
 
-    if (cchSrc < 0)
-        cchSrc = (int)minipal_wcslen(lpSrcStr) + 1;
+    if ((int)sourceLength < 0)
+        sourceLength = minipal_wcslen(source) + 1;
 
     UTF8Encoding enc =
     {
@@ -2113,16 +2113,16 @@ static int utf16_to_utf8_preallocated(
 #endif
     };
 
-    ret = GetByteCount(&enc, (CHAR16_T*)lpSrcStr, cchSrc);
-    if (cchDest)
+    ret = GetByteCount(&enc, (CHAR16_T*)source, sourceLength);
+    if (destinationLength)
     {
-        if (ret > cchDest)
+        if ((size_t)ret > destinationLength)
         {
-            errno = ERROR_INSUFFICIENT_BUFFER;
+            errno = MINIPAL_ERROR_INSUFFICIENT_BUFFER;
             ret = 0;
         }
 
-        GetBytes(&enc, (CHAR16_T*)lpSrcStr, cchSrc, (unsigned char*)*lpDestStr, ret);
+        GetBytes(&enc, (CHAR16_T*)source, sourceLength, (unsigned char*)*destination, ret);
         if (errno) ret = 0;
     }
 
@@ -2130,12 +2130,12 @@ static int utf16_to_utf8_preallocated(
 }
 
 int minipal_utf16_to_utf8_preallocated(
-    const CHAR16_T* lpSrcStr,
-    int cchSrc,
-    char** lpDestStr,
-    int cchDest)
+    const CHAR16_T* source,
+    size_t sourceLength,
+    char** destination,
+    size_t destinationLength)
 {
-    return utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest
+    return utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength
 #if BIGENDIAN
         , bool treatAsLE
 #endif
@@ -2143,56 +2143,56 @@ int minipal_utf16_to_utf8_preallocated(
 }
 
 int minipal_utf8_to_utf16_allocate(
-    const char* lpSrcStr,
-    int cchSrc,
-    CHAR16_T** lpDestStr,
+    const char* source,
+    size_t sourceLength,
+    CHAR16_T** destination,
     unsigned int dwFlags
 #if BIGENDIAN
     , bool treatAsLE
 #endif
 )
 {
-    int cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, NULL, 0, dwFlags
+    size_t destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, NULL, 0, dwFlags
 #if BIGENDIAN
     , bool treatAsLE
 #endif
     );
-    if (cchDest > 0)
+    if (destinationLength > 0)
     {
-        *lpDestStr = (CHAR16_T*)malloc((cchDest + 1) * sizeof(CHAR16_T));
-        cchDest = minipal_utf8_to_utf16_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest, dwFlags
+        *destination = (CHAR16_T*)malloc((destinationLength + 1) * sizeof(CHAR16_T));
+        destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, destination, destinationLength, dwFlags
 #if BIGENDIAN
             , bool treatAsLE
 #endif
         );
-        (*lpDestStr)[cchDest] = '\0';
+        (*destination)[destinationLength] = '\0';
     }
-    return cchDest;
+    return destinationLength;
 }
 
 int minipal_utf16_to_utf8_allocate(
-    const CHAR16_T* lpSrcStr,
-    int cchSrc,
-    char** lpDestStr
+    const CHAR16_T* source,
+    size_t sourceLength,
+    char** destination
 #if BIGENDIAN
     , bool treatAsLE
 #endif
 )
 {
-    int cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, NULL, 0
+    size_t destinationLength = utf16_to_utf8_preallocated(source, sourceLength, NULL, 0
 #if BIGENDIAN
     , bool treatAsLE
 #endif
     );
-    if (cchDest > 0)
+    if (destinationLength > 0)
     {
-        *lpDestStr = (char*)malloc((cchDest + 1) * sizeof(char));
-        cchDest = utf16_to_utf8_preallocated(lpSrcStr, cchSrc, lpDestStr, cchDest
+        *destination = (char*)malloc((destinationLength + 1) * sizeof(char));
+        destinationLength = utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength
 #if BIGENDIAN
             , bool treatAsLE
 #endif
         );
-        (*lpDestStr)[cchDest] = '\0';
+        (*destination)[destinationLength] = '\0';
     }
-    return cchDest;
+    return destinationLength;
 }

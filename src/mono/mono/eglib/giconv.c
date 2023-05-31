@@ -328,12 +328,9 @@ static FORCE_INLINE (void)
 map_error(GError **err)
 {
 	if (errno == 0) return;
-	if (errno == ERROR_INSUFFICIENT_BUFFER) {
+	if (errno == MINIPAL_ERROR_INSUFFICIENT_BUFFER) {
 		g_set_error (err, G_CONVERT_ERROR, G_CONVERT_ERROR_NO_MEMORY,
 			     "Allocation failed.");
-	} else if (errno == ERROR_NO_UNICODE_TRANSLATION) {
-		g_set_error (err, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
-			     "Illegal byte sequence encountered in the input.");
 	} else {
 		g_set_error (err, G_CONVERT_ERROR, G_CONVERT_ERROR_PARTIAL_INPUT,
 			     "Partial byte sequence encountered in the input.");
@@ -374,7 +371,7 @@ g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_r
 		return NULL;
 
 	gunichar2* lpDestStr = custom_alloc_func((ret + 1) * sizeof (gunichar2), custom_alloc_data);
-	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, MB_ERR_INVALID_CHARS
+	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, MINIPAL_MB_ERR_INVALID_CHARS
 #ifdef BIGENDIAN
 	, /* treatAsLE */ treatAsLE
 #endif
@@ -386,13 +383,13 @@ g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_r
 gunichar2 *
 g_utf8_to_utf16 (const gchar *str, glong len, glong *items_read, glong *items_written, GError **err)
 {
-	return g_utf8_to_utf16_impl (str, len, items_read, items_written, err, MB_ERR_INVALID_CHARS, false);
+	return g_utf8_to_utf16_impl (str, len, items_read, items_written, err, MINIPAL_MB_ERR_INVALID_CHARS, false);
 }
 
 gunichar2 *
 g_utf8_to_utf16le (const gchar *str, glong len, glong *items_read, glong *items_written, GError **err)
 {
-	return g_utf8_to_utf16_impl (str, len, items_read, items_written, err, MB_ERR_INVALID_CHARS, true);
+	return g_utf8_to_utf16_impl (str, len, items_read, items_written, err, MINIPAL_MB_ERR_INVALID_CHARS, true);
 }
 
 gunichar2 *

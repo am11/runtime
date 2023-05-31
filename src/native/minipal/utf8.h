@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #define MINIPAL_MB_ERR_INVALID_CHARS 0x00000008
+#define MINIPAL_TREAT_AS_LITTLE_ENDIAN 0x00000016
 #define MINIPAL_ERROR_INSUFFICIENT_BUFFER 122L
 #define MINIPAL_ERROR_INVALID_PARAMETER 87L
 
@@ -23,25 +24,57 @@ typedef wchar_t CHAR16_T;
 typedef unsigned short CHAR16_T;
 #endif
 
-int minipal_utf8_to_utf16_preallocated(const char* source, size_t sourceLength, CHAR16_T** destination, size_t destinationLength, unsigned int flags
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-);
+/**
+ * Convert a string from UTF-8 to UTF-16 (UCS-2) with preallocated memory
+ *
+ * @param source The source string in UTF-8 format.
+ * @param sourceLength Length of the source string.
+ * @param destination Pointer to the destination UTF-16 string. It can be NULL to query number of items required by the conversion.
+ * @param destinationLength Length of the destination string.
+ * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
+ * @return Number of items required by the conversion.
+ */
+int minipal_utf8_to_utf16_preallocated(const char* source, size_t sourceLength, CHAR16_T** destination, size_t destinationLength, unsigned int flags);
 
-int minipal_utf16_to_utf8_preallocated(const CHAR16_T* source, size_t sourceLength, char** destination, size_t destinationLength);
+/**
+ * Convert a string from UTF-16 (UCS-2) to UTF-8 with preallocated memory
+ *
+ * @param source The source string in UTF-16 format.
+ * @param sourceLength Length of the source string.
+ * @param destination Pointer to the destination UTF-8 string. It can be NULL to query number of items required by the conversion.
+ * @param destinationLength Length of the destination string.
+ * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
+ * @return Number of items required by the conversion.
+ */
+int minipal_utf16_to_utf8_preallocated(const CHAR16_T* source, size_t sourceLength, char** destination, size_t destinationLength, unsigned int flags);
 
-int minipal_utf8_to_utf16_allocate(const char* source, size_t sourceLength, CHAR16_T** destination, unsigned int flags
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-);
+/**
+ * Convert a string from UTF-16 (UCS-2) to UTF-8 by allocating memory
+ *
+ * The caller of this API should call free() on the `destination` pointer after the usage.
+ *
+ * @param source The source string in UTF-16 format.
+ * @param sourceLength Length of the source string.
+ * @param destination Pointer to the destination UTF-8 string. It can be NULL to query number of items required by the conversion.
+ * @param destinationLength Length of the destination string.
+ * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
+ * @return Number of items required by the conversion.
+ */
+int minipal_utf8_to_utf16_allocate(const char* source, size_t sourceLength, CHAR16_T** destination, unsigned int flags);
 
-int minipal_utf16_to_utf8_allocate(const CHAR16_T* source, size_t sourceLength, char** destination
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-);
+/**
+ * Convert a string from UTF-16 (UCS-2) to UTF-8 with preallocated memory
+ *
+ * The caller of this API should call free() on the `destination` pointer after the usage.
+ *
+ * @param source The source string in UTF-16 format.
+ * @param sourceLength Length of the source string.
+ * @param destination Pointer to the destination UTF-8 string. It can be NULL to query number of items required by the conversion.
+ * @param destinationLength Length of the destination string.
+ * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
+ * @return Number of items required by the conversion.
+ */
+int minipal_utf16_to_utf8_allocate(const CHAR16_T* source, size_t sourceLength, char** destination, unsigned int flags);
 
 #ifdef __cplusplus
 }

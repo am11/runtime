@@ -667,19 +667,17 @@ static int GetCharCount(UTF8Encoding* self, unsigned char* bytes, int count)
         LongCodeWithMask32 :
 #if BIGENDIAN
         // be careful about the sign extension
-        if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
+        if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
         else
-#else
-            ch &= 0xFF;
 #endif
+        ch &= 0xFF;
 
         LongCodeWithMask16:
 #if BIGENDIAN
-        if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 8);
+        if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 8);
         else
-#else
-            ch &= 0xFF;
 #endif
+        ch &= 0xFF;
 
         pSrc++;
         if (ch <= 0x7F) {
@@ -1090,7 +1088,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
 
                 // Unfortunately, this is endianness sensitive
 #if BIGENDIAN
-                if (!treatAsLE)
+                if (!self->treatAsLE)
                 {
                     *pTarget = (CHAR16_T)((ch >> 8) & 0x7F);
                     pSrc += 2;
@@ -1098,14 +1096,13 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
                     pTarget += 2;
                 }
                 else
-#else
+#endif
                 {
                     *pTarget = (CHAR16_T)(ch & 0x7F);
                     pSrc += 2;
                     *(pTarget + 1) = (CHAR16_T)((ch >> 8) & 0x7F);
                     pTarget += 2;
                 }
-#endif
             }
 
             // Run 8 characters at a time!
@@ -1118,7 +1115,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
 
                 // Unfortunately, this is endianness sensitive
 #if BIGENDIAN
-                if (!treatAsLE)
+                if (!self->treatAsLE)
                 {
                     *pTarget = (CHAR16_T)((ch >> 24) & 0x7F);
                     *(pTarget + 1) = (CHAR16_T)((ch >> 16) & 0x7F);
@@ -1132,7 +1129,7 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
                     pTarget += 8;
                 }
                 else
-#else
+#endif
                 {
                     *pTarget = (CHAR16_T)(ch & 0x7F);
                     *(pTarget + 1) = (CHAR16_T)((ch >> 8) & 0x7F);
@@ -1145,26 +1142,23 @@ static int GetChars(UTF8Encoding* self, unsigned char* bytes, int byteCount, CHA
                     *(pTarget + 7) = (CHAR16_T)((chb >> 24) & 0x7F);
                     pTarget += 8;
                 }
-#endif
             }
             break;
 
             LongCodeWithMask32 :
 #if BIGENDIAN
             // be careful about the sign extension
-            if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
+            if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
             else
-#else
-            ch &= 0xFF;
 #endif
+            ch &= 0xFF;
 
             LongCodeWithMask16:
 #if BIGENDIAN
-            if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 8);
+            if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 8);
             else
-#else
-            ch &= 0xFF;
 #endif
+            ch &= 0xFF;
 
             pSrc++;
             if (ch <= 0x7F) {
@@ -1609,7 +1603,7 @@ static int GetBytes(UTF8Encoding* self, CHAR16_T* chars, int charCount, unsigned
 
                 // Unfortunately, this is endianness sensitive
 #if BIGENDIAN
-                if (!treatAsLE)
+                if (!self->treatAsLE)
                 {
                     *pTarget = (unsigned char)(ch >> 16);
                     *(pTarget + 1) = (unsigned char)ch;
@@ -1619,7 +1613,7 @@ static int GetBytes(UTF8Encoding* self, CHAR16_T* chars, int charCount, unsigned
                     pTarget += 4;
                 }
                 else
-#else
+#endif
                 {
                     *pTarget = (unsigned char)ch;
                     *(pTarget + 1) = (unsigned char)(ch >> 16);
@@ -1628,18 +1622,16 @@ static int GetBytes(UTF8Encoding* self, CHAR16_T* chars, int charCount, unsigned
                     *(pTarget + 3) = (unsigned char)(chc >> 16);
                     pTarget += 4;
                 }
-#endif
             }
             continue;
 
         LongCodeWithMask:
 #if BIGENDIAN
         // be careful about the sign extension
-        if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
+        if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
         else
-#else
-            ch = (CHAR16_T)ch;
 #endif
+        ch = (CHAR16_T)ch;
 
         pSrc++;
 
@@ -1991,11 +1983,10 @@ static int GetByteCount(UTF8Encoding* self, CHAR16_T *chars, int count)
         LongCodeWithMask:
 #if BIGENDIAN
         // be careful about the sign extension
-        if (!treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
+        if (!self->treatAsLE) ch = (int)(((unsigned int)ch) >> 16);
         else
-#else
-            ch = (CHAR16_T)ch;
 #endif
+        ch = (CHAR16_T)ch;
 
         pSrc++;
 
@@ -2050,11 +2041,7 @@ int minipal_utf8_to_utf16_preallocated(
     size_t sourceLength,
     CHAR16_T** destination,
     size_t destinationLength,
-    unsigned int dwFlags
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-)
+    unsigned int flags)
 {
     int ret;
     errno = 0;
@@ -2065,9 +2052,9 @@ int minipal_utf8_to_utf16_preallocated(
     UTF8Encoding enc =
     {
         .buffer = { .decoder = { .fallbackCount = -1, .fallbackIndex = -1, .strDefault = { 0xFFFD, 0 }, .strDefaultLength = 1 } },
-        .useFallback = !(dwFlags & MINIPAL_MB_ERR_INVALID_CHARS),
+        .useFallback = !(flags & MINIPAL_MB_ERR_INVALID_CHARS),
 #if BIGENDIAN
-        .treatAsLE = treatAsLE
+        .treatAsLE = (flags & MINIPAL_TREAT_AS_LITTLE_ENDIAN)
 #endif
     };
 
@@ -2091,11 +2078,8 @@ static int utf16_to_utf8_preallocated(
     const CHAR16_T* source,
     size_t sourceLength,
     char** destination,
-    size_t destinationLength
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-)
+    size_t destinationLength,
+    unsigned int flags)
 {
     int ret;
     errno = 0;
@@ -2109,7 +2093,7 @@ static int utf16_to_utf8_preallocated(
         .buffer = { .encoder = { .fallbackCount = -1, .fallbackIndex = -1, .strDefault = { 0xFFFD, 0xFFFD, 0 }, .strDefaultLength = 2 } },
         .useFallback = true,
 #if BIGENDIAN
-        .treatAsLE = treatAsLE
+        .treatAsLE = (flags & MINIPAL_TREAT_AS_LITTLE_ENDIAN)
 #endif
     };
 
@@ -2133,38 +2117,24 @@ int minipal_utf16_to_utf8_preallocated(
     const CHAR16_T* source,
     size_t sourceLength,
     char** destination,
-    size_t destinationLength)
+    size_t destinationLength,
+    unsigned int flags)
 {
-    return utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength
-#if BIGENDIAN
-        , bool treatAsLE
-#endif
-    );
+    return utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength, flags);
 }
 
 int minipal_utf8_to_utf16_allocate(
     const char* source,
     size_t sourceLength,
     CHAR16_T** destination,
-    unsigned int dwFlags
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-)
+    unsigned int flags)
 {
-    size_t destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, NULL, 0, dwFlags
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-    );
+    size_t destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, NULL, 0, flags);
+
     if (destinationLength > 0)
     {
         *destination = (CHAR16_T*)malloc((destinationLength + 1) * sizeof(CHAR16_T));
-        destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, destination, destinationLength, dwFlags
-#if BIGENDIAN
-            , bool treatAsLE
-#endif
-        );
+        destinationLength = minipal_utf8_to_utf16_preallocated(source, sourceLength, destination, destinationLength, flags);
         (*destination)[destinationLength] = '\0';
     }
     return destinationLength;
@@ -2173,25 +2143,14 @@ int minipal_utf8_to_utf16_allocate(
 int minipal_utf16_to_utf8_allocate(
     const CHAR16_T* source,
     size_t sourceLength,
-    char** destination
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-)
+    char** destination,
+    unsigned int flags)
 {
-    size_t destinationLength = utf16_to_utf8_preallocated(source, sourceLength, NULL, 0
-#if BIGENDIAN
-    , bool treatAsLE
-#endif
-    );
+    size_t destinationLength = utf16_to_utf8_preallocated(source, sourceLength, NULL, 0, flags);
     if (destinationLength > 0)
     {
         *destination = (char*)malloc((destinationLength + 1) * sizeof(char));
-        destinationLength = utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength
-#if BIGENDIAN
-            , bool treatAsLE
-#endif
-        );
+        destinationLength = utf16_to_utf8_preallocated(source, sourceLength, destination, destinationLength, flags);
         (*destination)[destinationLength] = '\0';
     }
     return destinationLength;

@@ -28,15 +28,6 @@
 #include <errno.h>
 #include "../utils/mono-errno.h"
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define decode_utf16 decode_utf16le
-#else
-#ifndef BIGENDIAN
-#define BIGENDIAN 1
-#endif
-#define decode_utf16 decode_utf16be
-#endif
-
 #include <minipal/utf8.h>
 
 #ifdef _MSC_VER
@@ -48,6 +39,12 @@
 #define UNROLL_DECODE_UTF8 0
 
 static FORCE_INLINE (int) decode_utf8 (char *inbuf, size_t inleft, gunichar *outchar);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define decode_utf16 decode_utf16le
+#else
+#define decode_utf16 decode_utf16be
+#endif
 
 static FORCE_INLINE (uint16_t)
 read_uint16_endian (unsigned char *inptr, unsigned endian)
@@ -338,17 +335,19 @@ map_error(GError **err)
 }
 
 static gunichar2 *
-g_utf8_to_utf16_impl (const gchar *str, glong len, glong *items_read, glong *items_written, GError **err, int dwFlags, bool treatAsLE)
+g_utf8_to_utf16_impl (const gchar *str, glong len, glong *items_read, glong *items_written, GError **err, int flags, bool treatAsLE)
 {
 	errno = 0;
 	gunichar2* lpDestStr = NULL;
-	int ret = minipal_utf8_to_utf16_allocate (str, len, &lpDestStr, dwFlags
-#ifdef BIGENDIAN
-        , treatAsLE
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+	if (treatAsLE)
+		flags |= MINIPAL_TREAT_AS_LITTLE_ENDIAN;
 #endif
-);
+	int ret = minipal_utf8_to_utf16_allocate (str, len, &lpDestStr, flags);
+
 	if (items_written)
 		*items_written = errno == 0 ? ret : 0;
+
 	map_error(err);
 	return lpDestStr;
 }
@@ -356,12 +355,14 @@ g_utf8_to_utf16_impl (const gchar *str, glong len, glong *items_read, glong *ite
 static gunichar2 *
 g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_read, glong *items_written, GCustomAllocator custom_alloc_func, gpointer custom_alloc_data, GError **err, bool treatAsLE)
 {
+	guint flags = 0;
 	errno = 0;
-	int ret = minipal_utf8_to_utf16_preallocated (str, len, 0, 0, 0
-#ifdef BIGENDIAN
-	, /* treatAsLE */ treatAsLE
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+	if (treatAsLE)
+		flags = MINIPAL_TREAT_AS_LITTLE_ENDIAN;
 #endif
-    );
+	int ret = minipal_utf8_to_utf16_preallocated (str, len, 0, 0, flags);
+
 	map_error(err);
 
 	if (items_written)
@@ -371,11 +372,9 @@ g_utf8_to_utf16le_custom_alloc_impl (const gchar *str, glong len, glong *items_r
 		return NULL;
 
 	gunichar2* lpDestStr = custom_alloc_func((ret + 1) * sizeof (gunichar2), custom_alloc_data);
-	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, MINIPAL_MB_ERR_INVALID_CHARS
-#ifdef BIGENDIAN
-	, /* treatAsLE */ treatAsLE
-#endif
-	);
+	flags |= MINIPAL_MB_ERR_INVALID_CHARS;
+	ret = minipal_utf8_to_utf16_preallocated (str, len, &lpDestStr, ret, flags);
+
 	map_error(err);
 	return lpDestStr;
 }
@@ -485,13 +484,14 @@ g_utf8_to_ucs4 (const gchar *str, glong len, glong *items_read, glong *items_wri
 static gchar *
 g_utf16_to_utf8_impl (const gunichar2 *str, glong len, glong *items_read, glong *items_written, GError **err, bool treatAsLE)
 {
+	guint flags = 0;
 	errno = 0;
 	gchar* lpDestStr = NULL;
-	int ret = minipal_utf16_to_utf8_allocate (str, len, &lpDestStr
-#ifdef BIGENDIAN
-	, /* treatAsLE */ treatAsLE
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+	if (treatAsLE)
+		flags |= MINIPAL_TREAT_AS_LITTLE_ENDIAN;
 #endif
-	);
+	int ret = minipal_utf16_to_utf8_allocate (str, len, &lpDestStr, flags);
 
 	if (items_written)
 		*items_written = errno == 0 ? ret : 0;
@@ -516,7 +516,7 @@ gchar *
 g_utf16_to_utf8_custom_alloc (const gunichar2 *str, glong len, glong *items_read, glong *items_written, GCustomAllocator custom_alloc_func, gpointer custom_alloc_data, GError **err)
 {
 	errno = 0;
-	int ret = minipal_utf16_to_utf8_preallocated (str, len, 0, 0);
+	int ret = minipal_utf16_to_utf8_preallocated (str, len, 0, 0, 0);
 	map_error(err);
 
 	if (items_written)
@@ -526,7 +526,7 @@ g_utf16_to_utf8_custom_alloc (const gunichar2 *str, glong len, glong *items_read
 		return NULL;
 
 	gchar* lpDestStr = custom_alloc_func((ret + 1) * sizeof (gunichar2), custom_alloc_data);
-	ret = minipal_utf16_to_utf8_preallocated (str, len, &lpDestStr, ret);
+	ret = minipal_utf16_to_utf8_preallocated (str, len, &lpDestStr, ret, 0);
 
 	map_error(err);
 	return lpDestStr;

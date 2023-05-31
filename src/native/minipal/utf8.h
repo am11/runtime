@@ -34,7 +34,7 @@ typedef unsigned short CHAR16_T;
  * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
  * @return Number of items required by the conversion.
  */
-int minipal_utf8_to_utf16_preallocated(const char* source, size_t sourceLength, CHAR16_T** destination, size_t destinationLength, unsigned int flags);
+size_t minipal_utf8_to_utf16_preallocated(const char* source, size_t sourceLength, CHAR16_T** destination, size_t destinationLength, unsigned int flags);
 
 /**
  * Convert a string from UTF-16 (UCS-2) to UTF-8 with preallocated memory
@@ -46,7 +46,7 @@ int minipal_utf8_to_utf16_preallocated(const char* source, size_t sourceLength, 
  * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
  * @return Number of items required by the conversion.
  */
-int minipal_utf16_to_utf8_preallocated(const CHAR16_T* source, size_t sourceLength, char** destination, size_t destinationLength, unsigned int flags);
+size_t minipal_utf16_to_utf8_preallocated(const CHAR16_T* source, size_t sourceLength, char** destination, size_t destinationLength, unsigned int flags);
 
 /**
  * Convert a string from UTF-16 (UCS-2) to UTF-8 by allocating memory
@@ -60,7 +60,7 @@ int minipal_utf16_to_utf8_preallocated(const CHAR16_T* source, size_t sourceLeng
  * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
  * @return Number of items required by the conversion.
  */
-int minipal_utf8_to_utf16_allocate(const char* source, size_t sourceLength, CHAR16_T** destination, unsigned int flags);
+size_t minipal_utf8_to_utf16_allocate(const char* source, size_t sourceLength, CHAR16_T** destination, unsigned int flags);
 
 /**
  * Convert a string from UTF-16 (UCS-2) to UTF-8 with preallocated memory
@@ -74,7 +74,7 @@ int minipal_utf8_to_utf16_allocate(const char* source, size_t sourceLength, CHAR
  * @param flags Flags to alter the behavior of converter. Supported flags are MINIPAL_MB_ERR_INVALID_CHARS and MINIPAL_TREAT_AS_LITTLE_ENDIAN.
  * @return Number of items required by the conversion.
  */
-int minipal_utf16_to_utf8_allocate(const CHAR16_T* source, size_t sourceLength, char** destination, unsigned int flags);
+size_t minipal_utf16_to_utf8_allocate(const CHAR16_T* source, size_t sourceLength, char** destination, unsigned int flags);
 
 #ifdef __cplusplus
 }

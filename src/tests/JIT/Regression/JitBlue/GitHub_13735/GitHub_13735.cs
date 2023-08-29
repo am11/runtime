@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Xunit;
 
 public class GitHub_13735
 {
@@ -50,9 +51,9 @@ public class GitHub_13735
         Print(h);
     }
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         SampleA();
-        return 100;
     }
 }

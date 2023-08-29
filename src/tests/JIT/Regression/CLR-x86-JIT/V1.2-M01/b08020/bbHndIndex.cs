@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 public class AA
 {
     static void f(ref Array param)
@@ -24,11 +25,11 @@ public class AA
         }
     }
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         f(ref m_arr);
         Console.WriteLine("Passed.");
-        return 100;
     }
 
     static Array m_arr;

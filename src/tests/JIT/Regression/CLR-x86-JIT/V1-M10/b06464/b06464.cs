@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 
 public class Test_b06464
 {
@@ -26,9 +27,9 @@ public class Test_b06464
         return 1;
     }
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         A()[F()] = G();
-        return 100;
     }
 }

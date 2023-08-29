@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 public class bug1
 {
     public struct VT
@@ -19,7 +20,8 @@ public class bug1
 
     public static VT vtstatic = new VT();
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         double a5 = -0.5;
 
@@ -37,7 +39,6 @@ public class bug1
         long retval = (long)(Convert.ToInt32((Convert.ToInt32(((double)(vtstatic.a3 * (vt.a1 - cl.arr1d[0]))) - (vt.a1 - (a5))))) - (long)(((vtstatic.a3 + vtstatic.a2) + (vtstatic.a3 + 5L))));
         Console.WriteLine("The correct value is -8");
         Console.WriteLine("The actual value is {0}", retval);
-        return 100;
     }
 
 }

@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 
 public class AA
 {
@@ -34,10 +35,10 @@ public class AA
 		GC.Collect();
 	}
 	
-	public static int Main()
+	[Fact]
+	public static void TestEntryPoint()
 	{
 		DoThings();
 		new AA().CheckHeap();
-		return 100;
 	}
 }

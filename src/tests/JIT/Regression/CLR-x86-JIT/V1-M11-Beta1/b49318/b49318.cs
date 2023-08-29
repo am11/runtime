@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -23,14 +24,14 @@ namespace Test
             }
             catch (Exception) { }
         }
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             try
             {
                 Main1();
             }
             catch (Exception) { }
-            return 100;
         }
     }
 

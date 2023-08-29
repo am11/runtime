@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -11,7 +12,8 @@ namespace Test
         public static uint[] m_auForward5;
         public static uint[] Method2() { return null; }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             bool local3 = true;
             if (local3)
@@ -23,7 +25,6 @@ namespace Test
                 catch (Exception)
                 {
                 }
-            return 100;
         }
     }
 }

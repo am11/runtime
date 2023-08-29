@@ -218,7 +218,7 @@ namespace System.Reflection
 
         public override string ToString()
         {
-            return $"{FieldType} {name}";
+            return $"{FieldType.FormatTypeName ()} {name}";
         }
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
@@ -241,11 +241,10 @@ namespace System.Reflection
             if (val != null)
             {
                 RuntimeType fieldType = (RuntimeType)FieldType;
-                ParameterCopyBackAction _ = default;
 
                 if (!ReferenceEquals(val.GetType(), fieldType))
                 {
-                    fieldType.CheckValue(ref val, ref _, binder, culture, invokeAttr);
+                    fieldType.CheckValue(ref val, binder, culture, invokeAttr);
                 }
             }
 
@@ -275,7 +274,7 @@ namespace System.Reflection
         {
             Type? declaringType = DeclaringType;
             if (declaringType != null && declaringType.ContainsGenericParameters)
-                throw new InvalidOperationException("Late bound operations cannot be performed on fields with types for which Type.ContainsGenericParameters is true.");
+                throw new InvalidOperationException(SR.Arg_UnboundGenField);
         }
 
         public sealed override bool HasSameMetadataDefinitionAs(MemberInfo other) => HasSameMetadataDefinitionAsCore<RuntimeFieldInfo>(other);
@@ -292,12 +291,16 @@ namespace System.Reflection
         internal static extern int get_metadata_token(RuntimeFieldInfo monoField);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern Type[] GetTypeModifiers(bool optional);
+        private extern Type[] GetTypeModifiers(bool optional, int genericArgumentPosition = -1);
 
         public override Type[] GetOptionalCustomModifiers() => GetCustomModifiers(true);
 
         public override Type[] GetRequiredCustomModifiers() => GetCustomModifiers(false);
 
         private Type[] GetCustomModifiers(bool optional) => GetTypeModifiers(optional) ?? Type.EmptyTypes;
+
+        internal Type[] GetCustomModifiersFromModifiedType(bool optional, int genericArgumentPosition) => GetTypeModifiers(optional, genericArgumentPosition) ?? Type.EmptyTypes;
+
+        public override Type GetModifiedFieldType() => ModifiedType.Create(FieldType, this);
     }
 }

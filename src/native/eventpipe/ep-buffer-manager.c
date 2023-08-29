@@ -596,7 +596,7 @@ buffer_manager_move_next_event_any_thread (
 
 	dn_vector_ptr_custom_init_params_t params = {0, };
 	params.allocator = (dn_allocator_t *)&allocator;
-	params.capacity = dn_vector_ptr_buffer_capacity (dn_vector_ptr_default_local_allocator_byte_size);
+	params.capacity = dn_vector_ptr_default_local_allocator_capacity_size;
 
 	ep_raise_error_if_nok (dn_vector_ptr_custom_init (&buffer_array, &params));
 	ep_raise_error_if_nok (dn_vector_ptr_custom_init (&buffer_list_array, &params));
@@ -776,6 +776,7 @@ buffer_manager_try_convert_buffer_to_read_only (
 	EventPipeThread *thread = ep_buffer_get_writer_thread (new_read_buffer);
 	EP_SPIN_LOCK_ENTER (ep_thread_get_rt_lock_ref (thread), section1);
 		EventPipeThreadSessionState *thread_session_state = ep_thread_get_session_state (thread, buffer_manager->session);
+		EP_ASSERT(thread_session_state != NULL);
 		if (ep_thread_session_state_get_write_buffer (thread_session_state) == new_read_buffer) {
 			ep_thread_session_state_set_write_buffer (thread_session_state, NULL);
 			EP_ASSERT (ep_buffer_get_volatile_state (new_read_buffer) == EP_BUFFER_STATE_READ_ONLY);
@@ -1061,7 +1062,7 @@ ep_buffer_manager_suspend_write_event (
 
 	dn_vector_ptr_custom_init_params_t params = {0, };
 	params.allocator = (dn_allocator_t *)&allocator;
-	params.capacity = dn_vector_ptr_buffer_capacity (dn_vector_ptr_default_local_allocator_byte_size);
+	params.capacity = dn_vector_ptr_default_local_allocator_capacity_size;
 
 	dn_vector_ptr_t thread_vector;
 	ep_raise_error_if_nok (dn_vector_ptr_custom_init (&thread_vector, &params));
@@ -1079,6 +1080,7 @@ ep_buffer_manager_suspend_write_event (
 	DN_VECTOR_PTR_FOREACH_BEGIN (EventPipeThread *, thread, &thread_vector) {
 		EP_SPIN_LOCK_ENTER (ep_thread_get_rt_lock_ref (thread), section2)
 			EventPipeThreadSessionState *thread_session_state = ep_thread_get_session_state (thread, buffer_manager->session);
+			EP_ASSERT(thread_session_state != NULL);
 			ep_thread_session_state_set_write_buffer (thread_session_state, NULL);
 		EP_SPIN_LOCK_EXIT (ep_thread_get_rt_lock_ref (thread), section2)
 	} DN_VECTOR_PTR_FOREACH_END;
@@ -1205,7 +1207,7 @@ ep_buffer_manager_write_all_buffers_to_file_v4 (
 
 	dn_vector_ptr_custom_init_params_t params = {0, };
 	params.allocator = (dn_allocator_t *)&allocator;
-	params.capacity = dn_vector_ptr_buffer_capacity (dn_vector_ptr_default_local_allocator_byte_size);
+	params.capacity = dn_vector_ptr_default_local_allocator_capacity_size;
 
 	dn_vector_ptr_t session_states_to_delete;
 	ep_raise_error_if_nok (dn_vector_ptr_custom_init (&session_states_to_delete, &params));
@@ -1383,7 +1385,7 @@ ep_buffer_manager_deallocate_buffers (EventPipeBufferManager *buffer_manager)
 
 	dn_vector_ptr_custom_init_params_t params = {0, };
 	params.allocator = (dn_allocator_t *)&allocator;
-	params.capacity = dn_vector_ptr_buffer_capacity (dn_vector_ptr_default_local_allocator_byte_size);
+	params.capacity = dn_vector_ptr_default_local_allocator_capacity_size;
 
 	dn_vector_ptr_t thread_session_states_to_remove;
 	ep_raise_error_if_nok (dn_vector_ptr_custom_init (&thread_session_states_to_remove, &params));

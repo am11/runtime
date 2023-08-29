@@ -3,10 +3,12 @@
 //
 
 using System;
+using Xunit;
 
 public class Repro
 {
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         //We used to incorrectly generate an infinite loop by
         //emitting a jump instruction to itself
@@ -18,6 +20,5 @@ public class Repro
             i++;
         }
         Console.WriteLine("PASS!");
-        return 100;
     }
 }

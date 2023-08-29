@@ -629,6 +629,7 @@ void CodeGen::genCodeForBBlist()
 
                     case BBJ_RETURN:
                     case BBJ_EHFINALLYRET:
+                    case BBJ_EHFAULTRET:
                     case BBJ_EHFILTERRET:
                         // These are the "epilog follows" case, handled in the emitter.
 
@@ -715,6 +716,7 @@ void CodeGen::genCodeForBBlist()
                 FALLTHROUGH;
 
             case BBJ_EHFINALLYRET:
+            case BBJ_EHFAULTRET:
             case BBJ_EHFILTERRET:
                 genReserveFuncletEpilog(block);
                 break;
@@ -726,6 +728,7 @@ void CodeGen::genCodeForBBlist()
                 break;
 
             case BBJ_EHFINALLYRET:
+            case BBJ_EHFAULTRET:
             case BBJ_EHFILTERRET:
                 genEHFinallyOrFilterRet(block);
                 break;
@@ -1208,29 +1211,55 @@ void CodeGen::genUnspillRegIfNeeded(GenTree* tree)
             // Reset spilled flag, since we are going to load a local variable from its home location.
             unspillTree->gtFlags &= ~GTF_SPILLED;
 
-            GenTreeLclVar* lcl       = unspillTree->AsLclVar();
-            LclVarDsc*     varDsc    = compiler->lvaGetDesc(lcl);
-            var_types      spillType = varDsc->GetRegisterType(lcl);
-            assert(spillType != TYP_UNDEF);
+            GenTreeLclVar* lcl         = unspillTree->AsLclVar();
+            LclVarDsc*     varDsc      = compiler->lvaGetDesc(lcl);
+            var_types      unspillType = varDsc->GetRegisterType(lcl);
+            assert(unspillType != TYP_UNDEF);
 
 // TODO-Cleanup: The following code could probably be further merged and cleaned up.
-#if defined(TARGET_XARCH) || defined(TARGET_ARM64) || defined(TARGET_LOONGARCH64)
-            // Load local variable from its home location.
-            // Never allow truncating the locals here, otherwise a subsequent
-            // use of the local with a wider type would see the truncated
-            // value. We do allow wider loads as those can be efficient even
-            // when unaligned and might be smaller encoding wise (on xarch).
-            var_types lclLoadType = varDsc->lvNormalizeOnLoad() ? varDsc->TypeGet() : varDsc->GetStackSlotHomeType();
-            assert(lclLoadType != TYP_UNDEF);
-            if (genTypeSize(spillType) < genTypeSize(lclLoadType))
+#if defined(TARGET_XARCH) || defined(TARGET_ARM64) || defined(TARGET_LOONGARCH64) || defined(TARGET_RISCV64)
+
+            // Pick type to reload register from stack with. Note that in
+            // general, the type of 'lcl' does not have any relation to the
+            // type of 'varDsc':
+            //
+            // * For normalize-on-load (NOL) locals it is wider under normal
+            // circumstances, where morph has added a cast on top. In some
+            // cases it is the same, when morph has used a subrange assertion
+            // to avoid normalizing.
+            //
+            // * For all locals it can be narrower in some cases, when
+            // lowering optimizes to use a smaller typed `cmp` (e.g. 32-bit cmp
+            // for 64-bit local, or 8-bit cmp for 16-bit local).
+            //
+            // * For byrefs it can differ in GC-ness (TYP_I_IMPL vs TYP_BYREF).
+            //
+            // In the NOL case the potential use of subrange assertions means
+            // we always have to normalize, even if 'lcl' is wide; we could
+            // have a GTF_SPILLED LCL_VAR<int>(NOL local) with a future
+            // LCL_VAR<ushort>(same NOL local), where the latter local then
+            // relies on the normalization to have happened here as part of
+            // unspilling.
+            //
+            if (varDsc->lvNormalizeOnLoad())
             {
-                spillType = lclLoadType;
+                unspillType = varDsc->TypeGet();
+            }
+            else
+            {
+                // Potentially narrower -- see if we should widen.
+                var_types lclLoadType = varDsc->GetStackSlotHomeType();
+                assert(lclLoadType != TYP_UNDEF);
+                if (genTypeSize(unspillType) < genTypeSize(lclLoadType))
+                {
+                    unspillType = lclLoadType;
+                }
             }
 
 #if defined(TARGET_LOONGARCH64)
-            if (varTypeIsFloating(spillType) && emitter::isGeneralRegister(tree->GetRegNum()))
+            if (varTypeIsFloating(unspillType) && emitter::isGeneralRegister(tree->GetRegNum()))
             {
-                spillType = spillType == TYP_FLOAT ? TYP_INT : TYP_LONG;
+                unspillType = unspillType == TYP_FLOAT ? TYP_INT : TYP_LONG;
             }
 #endif
 #elif defined(TARGET_ARM)
@@ -1238,9 +1267,10 @@ void CodeGen::genUnspillRegIfNeeded(GenTree* tree)
 #else
             NYI("Unspilling not implemented for this target architecture.");
 #endif
+
             bool reSpill   = ((unspillTree->gtFlags & GTF_SPILL) != 0);
             bool isLastUse = lcl->IsLastUse(0);
-            genUnspillLocal(lcl->GetLclNum(), spillType, lcl->AsLclVar(), tree->GetRegNum(), reSpill, isLastUse);
+            genUnspillLocal(lcl->GetLclNum(), unspillType, lcl->AsLclVar(), tree->GetRegNum(), reSpill, isLastUse);
         }
         else if (unspillTree->IsMultiRegLclVar())
         {
@@ -1624,6 +1654,14 @@ void CodeGen::genConsumeRegs(GenTree* tree)
             genConsumeRegs(tree->gtGetOp1());
             genConsumeRegs(tree->gtGetOp2());
         }
+        else if (tree->OperIsFieldList())
+        {
+            for (GenTreeFieldList::Use& use : tree->AsFieldList()->Uses())
+            {
+                GenTree* fieldNode = use.GetNode();
+                genConsumeRegs(fieldNode);
+            }
+        }
 #endif
         else if (tree->OperIsLocalRead())
         {
@@ -1735,7 +1773,7 @@ void CodeGen::genConsumeMultiOpOperands(GenTreeMultiOp* tree)
 // Notes:
 //    sizeReg can be REG_NA when this function is used to consume the dstReg and srcReg
 //    for copying on the stack a struct with references.
-//    The source address/offset is determined from the address on the GT_OBJ node, while
+//    The source address/offset is determined from the address on the GT_BLK node, while
 //    the destination address is the address contained in 'm_stkArgVarNum' plus the offset
 //    provided in the 'putArgNode'.
 //    m_stkArgVarNum must be set to  the varnum for the local used for placing the "by-value" args on the stack.
@@ -1752,7 +1790,7 @@ void CodeGen::genConsumePutStructArgStk(GenTreePutArgStk* putArgNode,
     GenTree*  src        = putArgNode->Data();
     regNumber srcAddrReg = REG_NA;
     assert(varTypeIsStruct(src));
-    assert(src->OperIs(GT_OBJ) || src->OperIsLocalRead() || (src->OperIs(GT_IND) && varTypeIsSIMD(src)));
+    assert(src->OperIs(GT_BLK) || src->OperIsLocalRead() || (src->OperIs(GT_IND) && varTypeIsSIMD(src)));
 
     assert(dstReg != REG_NA);
     assert(srcReg != REG_NA);
@@ -1857,13 +1895,10 @@ void CodeGen::genPutArgStkFieldList(GenTreePutArgStk* putArgStk, unsigned outArg
 // Emit store instructions to store the registers produced by the GT_FIELD_LIST into the outgoing
 // argument area.
 
-#if defined(FEATURE_SIMD) && defined(TARGET_ARM64)
-        // storing of TYP_SIMD12 (i.e. Vector3) argument.
-        if (compMacOsArm64Abi() && (type == TYP_SIMD12))
+#if defined(FEATURE_SIMD)
+        if (type == TYP_SIMD12)
         {
-            // Need an additional integer register to extract upper 4 bytes from data.
-            regNumber tmpReg = nextArgNode->GetSingleTempReg();
-            GetEmitter()->emitStoreSimd12ToLclOffset(outArgVarNum, thisFieldOffset, reg, tmpReg);
+            GetEmitter()->emitStoreSimd12ToLclOffset(outArgVarNum, thisFieldOffset, reg, nextArgNode);
         }
         else
 #endif // FEATURE_SIMD
@@ -2477,7 +2512,7 @@ CodeGen::GenIntCastDesc::GenIntCastDesc(GenTreeCast* cast)
             m_checkKind = CHECK_NONE;
         }
 
-#ifdef TARGET_LOONGARCH64
+#if defined(TARGET_LOONGARCH64) || defined(TARGET_RISCV64)
         // For LoongArch64's ISA which is same with the MIPS64 ISA, even the instructions of 32bits operation need
         // the upper 32bits be sign-extended to 64 bits.
         m_extendKind = SIGN_EXTEND_INT;
@@ -2587,7 +2622,7 @@ void CodeGen::genStoreLongLclVar(GenTree* treeNode)
 }
 #endif // !defined(TARGET_64BIT)
 
-#ifndef TARGET_LOONGARCH64
+#if !defined(TARGET_LOONGARCH64) && !defined(TARGET_RISCV64)
 
 //------------------------------------------------------------------------
 // genCodeForJcc: Generate code for a GT_JCC node.
@@ -2645,4 +2680,4 @@ void CodeGen::genCodeForSetcc(GenTreeCC* setcc)
     inst_SETCC(setcc->gtCondition, setcc->TypeGet(), setcc->GetRegNum());
     genProduceReg(setcc);
 }
-#endif // !TARGET_LOONGARCH64
+#endif // !TARGET_LOONGARCH64 && !TARGET_RISCV64

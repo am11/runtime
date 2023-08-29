@@ -7,7 +7,6 @@
 #include "longfile.h"
 
 #include <cassert>
-#include <locale>
 #include <ShlObj.h>
 #include <ctime>
 
@@ -570,14 +569,18 @@ bool pal::getenv(const char_t* name, string_t* recv)
         auto err = GetLastError();
         if (err != ERROR_ENVVAR_NOT_FOUND)
         {
-            trace::error(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(GetLastError()));
+            trace::warning(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
         }
         return false;
     }
     auto buf = new char_t[length];
     if (::GetEnvironmentVariableW(name, buf, length) == 0)
     {
-        trace::error(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(GetLastError()));
+        auto err = GetLastError();
+        if (err != ERROR_ENVVAR_NOT_FOUND)
+        {
+            trace::warning(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
+        }
         return false;
     }
 
@@ -937,4 +940,8 @@ void pal::mutex_t::lock()
 void pal::mutex_t::unlock()
 {
     ::LeaveCriticalSection(&_impl);
+}
+
+void pal::initialize_createdump()
+{
 }

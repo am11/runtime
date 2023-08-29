@@ -3,8 +3,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Xunit;
 
-class GitHub_11408
+public class GitHub_11408
 {
     const int Pass = 100;
     const int Fail = -1;
@@ -25,7 +26,8 @@ class GitHub_11408
             foo((IntPtr)(&x));
         }
 
-        public static int Main()
+        [Fact]
+        public static int TestEntryPoint()
         {
             bar();
 

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 /*
 set DOTNET_JitNoRegLoc=1
 set DOTNET_JitSched=2
@@ -20,14 +21,14 @@ namespace Test
             return L;
         }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             try
             {
                 AA aa = ((AA)(BB.Method1(new String[4])));
             }
             catch (Exception) { }
-            return 100;
         }
     }
 }

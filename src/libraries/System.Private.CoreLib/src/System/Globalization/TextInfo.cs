@@ -32,6 +32,8 @@ namespace System.Globalization
         private readonly string _cultureName;
         private readonly CultureData _cultureData;
 
+        private bool HasEmptyCultureName { get { return _cultureName.Length == 0; } }
+
         // // Name of the text info we're using (ie: _cultureData.TextInfoName)
         private readonly string _textInfoName;
 
@@ -186,6 +188,24 @@ namespace System.Globalization
             char dst = default;
             ChangeCaseCore(&c, 1, &dst, 1, toUpper);
             return dst;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static char ToUpperOrdinal(char c)
+        {
+            if (GlobalizationMode.Invariant)
+            {
+                return InvariantModeCasing.ToUpper(c);
+            }
+
+            if (GlobalizationMode.UseNls)
+            {
+                return char.IsAscii(c)
+                    ? ToUpperAsciiInvariant(c)
+                    : Invariant.ChangeCase(c, toUpper: true);
+            }
+
+            return OrdinalCasing.ToUpper(c);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -434,7 +454,7 @@ namespace System.Globalization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static char ToUpperAsciiInvariant(char c)
+        internal static char ToUpperAsciiInvariant(char c)
         {
             if (char.IsAsciiLetterLower(c))
             {
@@ -682,11 +702,22 @@ namespace System.Globalization
             if (GlobalizationMode.UseNls)
             {
                 NlsChangeCase(src, srcLen, dstBuffer, dstBufferCapacity, bToUpper);
+                return;
             }
-            else
+#if TARGET_BROWSER
+            if (GlobalizationMode.Hybrid)
             {
-                IcuChangeCase(src, srcLen, dstBuffer, dstBufferCapacity, bToUpper);
+                JsChangeCase(src, srcLen, dstBuffer, dstBufferCapacity, bToUpper);
+                return;
             }
+#elif TARGET_MACCATALYST || TARGET_IOS || TARGET_TVOS
+            if (GlobalizationMode.Hybrid)
+            {
+                ChangeCaseNative(src, srcLen, dstBuffer, dstBufferCapacity, bToUpper);
+                return;
+            }
+#endif
+            IcuChangeCase(src, srcLen, dstBuffer, dstBufferCapacity, bToUpper);
         }
 
         // Used in ToTitleCase():

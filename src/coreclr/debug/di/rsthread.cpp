@@ -2135,11 +2135,6 @@ HRESULT CordbThread::InterceptCurrentException(ICorDebugFrame * pFrame)
     FAIL_IF_NEUTERED(this);
     ATT_REQUIRE_STOPPED_MAY_FAIL(GetProcess());
 
-#if defined(FEATURE_DBGIPC_TRANSPORT_DI)
-    // Continuable exceptions are not implemented on Unix-like platforms.
-    return E_NOTIMPL;
-
-#else  // !FEATURE_DBGIPC_TRANSPORT_DI
     HRESULT hr = S_OK;
     EX_TRY
     {
@@ -2216,7 +2211,6 @@ HRESULT CordbThread::InterceptCurrentException(ICorDebugFrame * pFrame)
     }
     EX_CATCH_HRESULT(hr);
     return hr;
-#endif // FEATURE_DBGIPC_TRANSPORT_DI
 }
 
 //---------------------------------------------------------------------------------------
@@ -8331,6 +8325,9 @@ HRESULT CordbJITILFrame::GetNativeVariable(CordbType *type,
 #elif defined(TARGET_LOONGARCH64)
         hr = m_nativeFrame->GetLocalFloatingPointValue(pNativeVarInfo->loc.vlReg.vlrReg + REGISTER_LOONGARCH64_F0,
                                                        type, ppValue);
+#elif defined(TARGET_RISCV64)
+        hr = m_nativeFrame->GetLocalFloatingPointValue(pNativeVarInfo->loc.vlReg.vlrReg + REGISTER_RISCV64_F0,
+                                                       type, ppValue);
 #else
 #error Platform not implemented
 #endif  // TARGET_ARM @ARMTODO
@@ -8578,10 +8575,10 @@ HRESULT CordbJITILFrame::RemapFunction(ULONG32 nOffset)
     HRESULT hr = S_OK;
     PUBLIC_API_BEGIN(this)
     {
-#if !defined(FEATURE_ENC_SUPPORTED)
+#if !defined(FEATURE_REMAP_FUNCTION)
         ThrowHR(E_NOTIMPL);
 
-#else  // FEATURE_ENC_SUPPORTED
+#else  // FEATURE_REMAP_FUNCTION
         // Can only be called on leaf frame.
         if (!m_nativeFrame->IsLeafFrame())
         {
@@ -8598,7 +8595,7 @@ HRESULT CordbJITILFrame::RemapFunction(ULONG32 nOffset)
         // Tell the left-side to do the remap
         hr = m_nativeFrame->m_pThread->SetRemapIP(nOffset);
 
-#endif // FEATURE_ENC_SUPPORTED
+#endif // FEATURE_REMAP_FUNCTION
     }
     PUBLIC_API_END(hr);
 
@@ -8769,6 +8766,8 @@ HRESULT CordbJITILFrame::GetReturnValueForType(CordbType *pType, ICorDebugValue 
     const CorDebugRegister floatRegister = REGISTER_ARM_D0;
 #elif  defined(TARGET_LOONGARCH64)
     const CorDebugRegister floatRegister = REGISTER_LOONGARCH64_F0;
+#elif  defined(TARGET_RISCV64)
+    const CorDebugRegister floatRegister = REGISTER_RISCV64_F0;
 #endif
 
 #if defined(TARGET_X86)
@@ -8783,6 +8782,8 @@ HRESULT CordbJITILFrame::GetReturnValueForType(CordbType *pType, ICorDebugValue 
     const CorDebugRegister ptrHighWordRegister = REGISTER_ARM_R1;
 #elif  defined(TARGET_LOONGARCH64)
     const CorDebugRegister ptrRegister = REGISTER_LOONGARCH64_A0;
+#elif  defined(TARGET_RISCV64)
+    const CorDebugRegister ptrRegister = REGISTER_RISCV64_A0;
 #endif
 
     CorElementType corReturnType = pType->GetElementType();
@@ -9968,7 +9969,7 @@ HRESULT CordbEval::NewString(LPCWSTR string)
 {
     PUBLIC_API_ENTRY(this);
     FAIL_IF_NEUTERED(this);
-    return NewStringWithLength(string, (UINT)wcslen(string));
+    return NewStringWithLength(string, (UINT)u16_strlen(string));
 }
 
 //---------------------------------------------------------------------------------------

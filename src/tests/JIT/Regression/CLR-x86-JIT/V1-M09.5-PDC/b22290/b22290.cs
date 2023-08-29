@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace DefaultNamespace
 {
     public class DD
@@ -10,10 +11,10 @@ namespace DefaultNamespace
         {
             return new float[7];
         }
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             new DD().Method1();
-            return 100;
         }
     }
 }

@@ -4,6 +4,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Xunit;
 
 public class GitHub_23739
 {
@@ -186,7 +187,8 @@ public class GitHub_23739
         Sink(ref l3);
     }
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         Cls1f cls1f = new Cls1f();
         Test1f(cls1f);
@@ -205,7 +207,5 @@ public class GitHub_23739
 
         Cls6f cls6f = new Cls6f();
         Test6f(cls6f);
-
-        return 100;
     }
 }

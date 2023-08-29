@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace DefaultNamespace
 {
     //@BEGINRENAME; Verify this renames
@@ -10,7 +11,8 @@ namespace DefaultNamespace
 
     public class repro
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             char b = 'B';
 
@@ -18,8 +20,6 @@ namespace DefaultNamespace
 
             //Console.Write( "Y"+    "Y" );  // This line causes no bug.
             Console.Write("Y" + b + "Y");  // This line causes the bug!  JIT InLiner problem.
-
-            return 100;
         }
     }
 }

@@ -229,10 +229,18 @@ ipc_log_poll_handles (dn_vector_t *ipc_poll_handles)
 	} DN_VECTOR_FOREACH_END;
 }
 
+static
+bool
+EP_CALLBACK_CALLTYPE
+ipc_stream_factory_callback (void)
+{
+	return ds_ipc_stream_factory_any_suspended_ports ();
+}
+
 bool
 ds_ipc_stream_factory_init (void)
 {
-	ep_ipc_stream_factory_callback_set (ds_ipc_stream_factory_any_suspended_ports);
+	ep_ipc_stream_factory_callback_set (ipc_stream_factory_callback);
 	_ds_port_array = dn_vector_ptr_alloc ();
 	return _ds_port_array != NULL;
 }
@@ -265,7 +273,7 @@ ds_ipc_stream_factory_configure (ds_ipc_error_callback_func callback)
 
 		dn_vector_ptr_custom_alloc_params_t params = {0, };
 		params.allocator = (dn_allocator_t *)&allocator;
-		params.capacity = dn_vector_ptr_buffer_capacity (dn_vector_ptr_default_local_allocator_byte_size);
+		params.capacity = dn_vector_ptr_default_local_allocator_capacity_size;
 
 		dn_vector_ptr_t *port_configs = dn_vector_ptr_custom_alloc (&params);
 		dn_vector_ptr_t *port_config_parts = dn_vector_ptr_custom_alloc (&params);

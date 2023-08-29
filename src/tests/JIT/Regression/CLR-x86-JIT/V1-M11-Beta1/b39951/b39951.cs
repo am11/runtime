@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -14,11 +15,11 @@ namespace Test
 
     public class BB
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             double local3 = 133.28;
             AA.Static1(local3, AA.m_auForward3[2]);
-            return 100;
         }
     }
 }

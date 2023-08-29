@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 
 struct Struct_32bytes
 {
@@ -132,9 +133,9 @@ public class bug178119
         return result;
     }
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         Console.WriteLine(foo1());
-        return 100;
     }
 }

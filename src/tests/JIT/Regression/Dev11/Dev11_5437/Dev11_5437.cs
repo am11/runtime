@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 
 public class Program
 {
@@ -15,7 +16,8 @@ public class Program
             throw new Exception("FAILED");
         }
     }
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         int d = 0;
         int i = 3;
@@ -29,6 +31,6 @@ public class Program
             }
         }
         Console.WriteLine("PASSED");
-        return 100; //Didn't hit the bug so return success
+        //Didn't hit the bug so return success
     }
 }

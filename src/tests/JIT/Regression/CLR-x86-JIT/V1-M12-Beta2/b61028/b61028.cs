@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 public class bug1
 {
     public struct VT1
@@ -17,13 +18,13 @@ public class bug1
     {
         return Convert.ToInt32(Convert.ToInt32(Convert.ToInt32(vtstatic.a9 / 3 + vtstatic.a3)) % (Convert.ToInt32(vtstatic.a1 * vtstatic.a0) - Convert.ToInt32(Convert.ToInt32(2) % Convert.ToInt32(Convert.ToInt32(2) % (Convert.ToInt32(9))))));
     }
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         vtstatic.a0 = 3;
         vtstatic.a1 = 2;
         vtstatic.a3 = 6;
         vtstatic.a9 = 1;
         f();
-        return 100;
     }
 }

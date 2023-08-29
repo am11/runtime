@@ -23,6 +23,7 @@
 */
 
 using System;
+using Xunit;
 
 namespace BadOverride1
 {
@@ -54,14 +55,14 @@ namespace BadOverride1
 
     public static class App
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             Dll.Apis.RunDllCode();
             Console.Write("\r\n");
             var derivedType = new DerivedType();
             derivedType.RunGenericMethod<int, string>(22);
             Console.Write("Call completed successfully.\r\n");
-            return 100;
         }
     }
 }

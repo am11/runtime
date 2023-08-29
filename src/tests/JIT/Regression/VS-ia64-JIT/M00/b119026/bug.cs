@@ -2,11 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 public class test
 {
     static short si16;
     static uint su32;
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         si16 = -1;
         su32 = (uint)si16;
@@ -21,12 +23,10 @@ public class test
         if (u32 == uint.MaxValue)
         {
             System.Console.WriteLine("Pass");
-            return 100;
         }
         else
         {
             System.Console.WriteLine("Fail");
-            return 100;
         }
     }
 }

@@ -2,18 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace JitTest
 {
     using System;
 
     public class Test
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             ulong A = 0x3bbde5b000000000;
             uint B = 0xaeb84648;
             ulong C = checked(A + B);
-            return 100;
         }
     }
 }

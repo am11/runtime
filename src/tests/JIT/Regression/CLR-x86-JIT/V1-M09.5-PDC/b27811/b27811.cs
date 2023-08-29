@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -37,11 +38,11 @@ namespace Test
             return ptr.m_afField1[2];
         }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             int N1 = 0;
             FailingFunc(ref N1);
-            return 100;
         }
     }
 }

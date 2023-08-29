@@ -3,9 +3,11 @@
 //
 
 using System;
+using Xunit;
 public struct AA
 {
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         bool f = false;
         if (f) f = false;
@@ -17,6 +19,5 @@ public struct AA
                 do { } while (f);
             }
         }
-        return 100;
     }
 }

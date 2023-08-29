@@ -28,7 +28,7 @@
 # | Arch  | windows                 | Linux                                                                                                                                | macOS          |
 # |-------|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------|----------------|
 # | x86   | Windows.10.Amd64.X86.Rt | -                                                                                                                                    | -              |
-# | x64   | Windows.10.Amd64.X86.Rt | Ubuntu.1804.Amd64                                                                                                                    | OSX.1014.Amd64 |
+# | x64   | Windows.10.Amd64.X86.Rt | Ubuntu.2204.Amd64                                                                                                                    | OSX.1014.Amd64 |
 # | arm   | -                       | (Ubuntu.1804.Arm32)Ubuntu.2004.ArmArch@mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-helix-arm32v7                        | -              |
 # | arm64 | Windows.11.Arm64        | (Ubuntu.1804.Arm64)Ubuntu.2004.ArmArch@mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-helix-arm64v8                        | OSX.1100.ARM64 |
 #
@@ -47,7 +47,7 @@ from jitutil import run_command, copy_directory, copy_files, set_pipeline_variab
 
 parser = argparse.ArgumentParser(description="description")
 
-parser.add_argument("-collection_type", required=True, help="Type of the SPMI collection to be done (crossgen2, pmi, run)")
+parser.add_argument("-collection_type", required=True, help="Type of the SPMI collection to be done (crossgen2, pmi, run, run_tiered, run_pgo)")
 parser.add_argument("-collection_name", required=True, help="Name of the SPMI collection to be done (e.g., libraries, libraries_tests, coreclr_tests, benchmarks)")
 parser.add_argument("-payload_directory", required=True, help="Path to payload directory to create: subdirectories are created for the correlation payload as well as the per-partition work items")
 parser.add_argument("-source_directory", required=True, help="Path to source directory")
@@ -60,7 +60,7 @@ parser.add_argument("-max_size", help="Max size of each partition in MB (for pmi
 
 is_windows = platform.system() == "Windows"
 
-legal_collection_types = [ "crossgen2", "pmi", "run" ]
+legal_collection_types = [ "crossgen2", "pmi", "run", "run_tiered", "run_pgo" ]
 
 directories_to_ignore = [
     "runtimes", # This appears to be the result of a nuget package that includes a bunch of native code
@@ -376,8 +376,8 @@ def partition_files(src_directory, dst_directory, max_size, exclude_directories=
         index += 1
 
 
-def setup_microbenchmark(workitem_directory, arch):
-    """ Perform setup of microbenchmarks
+def setup_benchmark(workitem_directory, arch):
+    """ Perform setup of microbenchmarks/realworld
 
     Args:
         workitem_directory (string): Path to work
@@ -405,7 +405,7 @@ def setup_microbenchmark(workitem_directory, arch):
         # have not published yet. As a result, we hit errors of "dotnet restore". As a workaround, hard code the
         # working version until we move to ".NET 8" in the script.
         run_command(
-            get_python_name() + [dotnet_install_script, "install", "--dotnet-versions", "8.0.100-alpha.1.22558.2", "--architecture", arch, "--install-dir",
+            get_python_name() + [dotnet_install_script, "install", "--channels", "8.0-preview", "--architecture", arch, "--install-dir",
                                  dotnet_directory, "--verbose"])
 
 
@@ -463,7 +463,7 @@ def main(main_args):
         elif arch == "arm64":
             helix_queue = "(Ubuntu.1804.Arm64)Ubuntu.2004.ArmArch@mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-helix-arm64v8"
         else:
-            helix_queue = "Ubuntu.1804.Amd64"
+            helix_queue = "Ubuntu.2204.Amd64"
     elif platform_name == "osx":
         helix_queue = "OSX.1100.ARM64" if arch == "arm64" else "OSX.1014.Amd64"
 
@@ -485,9 +485,9 @@ def main(main_args):
     print('Copying {} -> {}'.format(coreclr_args.core_root_directory, core_root_dst_directory))
     copy_directory(coreclr_args.core_root_directory, core_root_dst_directory, verbose_output=True, match_func=acceptable_copy)
 
-    if coreclr_args.collection_name == "benchmarks":
-        # Setup microbenchmarks
-        setup_microbenchmark(workitem_payload_directory, arch)
+    if coreclr_args.collection_name == "benchmarks" or coreclr_args.collection_name == "realworld":
+        # Setup benchmarks
+        setup_benchmark(workitem_payload_directory, arch)
     else:
         # Setup for pmi/crossgen2 runs
 

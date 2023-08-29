@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -25,14 +26,14 @@ namespace Test
             while (AA.m_bStatic1) ;
         }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             CC local5 = new CC();
             do
             {
                 Static1(0.0f, CC.m_axStatic4[2]);
             } while (AA.m_bStatic1);
-            return 100;
         }
     }
 }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Xunit;
 
 
 // The jit should correctly import get struct address as a first statement during the importation phase.
@@ -11,10 +12,10 @@ namespace GitHub_24114
 {
     public class Program
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             Test();
-            return 100;
         }
         
         [MethodImpl(MethodImplOptions.NoInlining)]

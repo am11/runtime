@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -9,12 +10,12 @@ namespace Test
     {
         private static void Func(TypedReference tr) { }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             bool b = false;
             TypedReference tr = __makeref(b);
             Func(b ? tr : __makeref(b));
-            return 100;
         }
     }
 }

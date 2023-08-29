@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 
 
 struct Big10DW
@@ -135,11 +136,11 @@ struct Big100000DW
 
 public class Test_hugestruct
 {
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         Big100000DW b = new Big100000DW();
         b.b10.b10.b10.b10.i5 = 0;
         GC.Collect();
-        return 100;
     }
 }

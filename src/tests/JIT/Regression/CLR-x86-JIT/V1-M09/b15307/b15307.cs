@@ -3,15 +3,16 @@
 
 using System;
 using System.Globalization;
+using Xunit;
 
 namespace DefaultNamespace
 {
     public class bug
     {
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             CultureInfo ci = new CultureInfo("en-us");
-            return 100;
         }
     }
 }

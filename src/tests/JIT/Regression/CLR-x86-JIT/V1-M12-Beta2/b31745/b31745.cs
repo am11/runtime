@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -16,12 +17,12 @@ namespace Test
         public static int[] Test(ref double[] param1, ref float[] param3)
         { return Method1(m_auStatic1, ref param3[2], __arglist()); }
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             double[] ad = new double[16];
             float[] af = new float[16];
             Test(ref ad, ref af);
-            return 100;
         }
     }
 }

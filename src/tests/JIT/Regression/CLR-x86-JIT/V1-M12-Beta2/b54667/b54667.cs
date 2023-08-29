@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -10,10 +11,10 @@ namespace Test
     {
         bool m_b;
         static void Static1(BB param3, ref bool param5) { }
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             Static1(new BB(), ref new BB[] { new BB() }[0].m_b);
-            return 100;
         }
     }
 }

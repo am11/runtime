@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 public class foo
 {
 
@@ -9,18 +10,16 @@ public class foo
     public static sbyte a, b, c;
 #pragma warning restore 0414
 
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
-
         a = 19;
         b = 3;
 
         div();
-
-        return 100;
     }
 
-    public static void div()
+    internal static void div()
     {
 
         sbyte b = 3;

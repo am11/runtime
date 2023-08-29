@@ -1908,7 +1908,7 @@ FCIMPL1(INT32, ReflectionEnum::InternalGetCorElementType, MethodTable* pMT) {
 
     // MethodTable::GetInternalCorElementType has unnecessary overhead for enums
     // Call EEClass::GetInternalCorElementType directly to avoid it
-    return pMT->GetClass_NoLogging()->GetInternalCorElementType();
+    return pMT->GetClass()->GetInternalCorElementType();
 }
 FCIMPLEND
 
@@ -1938,6 +1938,19 @@ extern "C" void QCALLTYPE Enum_GetValuesAndNames(QCall::TypeHandle pEnumType, QC
     fieldEnum.EnumInit(mdtFieldDef, pMT->GetCl());
 
     CorElementType type = pMT->GetClass()->GetInternalCorElementType();
+
+    // For underlying types that are signed integers, replace them with their
+    // unsigned counterparts, as expected by the managed Enum implementation.
+    // See the comment in Enum.cs for an explanation.
+    switch (type)
+    {
+        case ELEMENT_TYPE_I1: type = ELEMENT_TYPE_U1; break;
+        case ELEMENT_TYPE_I2: type = ELEMENT_TYPE_U2; break;
+        case ELEMENT_TYPE_I4: type = ELEMENT_TYPE_U4; break;
+        case ELEMENT_TYPE_I8: type = ELEMENT_TYPE_U8; break;
+        case ELEMENT_TYPE_I:  type = ELEMENT_TYPE_U;  break;
+        default: break;
+    }
 
     mdFieldDef field;
     while (pImport->EnumNext(&fieldEnum, &field))
@@ -1969,7 +1982,7 @@ extern "C" void QCALLTYPE Enum_GetValuesAndNames(QCall::TypeHandle pEnumType, QC
     {
         GCX_COOP();
 
-        struct gc {
+        struct {
             BASEARRAYREF values;
             PTRARRAYREF names;
         } gc;

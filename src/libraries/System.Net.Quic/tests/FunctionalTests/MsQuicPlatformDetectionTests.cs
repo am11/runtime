@@ -15,10 +15,12 @@ namespace System.Net.Quic.Tests
         public static bool IsQuicUnsupported => !IsSupported;
 
         [ConditionalFact(nameof(IsQuicUnsupported))]
-        public void UnsupportedPlatforms_ThrowsPlatformNotSupportedException()
+        public async Task UnsupportedPlatforms_ThrowsPlatformNotSupportedException()
         {
-            Assert.ThrowsAsync<PlatformNotSupportedException>(async () => await CreateQuicListener());
-            Assert.ThrowsAsync<PlatformNotSupportedException>(async () => await CreateQuicConnection(new IPEndPoint(IPAddress.Loopback, 0)));
+            PlatformNotSupportedException listenerEx = await Assert.ThrowsAsync<PlatformNotSupportedException>(async () => await CreateQuicListener());
+            PlatformNotSupportedException connectionEx = await Assert.ThrowsAsync<PlatformNotSupportedException>(async () => await CreateQuicConnection(new IPEndPoint(IPAddress.Loopback, 0)));
+            Assert.Equal(listenerEx.Message, connectionEx.Message);
+            _output.WriteLine(listenerEx.Message);
         }
 
         [ActiveIssue("https://github.com/dotnet/runtime/issues/73290", typeof(PlatformDetection), nameof(PlatformDetection.IsSingleFile))]
@@ -38,6 +40,7 @@ namespace System.Net.Quic.Tests
             find.StartInfo.FileName = "find";
             find.StartInfo.Arguments = "/usr/ -iname libmsquic.so*";
             find.StartInfo.RedirectStandardOutput = true;
+            find.StartInfo.RedirectStandardError = true;
             find.Start();
             string output = await find.StandardOutput.ReadToEndAsync();
             _output.WriteLine(output);
@@ -53,9 +56,6 @@ namespace System.Net.Quic.Tests
             }
         }
 
-        [ActiveIssue("https://github.com/dotnet/runtime/issues/81901", typeof(PlatformDetection), nameof(PlatformDetection.IsMariner1), nameof(PlatformDetection.IsInContainer))]
-        [ActiveIssue("https://github.com/dotnet/runtime/issues/81901", typeof(PlatformDetection), nameof(PlatformDetection.IsCentos7), nameof(PlatformDetection.IsInContainer))]
-        [ActiveIssue("https://github.com/dotnet/runtime/issues/82055", typeof(PlatformDetection), nameof(PlatformDetection.IsUbuntu1804), nameof(PlatformDetection.IsArmProcess), nameof(PlatformDetection.IsInContainer))]
         [ActiveIssue("https://github.com/dotnet/runtime/issues/82154", typeof(PlatformDetection), nameof(PlatformDetection.IsRaspbian10), nameof(PlatformDetection.IsArmv6Process), nameof(PlatformDetection.IsInContainer))]
         [ActiveIssue("https://github.com/dotnet/runtime/issues/82154", typeof(PlatformDetection), nameof(PlatformDetection.IsUbuntu2004), nameof(PlatformDetection.IsPpc64leProcess))]
         [ActiveIssue("https://github.com/dotnet/runtime/issues/82154", typeof(PlatformDetection), nameof(PlatformDetection.IsUbuntu2004), nameof(PlatformDetection.IsS390xProcess))]

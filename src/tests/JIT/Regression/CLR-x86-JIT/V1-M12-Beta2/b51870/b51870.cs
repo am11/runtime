@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 //
 
+using Xunit;
 namespace Test
 {
     using System;
@@ -10,7 +11,8 @@ namespace Test
     {
         int m_iField4;
 
-        public static int Main()
+        [Fact]
+        public static void TestEntryPoint()
         {
             BB local3 = new BB();
             bool b = false;
@@ -21,7 +23,6 @@ namespace Test
                     while (b) { }
                 }
             }
-            return 100;
         }
     }
 }

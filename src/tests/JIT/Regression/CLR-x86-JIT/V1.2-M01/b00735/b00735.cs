@@ -3,6 +3,7 @@
 //
 
 using System;
+using Xunit;
 public struct AA
 {
     static void f()
@@ -17,9 +18,9 @@ public struct AA
         }
         do { } while (flag);
     }
-    public static int Main()
+    [Fact]
+    public static void TestEntryPoint()
     {
         f();
-        return 100;
     }
 }

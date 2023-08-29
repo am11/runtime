@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Android.Build;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -334,11 +335,13 @@ public partial class ApkBuilder
         nativeLibraries += assemblerFilesToLink.ToString();
 
         string aotSources = assemblerFiles.ToString();
+        string monodroidSource = (IsLibraryMode) ? "monodroid-librarymode.c" : "monodroid.c";
 
         string cmakeLists = Utils.GetEmbeddedResource("CMakeLists-android.txt")
             .Replace("%ProjectName%", ProjectName)
             .Replace("%MonoInclude%", monoRuntimeHeaders)
             .Replace("%NativeLibrariesToLink%", nativeLibraries)
+            .Replace("%MONODROID_SOURCE%", monodroidSource)
             .Replace("%AotSources%", aotSources)
             .Replace("%AotModulesSource%", string.IsNullOrEmpty(aotSources) ? "" : "modules.c")
             .Replace("%APP_LINKER_ARGS%", extraLinkerArgs.ToString());
@@ -370,8 +373,7 @@ public partial class ApkBuilder
         cmakeLists = cmakeLists.Replace("%Defines%", defines.ToString());
 
         File.WriteAllText(Path.Combine(OutputDir, "CMakeLists.txt"), cmakeLists);
-
-        File.WriteAllText(Path.Combine(OutputDir, "monodroid.c"), Utils.GetEmbeddedResource("monodroid.c"));
+        File.WriteAllText(Path.Combine(OutputDir, monodroidSource), Utils.GetEmbeddedResource(monodroidSource));
 
         AndroidProject project = new AndroidProject("monodroid", runtimeIdentifier, AndroidNdk, logger);
         project.GenerateCMake(OutputDir, MinApiLevel, StripDebugSymbols);

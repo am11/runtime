@@ -179,30 +179,6 @@ PAL_Initialize(
 
 /*++
 Function:
-  PAL_InitializeWithFlags
-
-Abstract:
-  This function is the first function of the PAL to be called.
-  Internal structure initialization is done here. It could be called
-  several time by the same process, a reference count is kept.
-
-Return:
-  0 if successful
-  -1 if it failed
-
---*/
-int
-PALAPI
-PAL_InitializeWithFlags(
-    int argc,
-    const char *const argv[],
-    DWORD flags)
-{
-    return Initialize(argc, argv, flags);
-}
-
-/*++
-Function:
   PAL_InitializeDLL
 
 Abstract:
@@ -750,7 +726,6 @@ exit :
     LOGEXIT("PAL_Initialize returns int %d\n", retval);
     return retval;
 }
-
 
 /*++
 Function:

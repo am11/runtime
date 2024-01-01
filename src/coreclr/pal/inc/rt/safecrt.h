@@ -385,7 +385,6 @@ void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionNam
 #define _tmakepath_s    _wmakepath_s
 #define _stprintf_s     swprintf_s
 #define _tscanf_s       wscanf_s
-#define _tsscanf_s      swscanf_s
 
 #else
 
@@ -401,7 +400,6 @@ void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionNam
  * will call _SAFECRT_INVALID_PARAMETER if string _Src does not fit into _Dst
  */
 
-
 _SAFECRT__EXTERN_C
 errno_t __cdecl strcpy_s(char *_Dst, size_t _SizeInBytes, const char *_Src);
 
@@ -414,9 +412,7 @@ errno_t __cdecl strcpy_s(char (&_Dst)[_SizeInBytes], const char *_Src)
 }
 #endif
 
-
 #if _SAFECRT_USE_INLINES || _SAFECRT_IMPL
-
 
 _SAFECRT__INLINE
 errno_t __cdecl strcpy_s(char *_Dst, size_t _SizeInBytes, const char *_Src)
@@ -920,7 +916,6 @@ errno_t __cdecl wcsncat_s(WCHAR *_Dst, size_t _SizeInWords, const WCHAR *_Src, s
 }
 
 #endif
-
 
 /* _strset_s */
 /*
@@ -1431,7 +1426,6 @@ error_return:
 }
 #endif
 
-
 /* vsprintf_s */
 /*
  * swprintf_s, vsprintf_s format a string and copy it into _Dst;
@@ -1455,7 +1449,6 @@ int __cdecl vsprintf_s(char (&_Dst)[_SizeInBytes], const char *_Format, va_list 
     return vsprintf_s(_Dst, _SizeInBytes, _Format, _ArgList);
 }
 #endif
-
 
 /* no inline version of swprintf_s */
 
@@ -1494,14 +1487,6 @@ int __cdecl wscanf_s(const WCHAR *_Format, ...);
 /* no C++ overload for wscanf_s */
 
 /* no inline version of wscanf_s */
-
-/* swscanf_s */
-_SAFECRT__EXTERN_C
-int __cdecl swscanf_s(const WCHAR *_String, const WCHAR *_Format, ...);
-
-/* no C++ overload for swscanf_s */
-
-/* no inline version of swscanf_s */
 
 /* _swnscanf_s */
 _SAFECRT__EXTERN_C

@@ -3,8 +3,6 @@
 
 /*++
 
-
-
 Module Name:
 
     misc/perftrace.c
@@ -12,13 +10,9 @@ Module Name:
 Abstract:
     Implementation of PAL Performance trace utilities.
 
-
-
 --*/
 
 /* PAL headers */
-
-
 
 #ifdef PAL_PERF
 
@@ -40,7 +34,6 @@ Abstract:
 
 SET_DEFAULT_DEBUG_CHANNEL(MISC);
 
-
 #define PAL_PERF_MAX_LOGLINE     0x400  /* 1K */
 #define PAL_PERF_MAX_INPUT       0x1000 /* 4k for single line of input file */
 #define PAL_PERF_MAX_FUNCTION_NAME 128 /* any one want a function name longer than 127 bytes? */
@@ -57,7 +50,6 @@ typedef struct _pal_perf_api_info
     double          sum_of_square_duration; /* Sum of square of durations */
     DWORD           *histograms;    /* An array to store the histogram of an API execution cpu ticks. */
 } pal_perf_api_info;
-
 
 typedef struct _pal_perf_thread_info
 {
@@ -166,8 +158,6 @@ static const char traced_apis_filename[]="PerfTracedAPIs.txt";
 static const char perf_enabled_filename[]="AllPerfEnabledAPIs.txt";
 static const char PATH_SEPARATOR[] = "/";
 
-
-
 #define LLFORMAT "%llu"
 
 static
@@ -208,7 +198,6 @@ PERFComputeStandardDeviation(pal_perf_api_info *api)
         return 0.0;
     return sqrt(sum_of_variance/(n*n));
 }
-
 
 static
 void
@@ -344,7 +333,6 @@ PERFInitialize(LPWSTR command_line, LPWSTR exe_path)
     return ret;
 }
 
-
 void PERFTerminate(  )
 {
     static LONG pal_perf_terminated = FALSE;
@@ -360,7 +348,6 @@ void PERFTerminate(  )
     pthread_key_delete(PERF_tlsTableKey );
     PAL_free(pal_function_map);
 }
-
 
 BOOL PERFAllocThreadInfo(  )
 {
@@ -506,7 +493,6 @@ PERFUpdateProgramInfo(pal_perf_thread_info* local_info)
        }
     }
 }
-
 
 static
 void
@@ -978,7 +964,6 @@ PERFReadSetting(  )
 
 }
 
-
 static
 BOOL
 PERFFlushLog(pal_perf_thread_info * local_info, BOOL output_header)
@@ -1027,9 +1012,7 @@ PERFLogFunctionEntry(unsigned int pal_api_id, ULONGLONG *pal_perf_start_tick )
     __int32  buf_off;
     short bufused = 0;
 
-
     struct timeval tv;
-
 
     if(!pal_perf_enabled || pal_function_map==NULL || !pal_profile_on )  // haven't initialize, just quit.
         return;
@@ -1110,7 +1093,6 @@ PERFLogFunctionExit(unsigned int pal_api_id, ULONGLONG *pal_perf_start_tick )
     ULONGLONG duration = 0;
     struct timeval timev;
 
-
     if(!pal_perf_enabled || (pal_function_map == NULL) || !pal_profile_on ) // haven't initiallize yet, just quit.
         return;
 
@@ -1178,7 +1160,6 @@ PERFNoLatencyProfileEntry(unsigned int pal_api_id )
    return;
 }
 
-
 void
 PERFEnableThreadProfile(BOOL isInternal)
 {
@@ -1193,7 +1174,6 @@ PERFEnableThreadProfile(BOOL isInternal)
          }
     }
 }
-
 
 void
 PERFDisableThreadProfile(BOOL isInternal)
@@ -1210,7 +1190,6 @@ PERFDisableThreadProfile(BOOL isInternal)
     }
 }
 
-
 void
 PERFEnableProcessProfile(  )
 {
@@ -1221,7 +1200,6 @@ PERFEnableProcessProfile(  )
     // record the cpu clock ticks at the beginning of the profiling.
     program_info.start_ticks = PERFGetTicks();
 }
-
 
 void
 PERFDisableProcessProfile( )
@@ -1312,33 +1290,4 @@ PAL_EnableProcessProfile(VOID)
     PERFEnableProcessProfile();
 }
 
-PALIMPORT
-VOID
-PALAPI
-PAL_DisableProcessProfile(VOID)
-{
-    pal_profile_on = FALSE;
-    PERFDisableProcessProfile();
-}
-
-PALIMPORT
-BOOL
-PALAPI
-PAL_IsProcessProfileEnabled(VOID)
-{
-    return PERFIsProcessProfileEnabled();
-}
-
-PALIMPORT
-INT64
-PALAPI
-PAL_GetCpuTickCount(VOID)
-{
-    return PERFGetTicks();
-}
-
 #endif /* PAL_PERF */
-
-
-
-

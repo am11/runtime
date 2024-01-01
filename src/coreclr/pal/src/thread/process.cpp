@@ -338,7 +338,6 @@ GetCurrentProcessId(
     return gPID;
 }
 
-
 /*++
 Function:
   GetCurrentSessionId
@@ -357,7 +356,6 @@ GetCurrentSessionId(
     PERF_EXIT(GetCurrentSessionId);
     return gSID;
 }
-
 
 /*++
 Function:
@@ -829,7 +827,6 @@ CorUnix::InternalCreateProcess(
         goto InternalCreateProcessExit;
     }
 
-
     /* fork the new process */
     processId = fork();
 
@@ -996,7 +993,6 @@ CorUnix::InternalCreateProcess(
     lpProcessInformation->dwProcessId = processId;
     lpProcessInformation->dwThreadId_PAL_Undefined = 0;
 
-
     TRACE("New process created: id=%#x\n", processId);
 
 InternalCreateProcessExit:
@@ -1082,7 +1078,6 @@ InternalCreateProcessExit:
 
     return palError;
 }
-
 
 /*++
 Function:
@@ -2002,21 +1997,6 @@ PROCNotifyProcessShutdown(bool isExecutingOnAltStack)
 }
 
 /*++
-Function
-  PROCNotifyProcessShutdownDestructor
-
-  Called at process exit, invokes process shutdown notification
-
-(no return value)
---*/
-__attribute__((destructor))
-VOID
-PROCNotifyProcessShutdownDestructor()
-{
-    PROCNotifyProcessShutdown(/* isExecutingOnAltStack */ false);
-}
-
-/*++
 Function:
     PROCFormatInt
 
@@ -2728,7 +2708,6 @@ PROCGetProcessIDFromHandle(
         goto PROCGetProcessIDFromHandleExit;
     }
 
-
     palError = g_pObjectManager->ReferenceObjectByHandle(
         pThread,
         hProcess,
@@ -2854,7 +2833,6 @@ exit:
     return palError;
 }
 
-
 /*++
 Function:
   CreateInitialProcessAndThreadObjects
@@ -2971,7 +2949,6 @@ CreateInitialProcessAndThreadObjectsExit:
     return palError;
 }
 
-
 /*++
 Function:
   PROCCleanupInitialProcess
@@ -3039,7 +3016,6 @@ CorUnix::PROCAddThread(
     InternalLeaveCriticalSection(pCurrentThread, &g_csProcess);
 }
 
-
 /*++
 Function:
   PROCRemoveThread
@@ -3106,7 +3082,6 @@ EXIT:
     InternalLeaveCriticalSection(pCurrentThread, &g_csProcess);
 }
 
-
 /*++
 Function:
   PROCGetNumberOfThreads
@@ -3126,7 +3101,6 @@ CorUnix::PROCGetNumberOfThreads(
 {
     return g_dwThreadCount;
 }
-
 
 /*++
 Function:
@@ -3150,7 +3124,6 @@ PROCProcessLock(
 
     InternalEnterCriticalSection(pThread, &g_csProcess);
 }
-
 
 /*++
 Function:
@@ -3692,7 +3665,6 @@ checkFileType( LPCSTR lpFileName)
 
 }
 
-
 /*++
 Function:
   buildArgv
@@ -3982,7 +3954,6 @@ buildArgv(
 
     return lppArgv;
 }
-
 
 /*++
 Function:

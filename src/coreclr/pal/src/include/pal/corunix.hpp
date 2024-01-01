@@ -4,7 +4,6 @@
 /*++
 
 
-
 Module Name:
 
     corunix.hpp
@@ -12,7 +11,6 @@ Module Name:
 Abstract:
 
     Internal interface and object definitions
-
 
 
 --*/
@@ -481,47 +479,7 @@ namespace CorUnix
             return m_dwSharedDataSize;
         };
 
-        DWORD
-        GetSupportedAccessRights(
-            void
-            )
-        {
-            return m_dwSupportedAccessRights;
-        };
-
         // Generic access rights mapping
-
-        SecuritySupport
-        GetSecuritySupport(
-            void
-            )
-        {
-            return  m_eSecuritySupport;
-        };
-
-        SecurityPersistence
-        GetSecurityPersistence(
-            void
-            )
-        {
-            return  m_eSecurityPersistence;
-        };
-
-        ObjectNameSupport
-        GetObjectNameSupport(
-            void
-            )
-        {
-            return  m_eObjectNameSupport;
-        };
-
-        HandleDuplicationSupport
-        GetHandleDuplicationSupport(
-            void
-            )
-        {
-            return  m_eHandleDuplicationSupport;
-        };
 
         SynchronizationSupport
         GetSynchronizationSupport(
@@ -953,16 +911,6 @@ namespace CorUnix
             VOID **ppvSynchData             // OUT
             ) = 0;
 
-    };
-
-    class IPalProcess
-    {
-    public:
-        virtual
-        DWORD
-        GetProcessID(
-            void
-            ) = 0;
     };
 
     class IPalObjectManager

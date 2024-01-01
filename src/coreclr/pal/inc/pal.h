@@ -138,7 +138,6 @@ extern bool g_arm64_atomics_present;
 
 #define EMPTY_BASES_DECL
 
-
 #if !defined(_MSC_VER) || defined(SOURCE_FORMATTING)
 #define __assume(x) (void)0
 #define __annotation(x)
@@ -277,11 +276,8 @@ PAL_IsDebuggerPresent();
 #define _I32_MAX  INT_MAX
 #define _I32_MIN  INT_MIN
 #define _UI8_MAX  UCHAR_MAX
-#define _UI8_MIN  UCHAR_MIN
 #define _UI16_MAX USHRT_MAX
-#define _UI16_MIN USHRT_MIN
 #define _UI32_MAX UINT_MAX
-#define _UI32_MIN UINT_MIN
 
 #undef NULL
 
@@ -298,7 +294,6 @@ PAL_IsDebuggerPresent();
 #ifndef PAL_STDCPP_COMPAT
 
 typedef __int64 time_t;
-#define _TIME_T_DEFINED
 #endif // !PAL_STDCPP_COMPAT
 
 #define DLL_PROCESS_ATTACH 1
@@ -432,12 +427,6 @@ PAL_RegisterForRuntimeStartup(
     IN PPAL_STARTUP_CALLBACK pfnCallback,
     IN PVOID parameter,
     OUT PVOID *ppUnregisterToken);
-
-PALIMPORT
-DWORD
-PALAPI
-PAL_UnregisterForRuntimeStartup(
-    IN PVOID pUnregisterToken);
 
 PALIMPORT
 BOOL
@@ -585,8 +574,6 @@ typedef struct _SECURITY_ATTRIBUTES {
             BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
-#define _SH_DENYWR      0x20    /* deny write mode */
-
 #define FILE_READ_DATA            ( 0x0001 )    // file & pipe
 #define FILE_APPEND_DATA          ( 0x0004 )    // file
 
@@ -625,7 +612,6 @@ typedef struct _SECURITY_ATTRIBUTES {
 
 #define INVALID_SET_FILE_POINTER   ((DWORD)-1)
 
-
 PALIMPORT
 HANDLE
 PALAPI
@@ -643,7 +629,6 @@ CreateFileW(
 #else
 #define CreateFile CreateFileA
 #endif
-
 
 PALIMPORT
 DWORD
@@ -866,7 +851,7 @@ PALAPI
 GetSystemTimeAsFileTime(
             OUT LPFILETIME lpSystemTimeAsFileTime);
 
-typedef struct _SYSTEMTIME {
+typedef struct {
     WORD wYear;
     WORD wMonth;
     WORD wDayOfWeek;
@@ -889,8 +874,6 @@ PALAPI
 FileTimeToSystemTime(
             IN CONST FILETIME *lpFileTime,
             OUT LPSYSTEMTIME lpSystemTime);
-
-
 
 PALIMPORT
 BOOL
@@ -946,7 +929,6 @@ PALAPI
 GetTempPathA(
          IN DWORD nBufferLength,
          OUT LPSTR lpBuffer);
-
 
 #ifdef UNICODE
 #define GetTempPath GetTempPathW
@@ -1115,10 +1097,9 @@ HANDLE
 PALAPI
 GetCurrentThread();
 
-
 #define STARTF_USESTDHANDLES       0x00000100
 
-typedef struct _STARTUPINFOW {
+typedef struct {
     DWORD cb;
     LPWSTR lpReserved_PAL_Undefined;
     LPWSTR lpDesktop_PAL_Undefined;
@@ -1388,9 +1369,7 @@ typedef struct _FLOATING_SAVE_AREA {
     DWORD   Cr0NpxState;
 } FLOATING_SAVE_AREA;
 
-typedef FLOATING_SAVE_AREA *PFLOATING_SAVE_AREA;
-
-typedef struct _CONTEXT {
+typedef struct {
     ULONG ContextFlags;
 
     ULONG   Dr0_PAL_Undefined;
@@ -1433,7 +1412,7 @@ typedef struct _CONTEXT {
 // support any other values in the ExtendedRegisters) but we might as well be as accurate as we can.
 #define CONTEXT_EXREG_XMM_OFFSET 160
 
-typedef struct _KNONVOLATILE_CONTEXT {
+typedef struct {
 
     DWORD Edi;
     DWORD Esi;
@@ -1442,7 +1421,7 @@ typedef struct _KNONVOLATILE_CONTEXT {
 
 } KNONVOLATILE_CONTEXT, *PKNONVOLATILE_CONTEXT;
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
 
     // The ordering of these fields should be aligned with that
     // of corresponding fields in CONTEXT
@@ -1458,7 +1437,6 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
     PDWORD Ebp;
 
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
-
 
 //
 // Context Frame
@@ -1513,22 +1491,22 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
                             (UI64(1) << (XSTATE_AVX512_ZMM_H)) | \
                             (UI64(1) << (XSTATE_AVX512_ZMM)))
 
-typedef struct DECLSPEC_ALIGN(16) _M128A {
+typedef struct DECLSPEC_ALIGN(16) {
     ULONGLONG Low;
     LONGLONG High;
 } M128A, *PM128A;
 
-typedef struct DECLSPEC_ALIGN(16) _M256 {
+typedef struct DECLSPEC_ALIGN(16) {
     M128A Low;
     M128A High;
-} M256, *PM256;
+} M256;
 
-typedef struct DECLSPEC_ALIGN(16) _M512 {
+typedef struct DECLSPEC_ALIGN(16) {
     M256 Low;
     M256 High;
-} M512, *PM512;
+} M512;
 
-typedef struct _XMM_SAVE_AREA32 {
+typedef struct {
     WORD   ControlWord;
     WORD   StatusWord;
     BYTE  TagWord;
@@ -1560,7 +1538,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     //
     // Register parameter home addresses.
     //
-    // N.B. These fields are for convience - they could be used to extend the
+    // N.B. These fields are for convenience - they could be used to extend the
     //      context record in the future.
     //
 
@@ -1754,7 +1732,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
     union {
         PM128A FloatingContext[16];
         struct {
@@ -1839,7 +1817,7 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 #define ARM_MAX_BREAKPOINTS     8
 #define ARM_MAX_WATCHPOINTS     1
 
-typedef struct _NEON128 {
+typedef struct {
     ULONGLONG Low;
     LONGLONG High;
 } NEON128, *PNEON128;
@@ -1908,7 +1886,7 @@ typedef struct DECLSPEC_ALIGN(8) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
 
     PDWORD R4;
     PDWORD R5;
@@ -1931,7 +1909,7 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
-typedef struct _IMAGE_ARM_RUNTIME_FUNCTION_ENTRY {
+typedef struct {
     DWORD BeginAddress;
     DWORD EndAddress;
     union {
@@ -2076,7 +2054,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
 
     PDWORD64 X19;
     PDWORD64 X20;
@@ -2102,7 +2080,7 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
-typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY {
+typedef struct {
     DWORD BeginAddress;
     union {
         DWORD UnwindData;
@@ -2118,7 +2096,7 @@ typedef struct _IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY {
     };
 } IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY, * PIMAGE_ARM64_RUNTIME_FUNCTION_ENTRY;
 
-typedef union IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY_XDATA {
+typedef union {
     ULONG HeaderData;
     struct {
         ULONG FunctionLength : 18;      // in words (2 bytes)
@@ -2225,7 +2203,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
 
     PDWORD64 S0;
     PDWORD64 S1;
@@ -2346,7 +2324,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
 
     PDWORD64 S1;
     PDWORD64 S2;
@@ -2470,7 +2448,7 @@ typedef struct DECLSPEC_ALIGN(8) _CONTEXT {
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
     PDWORD64 R6;
     PDWORD64 R7;
     PDWORD64 R8;
@@ -2598,14 +2576,13 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     DWORD Xer;
     DWORD Ccr;
 
-
 } CONTEXT, *PCONTEXT, *LPCONTEXT;
 
 //
 // Nonvolatile context pointer record.
 //
 
-typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+typedef struct {
     PDWORD64 R14;
     PDWORD64 R15;
     PDWORD64 R16;
@@ -2634,7 +2611,6 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
 #else
 #error Unknown architecture for defining CONTEXT.
 #endif
-
 
 PALIMPORT
 BOOL
@@ -2764,7 +2740,7 @@ PALIMPORT BOOL PALAPI PAL_GetUnwindInfoSize(SIZE_T baseAddress, ULONG64 ehFrameH
 #endif
 
 //
-typedef struct _CRITICAL_SECTION {
+typedef struct {
     PVOID DebugInfo;
     LONG LockCount;
     LONG RecursionCount;
@@ -2776,7 +2752,7 @@ typedef struct _CRITICAL_SECTION {
 #endif // PAL_TRACK_CRITICAL_SECTIONS_DATA
     volatile DWORD dwInitState;
 
-    union CSNativeDataStorage
+    union
     {
         BYTE rgNativeDataStorage[PAL_CS_NATIVE_DATA_SIZE];
         PVOID pvAlign; // make sure the storage is machine-pointer-size aligned
@@ -3028,7 +3004,6 @@ VirtualFree(
         IN SIZE_T dwSize,
         IN DWORD dwFreeType);
 
-
 #if defined(HOST_OSX) && defined(HOST_ARM64)
 
 PALIMPORT
@@ -3037,7 +3012,6 @@ PALAPI
 PAL_JitWriteProtect(bool writeEnable);
 
 #endif // defined(HOST_OSX) && defined(HOST_ARM64)
-
 
 PALIMPORT
 BOOL
@@ -3048,7 +3022,7 @@ VirtualProtect(
            IN DWORD flNewProtect,
            OUT PDWORD lpflOldProtect);
 
-typedef struct _MEMORY_BASIC_INFORMATION {
+typedef struct {
     PVOID BaseAddress;
     PVOID AllocationBase_PAL_Undefined;
     DWORD AllocationProtect;
@@ -3087,7 +3061,7 @@ UINT
 PALAPI
 GetACP(void);
 
-typedef struct _cpinfo {
+typedef struct {
     UINT MaxCharSize;
     BYTE DefaultChar[MAX_DEFAULTCHAR];
     BYTE LeadByte[MAX_LEADBYTES];
@@ -3129,7 +3103,6 @@ WideCharToMultiByte(
 #define EXCEPTION_NESTED_CALL 0x10      // Nested exception handler call
 #define EXCEPTION_TARGET_UNWIND 0x20    // Target unwind in progress
 #define EXCEPTION_COLLIDED_UNWIND 0x40  // Collided exception handler call
-#define EXCEPTION_SKIP_VEH 0x200
 
 #define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | \
                           EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
@@ -3176,7 +3149,7 @@ enum {
 #if defined(HOST_ARM64)
 typedef IMAGE_ARM64_RUNTIME_FUNCTION_ENTRY RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
 #else // HOST_ARM64
-typedef struct _RUNTIME_FUNCTION {
+typedef struct {
     DWORD BeginAddress;
 #ifdef HOST_AMD64
     DWORD EndAddress;
@@ -3201,17 +3174,13 @@ typedef struct _RUNTIME_FUNCTION {
 #define SEMAPHORE_ALL_ACCESS      (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
 #define PROCESS_TERMINATE         (0x0001)
-#define PROCESS_CREATE_THREAD     (0x0002)
-#define PROCESS_SET_SESSIONID     (0x0004)
 #define PROCESS_VM_OPERATION      (0x0008)
 #define PROCESS_VM_READ           (0x0010)
 #define PROCESS_VM_WRITE          (0x0020)
 #define PROCESS_DUP_HANDLE        (0x0040)
-#define PROCESS_CREATE_PROCESS    (0x0080)
 #define PROCESS_SET_QUOTA         (0x0100)
 #define PROCESS_SET_INFORMATION   (0x0200)
 #define PROCESS_QUERY_INFORMATION (0x0400)
-#define PROCESS_SUSPEND_RESUME    (0x0800)
 #define PROCESS_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | \
                                    0xFFF)
 
@@ -3818,7 +3787,6 @@ FormatMessageW(
 #define FormatMessage FormatMessageW
 #endif
 
-
 PALIMPORT
 DWORD
 PALAPI
@@ -3876,7 +3844,7 @@ PAL_InjectActivation(
     IN HANDLE hThread
 );
 
-typedef struct _SYSTEM_INFO {
+typedef struct {
     WORD wProcessorArchitecture_PAL_Undefined;
     WORD wReserved_PAL_Undefined; // NOTE: diff from winbase.h - no obsolete dwOemId union
     DWORD dwPageSize;
@@ -3901,20 +3869,12 @@ BOOL
 PALAPI
 PAL_SetCurrentThreadAffinity(WORD procNo);
 
-PALIMPORT
-BOOL
-PALAPI
-PAL_GetCurrentThreadAffinitySet(SIZE_T size, UINT_PTR* data);
-
 //
 // The types of events that can be logged.
 //
-#define EVENTLOG_SUCCESS                0x0000
 #define EVENTLOG_ERROR_TYPE             0x0001
 #define EVENTLOG_WARNING_TYPE           0x0002
 #define EVENTLOG_INFORMATION_TYPE       0x0004
-#define EVENTLOG_AUDIT_SUCCESS          0x0008
-#define EVENTLOG_AUDIT_FAILURE          0x0010
 
 #if defined FEATURE_PAL_ANSI
 #include "palprivate.h"
@@ -3947,8 +3907,6 @@ PAL_GetCurrentThreadAffinitySet(SIZE_T size, UINT_PTR* data);
 #define fflush        PAL_fflush
 #define fputs         PAL_fputs
 #define fseek         PAL_fseek
-#define fgetpos       PAL_fgetpos
-#define fsetpos       PAL_fsetpos
 #define setvbuf       PAL_setvbuf
 #define acos          PAL_acos
 #define asin          PAL_asin
@@ -3991,7 +3949,6 @@ int vprintf(const char *, va_list);
 #ifndef _CONST_RETURN
 #ifdef  __cplusplus
 #define _CONST_RETURN  const
-#define _CRT_CONST_CORRECT_OVERLOADS
 #else
 #define _CONST_RETURN
 #endif
@@ -4299,8 +4256,6 @@ typedef struct _FILE PAL_FILE;
 #define LC_NUMERIC      4
 #define LC_TIME         5
 
-#define _IOFBF  0       /* setvbuf should set fully buffered */
-#define _IOLBF  1       /* setvbuf should set line buffered */
 #define _IONBF  2       /* setvbuf should set unbuffered */
 
 #endif // PAL_STDCPP_COMPAT
@@ -4368,20 +4323,6 @@ VOID
 PALAPI
 PAL_EnableProcessProfile();
 
-PALIMPORT
-VOID
-PALAPI
-PAL_DisableProcessProfile();
-
-PALIMPORT
-BOOL
-PALAPI
-PAL_IsProcessProfileEnabled();
-
-PALIMPORT
-INT64
-PALAPI
-PAL_GetCpuTickCount();
 #endif // PAL_PERF
 
 /******************* PAL functions for SIMD extensions *****************/
@@ -4862,16 +4803,8 @@ public:
 #define PAL_SHLIB_SUFFIX_W  u".so"
 #endif
 
-#define DBG_EXCEPTION_HANDLED            ((DWORD   )0x00010001L)
 #define DBG_CONTINUE                     ((DWORD   )0x00010002L)
 #define DBG_EXCEPTION_NOT_HANDLED        ((DWORD   )0x80010001L)
-
-#define DBG_TERMINATE_THREAD             ((DWORD   )0x40010003L)
-#define DBG_TERMINATE_PROCESS            ((DWORD   )0x40010004L)
-#define DBG_CONTROL_C                    ((DWORD   )0x40010005L)
-#define DBG_RIPEXCEPTION                 ((DWORD   )0x40010007L)
-#define DBG_CONTROL_BREAK                ((DWORD   )0x40010008L)
-#define DBG_COMMAND_EXCEPTION            ((DWORD   )0x40010009L)
 
 #define STATUS_USER_APC                  ((DWORD   )0x000000C0L)
 #define STATUS_GUARD_PAGE_VIOLATION      ((DWORD   )0x80000001L)

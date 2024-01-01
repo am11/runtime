@@ -3,8 +3,6 @@
 
 /*++
 
-
-
 Module Name:
 
     include/pal/synchcache.hpp
@@ -12,8 +10,6 @@ Module Name:
 Abstract:
     Simple look-aside cache for unused objects with default
     constructor or no constructor
-
-
 
 --*/
 
@@ -69,10 +65,6 @@ namespace CorUnix
             Flush(NULL, true);
             InternalDeleteCriticalSection(&m_cs);
         }
-
-#ifdef _DEBUG
-        int GetMaxTrackedDepth() { return m_iMaxTrackedDepth; }
-#endif
 
         T * Get(CPalThread * pthrCurrent)
         {
@@ -244,10 +236,6 @@ namespace CorUnix
             Flush(NULL, true);
             InternalDeleteCriticalSection(&m_cs);
         }
-
-#ifdef _DEBUG
-        int GetMaxTrackedDepth() { return m_iMaxTrackedDepth; }
-#endif
 
         SharedID Get(CPalThread * pthrCurrent)
         {

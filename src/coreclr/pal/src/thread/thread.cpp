@@ -3,8 +3,6 @@
 
 /*++
 
-
-
 Module Name:
 
     thread.cpp
@@ -12,8 +10,6 @@ Module Name:
 Abstract:
 
     Thread object and core APIs
-
-
 
 --*/
 
@@ -253,60 +249,6 @@ static void FreeTHREAD(CPalThread *pThread)
     free(pThread);
 }
 
-
-/*++
-Function:
-  THREADGetThreadProcessId
-
-returns the process owner ID of the indicated hThread
---*/
-DWORD
-THREADGetThreadProcessId(
-    HANDLE hThread
-    // UNIXTODO Should take pThread parameter here (modify callers)
-    )
-{
-    CPalThread *pThread;
-    CPalThread *pTargetThread;
-    IPalObject *pobjThread = NULL;
-    PAL_ERROR palError = NO_ERROR;
-
-    DWORD dwProcessId = 0;
-
-    pThread = InternalGetCurrentThread();
-
-    palError = InternalGetThreadDataFromHandle(
-        pThread,
-        hThread,
-        &pTargetThread,
-        &pobjThread
-        );
-
-    if (NO_ERROR != palError)
-    {
-        if (!pThread->IsDummy())
-        {
-            dwProcessId = GetCurrentProcessId();
-        }
-        else
-        {
-            ASSERT("Dummy thread passed to THREADGetProcessId\n");
-        }
-
-        if (NULL != pobjThread)
-        {
-            pobjThread->ReleaseReference(pThread);
-        }
-    }
-    else
-    {
-        ERROR("Couldn't retrieve the hThread:%p pid owner !\n", hThread);
-    }
-
-
-    return dwProcessId;
-}
-
 /*++
 Function:
   GetCurrentThreadId
@@ -362,7 +304,6 @@ PAL_GetCurrentOSThreadId(
 
     return threadId;
 }
-
 
 /*++
 Function:
@@ -798,8 +739,6 @@ EXIT:
     return palError;
 }
 
-
-
 /*++
 Function:
   ExitThread
@@ -1003,7 +942,6 @@ InternalGetThreadPriorityExit:
     return palError;
 }
 
-
 /*++
 Function:
   SetThreadPriority
@@ -1058,7 +996,6 @@ CorUnix::InternalSetThreadPriority(
     int max_priority;
     int min_priority;
     float posix_priority;
-
 
     palError = InternalGetThreadDataFromHandle(
         pThread,
@@ -2892,59 +2829,4 @@ PAL_SetCurrentThreadAffinity(WORD procNo)
     // There is no API to manage thread affinity, so let's ignore the request
     return FALSE;
 #endif // HAVE_SCHED_SETAFFINITY || HAVE_PTHREAD_SETAFFINITY_NP
-}
-
-/*++
-Function:
-  PAL_SetCurrentThreadAffinity
-
-Abstract
-  Get affinity set of the current thread. The set is represented by an array of "size" entries of UINT_PTR type.
-
-Parameters:
-  size - number of entries in the "data" array
-  data - pointer to the data of the resulting set, the LSB of the first entry in the array represents processor 0
-
-Return value:
-  TRUE if the function was able to get the affinity set, FALSE if it has failed.
---*/
-BOOL
-PALAPI
-PAL_GetCurrentThreadAffinitySet(SIZE_T size, UINT_PTR* data)
-{
-#if HAVE_PTHREAD_GETAFFINITY_NP
-    cpu_set_t cpuSet;
-    CPU_ZERO(&cpuSet);
-
-    int st = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuSet);
-
-    if (st == 0)
-    {
-        const SIZE_T BitsPerBitsetEntry = 8 * sizeof(UINT_PTR);
-
-        // Get info for as much processors as it is possible to fit into the resulting set
-        SIZE_T remainingCount = std::min(size * BitsPerBitsetEntry, (SIZE_T)CPU_SETSIZE);
-        SIZE_T i = 0;
-        while (remainingCount != 0)
-        {
-            UINT_PTR entry = 0;
-            SIZE_T bitsToCopy = std::min(remainingCount, BitsPerBitsetEntry);
-            SIZE_T cpuSetOffset = i * BitsPerBitsetEntry;
-            for (SIZE_T j = 0; j < bitsToCopy; j++)
-            {
-                if (CPU_ISSET(cpuSetOffset + j, &cpuSet))
-                {
-                    entry |= (UINT_PTR)1 << j;
-                }
-            }
-            remainingCount -= bitsToCopy;
-            data[i++] = entry;
-        }
-    }
-
-    return st == 0;
-#else  // HAVE_PTHREAD_GETAFFINITY_NP
-    // There is no API to manage thread affinity, so let's ignore the request
-    return FALSE;
-#endif // HAVE_PTHREAD_GETAFFINITY_NP
 }

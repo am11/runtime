@@ -122,17 +122,3 @@ DLLEXPORT int __cdecl sscanf_s (
         va_end(arglist);
         return ret;
 }
-
-int __cdecl swscanf_s (
-        const char16_t *string,
-        const char16_t *format,
-        ...
-        )
-{
-        int ret;
-        va_list arglist;
-        va_start(arglist, format);
-        ret = vwscan_fn(__twinput_s, string, format, arglist);
-        va_end(arglist);
-        return ret;
-}

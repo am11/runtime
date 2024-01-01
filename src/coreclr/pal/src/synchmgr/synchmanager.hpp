@@ -3,8 +3,6 @@
 
 /*++
 
-
-
 Module Name:
 
     synchmanager.hpp
@@ -12,8 +10,6 @@ Module Name:
 Abstract:
     Private header file for synchronization manager and
     controllers implementation
-
-
 
 --*/
 #ifndef _SYNCHMANAGER_HPP_
@@ -290,10 +286,7 @@ namespace CorUnix
         {
             return m_dwOwnerPid;
         }
-        DWORD GetOwnerThreadID(void)
-        {
-            return m_dwOwnerTid;
-        }
+
         CPalThread * GetOwnerThread(void)
         {
             return m_pOwnerThread;
@@ -322,10 +315,6 @@ namespace CorUnix
                                     { m_fAbandoned = fAbandoned; }
         bool IsAbandoned(void) { return m_fAbandoned; }
 
-        void IncrementWaitingThreadCount(void)
-        {
-            m_ulcWaitingThreads += 1;
-        }
         void DecrementWaitingThreadCount(void)
         {
             m_ulcWaitingThreads -= 1;
@@ -334,7 +323,6 @@ namespace CorUnix
         {
             return m_ulcWaitingThreads;
         }
-
 
 #ifdef SYNCH_STATISTICS
         void IncrementStatWaitCount(void)
@@ -361,18 +349,12 @@ namespace CorUnix
         {
             return m_ptrWTLHead.ptr;
         }
-        WaitingThreadsListNode * GetWTLTailPtr(void)
-        {
-            return m_ptrWTLTail.ptr;
-        }
+
         SharedID GetWTLHeadShmPtr(void)
         {
             return m_ptrWTLHead.shrid;
         }
-        SharedID GetWTLTailShmPtr(void)
-        {
-            return m_ptrWTLTail.shrid;
-        }
+
         void SetWTLHeadPtr(WaitingThreadsListNode * p)
         {
             m_ptrWTLHead.ptr = p;
@@ -398,7 +380,6 @@ namespace CorUnix
         DWORD m_dwDebugTailSignature;
 #endif
     };
-
 
     class CSynchControllerBase
     {
@@ -427,15 +408,6 @@ namespace CorUnix
             WaitDomain wdWaitDomain);
 
         void Release(void);
-
-        void SetSynchData(CSynchData * psdSynchData)
-        {
-            m_psdSynchData = psdSynchData;
-        }
-        CSynchData * GetSynchData()
-        {
-            return m_psdSynchData;
-        }
     };
 
     class CSynchWaitController : public CSynchControllerBase,
@@ -703,42 +675,14 @@ namespace CorUnix
             }
             return lRet;
         }
-        static LONG GetSharedSynchLockCount(CPalThread * pthrCurrent)
-        {
-            _ASSERTE(0 <= pthrCurrent->synchronizationInfo.m_lSharedSynchLockCount);
-            _ASSERTE(0 == pthrCurrent->synchronizationInfo.m_lSharedSynchLockCount ||
-                     0 < pthrCurrent->synchronizationInfo.m_lLocalSynchLockCount);
-            return pthrCurrent->synchronizationInfo.m_lSharedSynchLockCount;
-        }
 
-        CSynchWaitController * CacheGetWaitCtrlr(CPalThread * pthrCurrent)
-        {
-            return m_cacheWaitCtrlrs.Get(pthrCurrent);
-        }
-        int CacheGetWaitCtrlr(
-            CPalThread * pthrCurrent,
-            int n,
-            CSynchWaitController * prgCtrlrs[])
-        {
-            return m_cacheWaitCtrlrs.Get(pthrCurrent, n, prgCtrlrs);
-        }
         void CacheAddWaitCtrlr(
             CPalThread * pthrCurrent,
             CSynchWaitController * pCtrlr)
         {
             m_cacheWaitCtrlrs.Add(pthrCurrent, pCtrlr);
         }
-        CSynchStateController * CacheGetStateCtrlr(CPalThread * pthrCurrent)
-        {
-            return m_cacheStateCtrlrs.Get(pthrCurrent);
-        }
-        int CacheGetStateCtrlr(
-            CPalThread * pthrCurrent,
-            int n,
-            CSynchStateController * prgCtrlrs[])
-        {
-            return m_cacheStateCtrlrs.Get(pthrCurrent, n, prgCtrlrs);
-        }
+
         void CacheAddStateCtrlr(
             CPalThread * pthrCurrent,
             CSynchStateController * pCtrlr)
@@ -746,20 +690,13 @@ namespace CorUnix
             m_cacheStateCtrlrs.Add(pthrCurrent, pCtrlr);
         }
 
-        CSynchData * CacheGetLocalSynchData(CPalThread * pthrCurrent)
-        {
-            return m_cacheSynchData.Get(pthrCurrent);
-        }
         void CacheAddLocalSynchData(
             CPalThread * pthrCurrent,
             CSynchData * psdSynchData)
         {
             m_cacheSynchData.Add(pthrCurrent, psdSynchData);
         }
-        SharedID CacheGetSharedSynchData(CPalThread * pthrCurrent)
-        {
-            return m_cacheSHRSynchData.Get(pthrCurrent);
-        }
+
         void CacheAddSharedSynchData(
             CPalThread * pthrCurrent,
             SharedID shridSData)
@@ -789,17 +726,6 @@ namespace CorUnix
             m_cacheSHRWTListNodes.Add(pthrCurrent, shridWTLNode);
         }
 
-        ThreadApcInfoNode * CacheGetApcInfoNodes(CPalThread * pthrCurrent)
-        {
-            return m_cacheThreadApcInfoNodes.Get(pthrCurrent);
-        }
-        void CacheAddApcInfoNodes(
-            CPalThread * pthrCurrent,
-            ThreadApcInfoNode * pNode)
-        {
-            m_cacheThreadApcInfoNodes.Add(pthrCurrent, pNode);
-        }
-
         OwnedObjectsListNode * CacheGetOwnedObjsListNode(
             CPalThread * pthrCurrent)
         {
@@ -811,7 +737,6 @@ namespace CorUnix
         {
             m_cacheOwnedObjectsListNodes.Add(pthrCurrent, pNode);
         }
-
 
         //
         // IPalSynchronizationManager methods

@@ -3,8 +3,6 @@
 
 /*++
 
-
-
 Module Name:
 
     palinternal.h
@@ -132,8 +130,6 @@ When overriding a system function with the PAL's own implementation :
 - implement the function in the pal, naming it PAL_function_name
 - within the PAL, call PAL_function_name() to call the PAL's implementation,
 function_name() to call the system's implementation
-
-
 
 --*/
 
@@ -414,8 +410,6 @@ function_name() to call the system's implementation
 #undef fgets
 #undef fputs
 #undef fseek
-#undef fgetpos
-#undef fsetpos
 #undef getcwd
 #undef _flushall
 #undef setvbuf

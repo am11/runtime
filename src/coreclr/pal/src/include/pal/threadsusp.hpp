@@ -3,16 +3,12 @@
 
 /*++
 
-
-
 Module Name:
 
     include/pal/threadsusp.hpp
 
 Abstract:
     Declarations for thread suspension
-
-
 
 --*/
 
@@ -147,22 +143,6 @@ namespace CorUnix
             m_lNumThreadsSuspendedByThisThread is accessed by its owning
             thread and therefore does not require synchronization. */
 
-#ifdef _DEBUG
-            VOID
-            IncrNumThreadsSuspendedByThisThread(
-                )
-            {
-                InterlockedIncrement(&m_lNumThreadsSuspendedByThisThread);
-            };
-
-            VOID
-            DecrNumThreadsSuspendedByThisThread(
-                )
-            {
-                InterlockedDecrement(&m_lNumThreadsSuspendedByThisThread);
-            };
-#endif
-
             VOID
             AcquireSuspensionLocks(
                 CPalThread *pthrSuspender,
@@ -174,40 +154,6 @@ namespace CorUnix
                 CPalThread *pthrSuspender,
                 CPalThread *pthrTarget
             );
-
-#if USE_POSIX_SEMAPHORES
-            sem_t*
-            GetSuspendSemaphore(
-                void
-                )
-            {
-                return &m_semSusp;
-            };
-
-            sem_t*
-            GetResumeSemaphore(
-                void
-                )
-            {
-                return &m_semResume;
-            };
-#elif USE_SYSV_SEMAPHORES
-            int
-            GetSuspendSemaphoreId(
-                void
-                )
-            {
-                return m_nSemsuspid;
-            };
-
-            sembuf*
-            GetSemaphorePostBuffer(
-                void
-                )
-            {
-                return &m_sbSempost;
-            };
-#endif // USE_POSIX_SEMAPHORES
 
 #if DEADLOCK_WHEN_THREAD_IS_SUSPENDED_WHILE_BLOCKED_ON_MUTEX
             LONG*
@@ -228,35 +174,11 @@ namespace CorUnix
 #endif // DEADLOCK_WHEN_THREAD_IS_SUSPENDED_WHILE_BLOCKED_ON_MUTEX
 
             void
-            SetSuspPending(
-                BOOL fPending
-                )
-            {
-                m_fPending = fPending;
-            };
-
-            BOOL
-            GetSuspPending(
-                void
-                )
-            {
-                return m_fPending;
-            };
-
-            void
             SetSelfSusp(
                 BOOL fSelfsusp
                 )
             {
                 m_fSelfsusp = fSelfsusp;
-            };
-
-            BOOL
-            GetSelfSusp(
-                void
-                )
-            {
-                return m_fSelfsusp;
             };
 
             void
@@ -307,29 +229,12 @@ namespace CorUnix
 
             virtual ~CThreadSuspensionInfo();
 
-#ifdef _DEBUG
-            LONG
-            GetNumThreadsSuspendedByThisThread(
-                void
-                )
-            {
-                return m_lNumThreadsSuspendedByThisThread;
-            };
-#endif // _DEBUG
-
 #if USE_SYSV_SEMAPHORES
             void
             DestroySemaphoreIds(
                 void
             );
 #endif
-            void
-            SetSuspendedForShutdown(
-                BOOL fSuspendedForShutdown
-                )
-            {
-                m_fSuspendedForShutdown = fSuspendedForShutdown;
-            };
 
             BOOL
             GetSuspendedForShutdown(

@@ -532,20 +532,27 @@ if (CLR_CMAKE_HOST_UNIX)
     endif()
   endif()
 
-  if(CLR_CMAKE_HOST_OSX OR CLR_CMAKE_HOST_MACCATALYST)
-    # We cannot enable "stack-protector-strong" on OS X due to a bug in clang compiler (current version 7.0.2)
-    add_compile_options(-fstack-protector)
-    if(CLR_CMAKE_HOST_UNIX_ARM64)
-      # For OSX-Arm64, LSE instructions are enabled by default
-      add_definitions(-DLSE_INSTRUCTIONS_ENABLED_BY_DEFAULT)
-      add_compile_options(-mcpu=apple-m1)
-    endif(CLR_CMAKE_HOST_UNIX_ARM64)
-  elseif(NOT CLR_CMAKE_HOST_BROWSER AND NOT CLR_CMAKE_HOST_WASI)
+  if((CLR_CMAKE_HOST_OSX OR CLR_CMAKE_HOST_MACCATALYST) AND CLR_CMAKE_HOST_UNIX_ARM64)
+    # For OSX-Arm64, LSE instructions are enabled by default
+    add_definitions(-DLSE_INSTRUCTIONS_ENABLED_BY_DEFAULT)
+    add_compile_options(-mcpu=apple-m1)
+  endif()
+
+  # hardening options
+  if(NOT CLR_CMAKE_HOST_BROWSER AND NOT CLR_CMAKE_HOST_WASI)
     check_c_compiler_flag(-fstack-protector-strong COMPILER_SUPPORTS_F_STACK_PROTECTOR_STRONG)
     if (COMPILER_SUPPORTS_F_STACK_PROTECTOR_STRONG)
       add_compile_options(-fstack-protector-strong)
     endif()
-  endif(CLR_CMAKE_HOST_OSX OR CLR_CMAKE_HOST_MACCATALYST)
+
+    check_c_compiler_flag(-fstack-clash-protection COMPILER_SUPPORTS_F_STACK_CLASH_PROTECTION)
+    if (COMPILER_SUPPORTS_F_STACK_CLASH_PROTECTION)
+      add_compile_options(-fstack-clash-protection)
+    endif()
+
+    # Enable fortification
+    add_compile_definitions("_FORTIFY_SOURCE=3")
+  endif()
 
   # Suppress warnings-as-errors in release branches to reduce servicing churn
   if (PRERELEASE)

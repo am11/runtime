@@ -327,7 +327,7 @@ namespace Internal.IL
             _currentBasicBlock = basicBlock;
             _currentOffset = basicBlock.StartOffset;
 
-            for (;;)
+            while (true)
             {
                 StartImportingInstruction();
 

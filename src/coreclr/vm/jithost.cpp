@@ -156,7 +156,7 @@ void JitHost::reclaim()
         m_lastFlush = ticks;
 
         // Flush all slabs in m_pPreviousCachedList
-        for (;;)
+        while (true)
         {
             Slab* slabToDelete = NULL;
 

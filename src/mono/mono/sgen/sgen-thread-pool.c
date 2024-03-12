@@ -186,7 +186,7 @@ thread_func (void *data)
 	current_context = 0;
 
 	mono_os_mutex_lock (&lock);
-	for (;;) {
+	while (true) {
 		gboolean do_idle = FALSE;
 		SgenThreadPoolJob *job = NULL;
 		SgenThreadPoolContext *context = NULL;

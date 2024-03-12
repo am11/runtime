@@ -135,7 +135,7 @@ ElfReader::PopulateForSymbolLookup(uint64_t baseAddress)
     }
 
     // Search for dynamic entries
-    for (;;)
+    while (true)
     {
         Elf_Dyn dyn;
         if (!ReadMemory(dynamicAddr, &dyn, sizeof(dyn))) {
@@ -350,7 +350,7 @@ ElfReader::EnumerateLinkMapEntries(Elf_Dyn* dynamicAddr)
 
     // Search dynamic entries for DT_DEBUG (r_debug entry)
     struct r_debug* rdebugAddr = nullptr;
-    for (;;)
+    while (true)
     {
         Elf_Dyn dyn;
         if (!ReadMemory(dynamicAddr, &dyn, sizeof(dyn))) {

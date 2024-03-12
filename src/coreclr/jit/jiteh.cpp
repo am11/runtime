@@ -780,7 +780,7 @@ unsigned Compiler::ehTrueEnclosingTryIndexIL(unsigned regionIndex)
     EHblkDsc* ehDscRoot = ehGetDsc(regionIndex);
     EHblkDsc* HBtab     = ehDscRoot;
 
-    for (;;)
+    while (true)
     {
         regionIndex = HBtab->ebdEnclosingTryIndex;
         if (regionIndex == EHblkDsc::NO_ENCLOSING_INDEX)
@@ -4453,7 +4453,7 @@ bool Compiler::fgCheckEHCanInsertAfterBlock(BasicBlock* blk, unsigned regionInde
     unsigned nestedRegionIndex = ehGetMostNestedRegionIndex(blk, &inTryRegion);
 
     bool insertOK = true;
-    for (;;)
+    while (true)
     {
         if (nestedRegionIndex == regionIndex)
         {
@@ -4505,7 +4505,7 @@ bool Compiler::fgCheckEHCanInsertAfterBlock(BasicBlock* blk, unsigned regionInde
 
         // Convert to [0..compHndBBtabCount] form.
         nestedRegionIndex = (nestedRegionIndex == EHblkDsc::NO_ENCLOSING_INDEX) ? 0 : nestedRegionIndex + 1;
-    } // end of for(;;)
+    } // end of while (true)
 
     return insertOK;
 }

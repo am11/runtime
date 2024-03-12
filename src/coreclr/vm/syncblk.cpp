@@ -1682,7 +1682,7 @@ BOOL ObjHeader::LeaveObjMonitor()
 
     DWORD dwSwitchCount = 0;
 
-    for (;;)
+    while (true)
     {
         AwareLock::LeaveHelperAction action = thisObj->GetHeader()->LeaveObjMonitorHelper(GetThread());
 
@@ -1734,7 +1734,7 @@ BOOL ObjHeader::LeaveObjMonitorAtException()
 
     DWORD dwSwitchCount = 0;
 
-    for (;;)
+    while (true)
     {
         AwareLock::LeaveHelperAction action = LeaveObjMonitorHelper(GetThread());
 
@@ -2578,7 +2578,7 @@ BOOL AwareLock::EnterEpilogHelper(Thread* pCurThread, INT32 timeOut)
 
         pCurThread->EnablePreemptiveGC();
 
-        for (;;)
+        while (true)
         {
             // Measure the time we wait so that, in the case where we wake up
             // and fail to acquire the mutex, we can adjust remaining timeout

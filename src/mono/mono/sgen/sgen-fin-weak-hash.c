@@ -434,7 +434,7 @@ add_stage_entry (int num_entries, volatile gint32 *next_entry, StageEntry *entri
 	gint32 previous_state;
 
  retry:
-	for (;;) {
+	while (true) {
 		index = UnlockedRead (next_entry);
 		if (index >= num_entries) {
 			HEAVY_STAT (UnlockedIncrement64 (&stat_overflow_abort));

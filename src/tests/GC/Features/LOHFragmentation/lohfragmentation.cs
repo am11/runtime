@@ -60,7 +60,7 @@ namespace LOH_test
 
 
 
-                for (; ; )
+                while (true)
                 {
 
                     // Allocate a temporary larger block if we're set up to do so

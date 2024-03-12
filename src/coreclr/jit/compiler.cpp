@@ -386,7 +386,7 @@ bool Compiler::isTrivialPointerSizedStruct(CORINFO_CLASS_HANDLE clsHnd) const
     {
         return false;
     }
-    for (;;)
+    while (true)
     {
         // all of class chain must be of value type and must have only one field
         if (!info.compCompHnd->isValueClass(clsHnd) || info.compCompHnd->getClassNumInstanceFields(clsHnd) != 1)

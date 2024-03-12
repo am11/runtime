@@ -519,7 +519,7 @@ namespace NativeFormat
                     return NativeParser();
                 }
 
-                for (; ; )
+                while (true)
                 {
                     if (_parser.GetOffset() < _endOffset)
                     {

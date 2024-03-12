@@ -40,7 +40,7 @@ namespace ILCompiler.DependencyAnalysis.ReadyToRun
             {
                 TypeDefinitionHandle defTypeHandle = defTypeInfo.Handle;
                 int hashCode = 0;
-                for (; ; )
+                while (true)
                 {
                     TypeDefinition defType = defTypeInfo.MetadataReader.GetTypeDefinition(defTypeHandle);
                     string namespaceName = defTypeInfo.MetadataReader.GetString(defType.Namespace);
@@ -59,7 +59,7 @@ namespace ILCompiler.DependencyAnalysis.ReadyToRun
             {
                 ExportedTypeHandle expTypeHandle = expTypeInfo.Handle;
                 int hashCode = 0;
-                for (; ;)
+                while (true)
                 {
                     ExportedType expType = expTypeInfo.MetadataReader.GetExportedType(expTypeHandle);
                     string namespaceName = expTypeInfo.MetadataReader.GetString(expType.Namespace);

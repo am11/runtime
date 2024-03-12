@@ -531,7 +531,7 @@ bool SigParser::ParseLocal()
 
 bool SigParser::ParseOptionalCustomModsOrConstraint()
 {
-	for (;;)
+	while (true)
 	{
 		if (pbCur >= pbEnd)
 		{
@@ -564,7 +564,7 @@ bool SigParser::ParseOptionalCustomModsOrConstraint()
 
 bool SigParser::ParseOptionalCustomMods()
 {
-	for (;;)
+	while (true)
 	{
 		if (pbCur >= pbEnd)
 		{

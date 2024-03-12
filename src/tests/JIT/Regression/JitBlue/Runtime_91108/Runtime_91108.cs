@@ -42,7 +42,7 @@ public class TestClass
             p_int_546 = ((int)(((int)(int_554 |= ((int)(((int)(int_554 |= -1)) + ((int)(int_24 >>= s_int_8)))))) / ((int)((((int)(((int)(((int)(s_int_8 / ((int)((int_24) | 46)))) & int_24)) | ((int)(((int)(int_554 % ((int)((int_554) | 16)))) << ((int)(int_554 % ((int)((int_24) | 52))))))))) | 26))));
             int __loopvar0 = s_loopInvariant - 7;
             int __loopvar3 = s_loopInvariant - 15;
-            for (;;)
+            while (true)
             {
                 if (__loopvar3 > s_loopInvariant + 4)
                     break;

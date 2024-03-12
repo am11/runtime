@@ -692,7 +692,7 @@ bool WriteBarrierManager::NeedDifferentWriteBarrier(bool bReqUpperBoundsCheck, b
 
     WriteBarrierType writeBarrierType = m_currentWriteBarrier;
 
-    for(;;)
+    while (true)
     {
         switch (writeBarrierType)
         {

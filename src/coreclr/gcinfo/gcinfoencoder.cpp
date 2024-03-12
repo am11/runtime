@@ -2076,7 +2076,7 @@ void GcInfoEncoder::Build()
             _ASSERTE(currentChunk < numChunks);
             UINT32 numTransitionsInCurrentChunk = 1;
 
-            for(;;)
+            while (true)
             {
                 UINT32 slotIndex = (UINT32) (pCurrent->SlotId);
                 BYTE becomesLive = pCurrent->BecomesLive;

@@ -2025,14 +2025,14 @@ namespace V8.Crypto
             var qs = B >> 1;
             _e = Int32.Parse(E, NumberStyles.HexNumber);
             var ee = new BigInteger(E, 16);
-            for (; ;)
+            while (true)
             {
-                for (; ;)
+                while (true)
                 {
                     _p = new BigInteger(B - qs, 1, rng);
                     if (_p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0 && _p.isProbablePrime(10)) break;
                 }
-                for (; ;)
+                while (true)
                 {
                     _q = new BigInteger(qs, 1, rng);
                     if (_q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) == 0 && _q.isProbablePrime(10)) break;

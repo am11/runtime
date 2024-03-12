@@ -497,7 +497,7 @@ void StressLog::EnumerateStressMsgs(/*STRESSMSGCALLBACK*/void* smcbWrapper, /*EN
     ENDTHREADLOGCALLBACK etcb = (ENDTHREADLOGCALLBACK) etcbWrapper;
     void *argsCopy[StressMsg::maxArgCnt];
 
-    for (;;)
+    while (true)
     {
         ThreadStressLog* latestLog = this->FindLatestThreadLog();
 

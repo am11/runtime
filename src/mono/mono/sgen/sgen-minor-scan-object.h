@@ -126,7 +126,7 @@ SERIAL_DRAIN_GRAY_STACK (SgenGrayQueue *queue)
 	 */
 	for (i = 0; i < 32; i++) {
 #else
-	for (;;) {
+	while (true) {
 #endif
 		GCObject *obj;
 		SgenDescriptor desc;

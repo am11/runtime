@@ -3610,7 +3610,7 @@ static void ConsumeCustomModifiers(PCCOR_SIGNATURE& pSig, PCCOR_SIGNATURE pEndSi
     CorElementType type;
 
     PCCOR_SIGNATURE pSigTmp = pSig;
-    for (;;)
+    while (true)
     {
         type = ELEMENT_TYPE_MAX;
         IfFailThrow(CorSigUncompressElementType_EndPtr(pSigTmp, pEndSig, &type));

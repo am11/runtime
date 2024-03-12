@@ -1107,7 +1107,7 @@ CMiniMdBase::FindCustomAttributeFor(
     //  one, so the object test is at the bottom.
     ixCur = ixFound;
     IfFailRet(vGetRow(TBL_CustomAttribute, ixCur, &pCur));
-    for(;;)
+    while (true)
     {
         // Test the type of the current row.
         tkFound = getIX(pCur, _COLDEF(CustomAttribute,Type));
@@ -1129,7 +1129,7 @@ CMiniMdBase::FindCustomAttributeFor(
     }
     // Didn't find the name looking up.  Try looking down.
     ixCur = ixFound - 1;
-    for(;;)
+    while (true)
     {
         // Run out of table yet?
         if (ixCur == 0)

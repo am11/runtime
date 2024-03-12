@@ -1616,7 +1616,7 @@ mono_thread_internal_attach (MonoDomain *domain)
 
 	if (!mono_thread_attach_internal (thread, FALSE)) {
 		/* Mono is shutting down, so just wait for the end */
-		for (;;)
+		while (true)
 			mono_thread_info_sleep (10000, NULL);
 	}
 
@@ -4354,7 +4354,7 @@ self_suspend_internal (void)
 static void
 suspend_for_shutdown_async_call (gpointer unused)
 {
-	for (;;)
+	while (true)
 		mono_thread_info_yield ();
 }
 

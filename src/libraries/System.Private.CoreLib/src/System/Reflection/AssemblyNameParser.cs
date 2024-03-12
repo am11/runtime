@@ -360,7 +360,7 @@ namespace System.Reflection
                 c = GetNextChar();
             }
 
-            for (; ; )
+            while (true)
             {
                 if (c == 0)
                 {

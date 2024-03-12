@@ -423,7 +423,7 @@ public:
 
                 if(item->ComparedTo(*high) > 0) mid = high+1;
                 else if(item->ComparedTo(*low) < 0) mid = low;
-                else for(;;)
+                else while (true)
                 {
                     mid = &low[(high - low) >> 1];
 
@@ -467,7 +467,7 @@ public:
             T** high = &m_Arr[m_ulOffset+m_ulCount-1];
             T** mid;
             if(item->ComparedTo(*high) == 0) return(*high);
-            for(;;)
+            while (true)
             {
                 mid = &low[(high - low) >> 1];
                 int cmp = item->ComparedTo(*mid);
@@ -488,7 +488,7 @@ public:
             T** high = &m_Arr[m_ulOffset+m_ulCount-1];
             T** mid;
             if((*high)->Compare(item) == 0) return(*high);
-            for(;;)
+            while (true)
             {
                 mid = &low[(high - low) >> 1];
                 int cmp = (*mid)->Compare(item);
@@ -514,7 +514,7 @@ public:
                 m_ulCount--;
                 return TRUE;
             }
-            for(;;)
+            while (true)
             {
                 mid = &low[(high - low) >> 1];
                 int cmp = item->ComparedTo(*mid);

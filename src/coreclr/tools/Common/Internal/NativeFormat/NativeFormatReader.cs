@@ -538,7 +538,7 @@ namespace Internal.NativeFormat
 
             public NativeParser GetNext()
             {
-                for (; ; )
+                while (true)
                 {
                     while (_parser.Offset < _endOffset)
                     {

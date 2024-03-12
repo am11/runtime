@@ -70,7 +70,7 @@ mono_arch_set_target (char *mtriple)
 	if (!strncmp (mtriple, MONO_RISCV_ARCHITECTURE, len)) {
 		mtriple += len;
 
-		for (;;) {
+		while (true) {
 			char c = *mtriple;
 
 			if (!c || c == '-')

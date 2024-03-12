@@ -239,7 +239,7 @@ DynamicMethodDesc* DynamicMethodTable::GetDynamicMethod(BYTE *psig, DWORD sigSiz
 
     DynamicMethodDesc *pNewMD = NULL;
 
-    for (;;)
+    while (true)
     {
         {
             LockHolder lh(this);

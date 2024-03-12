@@ -106,7 +106,7 @@ namespace BenchmarksGame
             r = 0;
             s = 0;
             t = 1;
-            for (; ; )
+            while (true)
             {
                 int y = extract(3);
                 if (y == extract(4))

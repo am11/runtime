@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Cli.Build.Framework
         public void Write(string message)
         {
             var escapeScan = 0;
-            for (;;)
+            while (true)
             {
                 var escapeIndex = message.IndexOf("\x1b[", escapeScan, StringComparison.Ordinal);
                 if (escapeIndex == -1)

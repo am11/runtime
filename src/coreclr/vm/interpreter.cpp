@@ -2147,7 +2147,7 @@ EvalLoop:
     DoMonitorEnterWork();
 
     INTERPLOG("START %d, %s\n", m_methInfo->m_stubNum, methName);
-    for (;;)
+    while (true)
     {
         // TODO: verify that m_ILCodePtr is legal, and we haven't walked off the end of the IL array? (i.e., bad IL).
         // Note that ExecuteBranch() should be called for every branch. That checks that we aren't either before or

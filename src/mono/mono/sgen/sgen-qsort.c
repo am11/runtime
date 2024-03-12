@@ -61,7 +61,7 @@ sgen_qsort_rec (
 		SET (pivot_tmp, ELEM (pivot));
 
 		/* Partition. */
-		for (;;) {
+		while (true) {
 			while (left <= right && compare (ELEM (left), pivot_tmp) <= 0)
 				++left;
 			while (left <= right && compare (ELEM (right), pivot_tmp) > 0)

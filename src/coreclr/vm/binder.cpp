@@ -705,7 +705,7 @@ static void FCallCheckSignature(MethodDesc* pMD, PCODE pImpl)
     int argIndex = -2; // start with return value
     int enregisteredArguments = 0;
     const char* pUnmanagedArg = pUnmanagedSig;
-    for (;;)
+    while (true)
     {
         CorElementType argType = ELEMENT_TYPE_END;
         TypeHandle argTypeHandle;
@@ -1000,7 +1000,7 @@ void CoreLibBinder::CheckExtended()
     // for all methods...
     IfFailGo(pInternalImport->EnumAllInit(mdtMethodDef, &hEnum));
 
-    for (;;) {
+    while (true) {
         mdTypeDef td;
         mdTypeDef tdClass;
         DWORD dwImplFlags;

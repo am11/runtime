@@ -41,7 +41,7 @@ public class Program
 		bool locked = false;
 		try {
 			((Barrier)barrier).SignalAndWait ();
-			for (;;) {
+			while (true) {
 				try {
 					try {}
 					finally	{
@@ -67,7 +67,7 @@ public class Program
 
 		try {
 			((Barrier)barrier).SignalAndWait ();
-			for (;;) {
+			while (true) {
 				try {
 					try {}
 					finally	{

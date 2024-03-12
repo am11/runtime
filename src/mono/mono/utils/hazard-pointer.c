@@ -206,7 +206,7 @@ mono_get_hazardous_pointer (gpointer volatile *pp, MonoThreadHazardPointers *hp,
 {
 	gpointer p;
 
-	for (;;) {
+	while (true) {
 		/* Get the pointer */
 		p = *pp;
 		/* If we don't have hazard pointers just return the

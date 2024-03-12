@@ -30,7 +30,7 @@ mono_lls_get_hazardous_pointer_with_mask (gpointer volatile *pp, MonoThreadHazar
 {
 	gpointer p;
 
-	for (;;) {
+	while (true) {
 		/* Get the pointer */
 		p = *pp;
 		/* If we don't have hazard pointers just return the

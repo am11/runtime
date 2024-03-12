@@ -75,7 +75,7 @@ namespace System.Reflection.Runtime.TypeParsing
 			int src = _index;
 			char[] buffer = new char[_chars.Length];
 			int dst = 0;
-			for (; ; )
+			while (true)
 			{
 				char c = _chars[src];
 				TokenType token = CharToToken(c);
@@ -124,7 +124,7 @@ namespace System.Reflection.Runtime.TypeParsing
 			int src = _index;
 			char[] buffer = new char[_chars.Length];
 			int dst = 0;
-			for (; ; )
+			while (true)
 			{
 				char c = _chars[src];
 				if (c == NUL)
@@ -149,7 +149,7 @@ namespace System.Reflection.Runtime.TypeParsing
 			int src = _index;
 			char[] buffer = new char[_chars.Length];
 			int dst = 0;
-			for (; ; )
+			while (true)
 			{
 				char c = _chars[src];
 				if (c == NUL)

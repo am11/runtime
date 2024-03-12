@@ -262,7 +262,7 @@ BYTE *CHashTable::FindNextEntry(        // The next entry, or0 for end of list.
 
     HASHENTRY   *psEntry;               // Used to traverse the chains.
 
-    for (;;)
+    while (true)
     {
         // See if we already have one to use and if so, use it.
         if (psSrch->iNext != UINT32_MAX)

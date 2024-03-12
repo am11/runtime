@@ -258,7 +258,7 @@ ReturnFromEndOfRecursiveFunction:
                 bool abortedDueToTimeout = false;
                 int operationCount = 0;
 
-                for (; ; )
+                while (true)
                 {
                     //
                     // Each pass visits every vertex and attempts to detect whether it is part of a flagged cycle. The first pass only finds simple

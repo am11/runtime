@@ -45,7 +45,7 @@ void quick_sort(RandomAccessIterator first, RandomAccessIterator last, Less less
     RandomAccessIterator lastStack[32];
     size_t depth = 0;
 
-    for (;;)
+    while (true)
     {
         size_t count = (last - first) + 1;
 
@@ -90,7 +90,7 @@ void quick_sort(RandomAccessIterator first, RandomAccessIterator last, Less less
         RandomAccessIterator newFirst = first;
         RandomAccessIterator newLast = last;
 
-        for (;;)
+        while (true)
         {
             // Find newFirst such that *newFirst >= *pivot.
             //

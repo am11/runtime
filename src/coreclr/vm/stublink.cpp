@@ -851,7 +851,7 @@ Stub *StubLinker::Link(LoaderHeap *pHeap, DWORD flags)
 #ifdef STUBLINKER_GENERATES_UNWIND_INFO
     StubUnwindInfoSegmentBoundaryReservationList ReservedStubs;
 
-    for (;;)
+    while (true)
 #endif
     {
         pStub = Stub::NewStub(

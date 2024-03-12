@@ -169,7 +169,7 @@ desc_alloc (MonoMemAccountType type)
 	MonoThreadHazardPointers *hp = mono_hazard_pointer_get ();
 	Descriptor *desc;
 
-	for (;;) {
+	while (true) {
 		gboolean success;
 
 		desc = (Descriptor *) mono_get_hazardous_pointer ((volatile gpointer *)&desc_avail, hp, 1);
@@ -263,7 +263,7 @@ desc_retire (Descriptor *desc)
 static Descriptor*
 list_get_partial (MonoLockFreeAllocSizeClass *sc)
 {
-	for (;;) {
+	while (true) {
 		Descriptor *desc = (Descriptor*) mono_lock_free_queue_dequeue (&sc->partial);
 		if (!desc)
 			return NULL;
@@ -295,7 +295,7 @@ static void
 list_remove_empty_desc (MonoLockFreeAllocSizeClass *sc)
 {
 	int num_non_empty = 0;
-	for (;;) {
+	while (true) {
 		Descriptor *desc = (Descriptor*) mono_lock_free_queue_dequeue (&sc->partial);
 		if (!desc)
 			return;
@@ -436,7 +436,7 @@ mono_lock_free_alloc (MonoLockFreeAllocator *heap)
 {
 	gpointer addr;
 
-	for (;;) {
+	while (true) {
 
 		addr = alloc_from_active_or_partial (heap);
 		if (addr)

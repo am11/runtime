@@ -93,7 +93,7 @@ public class TestClass_65690
             if (15 / 4 % ulong_152 + 22 + 78 - s_ulong_19 > 19)
             {
                 int __loopvar26 = 15 - 4;
-                for (; ; )
+                while (true)
                 {
                     if (__loopvar26 >= s_loopInvariant)
                         break;

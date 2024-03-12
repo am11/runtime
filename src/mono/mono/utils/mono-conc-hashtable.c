@@ -273,7 +273,7 @@ mono_conc_hashtable_remove (MonoConcurrentHashTable *hash_table, gpointer key)
 	i = hash & table_mask;
 
 	if (!hash_table->equal_func) {
-		for (;;) {
+		while (true) {
 			if (!kvs [i].key) {
 				return NULL; /*key not found*/
 			}
@@ -297,7 +297,7 @@ mono_conc_hashtable_remove (MonoConcurrentHashTable *hash_table, gpointer key)
 		}
 	} else {
 		GEqualFunc equal = hash_table->equal_func;
-		for (;;) {
+		while (true) {
 			if (!kvs [i].key) {
 				return NULL; /*key not found*/
 			}
@@ -348,7 +348,7 @@ mono_conc_hashtable_insert (MonoConcurrentHashTable *hash_table, gpointer key, g
 	i = hash & table_mask;
 
 	if (!hash_table->equal_func) {
-		for (;;) {
+		while (true) {
 			if (!kvs [i].key || kvs [i].key == TOMBSTONE) {
 				kvs [i].value = value;
 				/* The write to values must happen after the write to keys */
@@ -367,7 +367,7 @@ mono_conc_hashtable_insert (MonoConcurrentHashTable *hash_table, gpointer key, g
 		}
 	} else {
 		GEqualFunc equal = hash_table->equal_func;
-		for (;;) {
+		while (true) {
 			if (!kvs [i].key || kvs [i].key == TOMBSTONE) {
 				kvs [i].value = value;
 				/* The write to values must happen after the write to keys */

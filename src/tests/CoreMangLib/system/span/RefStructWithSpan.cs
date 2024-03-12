@@ -49,7 +49,7 @@ public class My
 {
     static void Stress()
     {
-        for (; ; )
+        while (true)
         {
             GC.Collect();
             Thread.Sleep(1);
@@ -59,7 +59,7 @@ public class My
     static void Churn()
     {
         Random r = new Random();
-        for (; ; )
+        while (true)
         {
             var a = new int[1 + r.Next(100)];
             a[0] = a.Length;

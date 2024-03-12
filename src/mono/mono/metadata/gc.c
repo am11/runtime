@@ -459,7 +459,7 @@ mono_domain_finalize (MonoDomain *domain, guint32 timeout)
 
 	ret = TRUE;
 
-	for (;;) {
+	while (true) {
 		if (timeout == MONO_INFINITE_WAIT) {
 			res = mono_coop_sem_wait (&req->done, MONO_SEM_FLAGS_ALERTABLE);
 		} else {

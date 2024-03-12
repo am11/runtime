@@ -347,7 +347,7 @@ mono_conc_g_hash_table_insert (MonoConcGHashTable *hash_table, gpointer key, gpo
 	i = hash & table_mask;
 
 	if (!hash_table->equal_func) {
-		for (;;) {
+		while (true) {
 			gpointer cur_key = table->keys [i];
 			gboolean is_tombstone = FALSE;
 			if (!cur_key || (is_tombstone = key_is_tombstone (hash_table, cur_key))) {
@@ -370,7 +370,7 @@ mono_conc_g_hash_table_insert (MonoConcGHashTable *hash_table, gpointer key, gpo
 		}
 	} else {
 		GEqualFunc equal = hash_table->equal_func;
-		for (;;) {
+		while (true) {
 			gpointer cur_key = table->keys [i];
 			gboolean is_tombstone = FALSE;
 			if (!cur_key || (is_tombstone = key_is_tombstone (hash_table, cur_key))) {
@@ -408,7 +408,7 @@ mono_conc_g_hash_table_remove (MonoConcGHashTable *hash_table, gconstpointer key
 	i = hash & table_mask;
 
 	if (!hash_table->equal_func) {
-		for (;;) {
+		while (true) {
 			gpointer cur_key = table->keys [i];
 			if (!cur_key) {
 				return NULL; /*key not found*/
@@ -433,7 +433,7 @@ mono_conc_g_hash_table_remove (MonoConcGHashTable *hash_table, gconstpointer key
 		}
 	} else {
 		GEqualFunc equal = hash_table->equal_func;
-		for (;;) {
+		while (true) {
 			gpointer cur_key = table->keys [i];
 			if (!cur_key) {
 				return NULL; /*key not found*/

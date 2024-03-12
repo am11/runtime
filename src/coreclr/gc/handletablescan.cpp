@@ -1438,7 +1438,7 @@ PTR_TableSegment CALLBACK FullSegmentIterator(PTR_HandleTable pTable, PTR_TableS
 
     // loop until we find an appropriate segment to return
     PTR_TableSegment pNextSegment;
-    for (;;)
+    while (true)
     {
         // first, call the standard iterator to get the next segment
         pNextSegment = StandardSegmentIterator(pTable, pPrevSegment);
@@ -1624,10 +1624,10 @@ void SegmentScanByTypeMap(PTR_TableSegment pSegment, const BOOL *rgTypeInclusion
     uint32_t uLimit = pSegment->bEmptyLine;
 
     // loop across the segment looking for blocks to scan
-    for (;;)
+    while (true)
     {
         // find the first block included by the type map
-        for (;;)
+        while (true)
         {
             // if we are out of range looking for a start point then we're done
             if (uBlock >= uLimit)
@@ -1645,7 +1645,7 @@ void SegmentScanByTypeMap(PTR_TableSegment pSegment, const BOOL *rgTypeInclusion
         uint32_t uFirst = uBlock;
 
         // find the next block not included in the type map
-        for (;;)
+        while (true)
         {
             // advance the block index
             uBlock++;

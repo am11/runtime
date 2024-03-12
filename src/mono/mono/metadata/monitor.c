@@ -478,7 +478,7 @@ mono_monitor_inflate (MonoObject *obj)
 
 	old_lw.sync = obj->synchronisation;
 
-	for (;;) {
+	while (true) {
 		LockWord tmp_lw;
 
 		if (lock_word_is_inflated (old_lw)) {
@@ -684,7 +684,7 @@ mono_monitor_exit_inflated (MonoObject *obj)
 
 		old_status = mon->status;
 
-		for (;;) {
+		while (true) {
 			new_status = mon_status_set_owner (old_status, 0);
 			tmp_status = mono_atomic_cas_i32 ((gint32*)&mon->status, new_status, old_status);
 			if (tmp_status == old_status) {
@@ -736,7 +736,7 @@ mon_add_entry_count (MonoThreadsSync *mon, int val)
 	guint32 old_status, tmp_status, new_status;
 
 	old_status = mon->status;
-	for (;;) {
+	while (true) {
 		/* The lock is free, we should retry */
 		if (val > 0 && mon_status_get_owner (old_status) == 0)
 			return FALSE;

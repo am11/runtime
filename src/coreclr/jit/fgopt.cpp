@@ -203,7 +203,7 @@ bool Compiler::fgRemoveDeadBlocks()
             assert(block->hasTryIndex());
             unsigned  tryIndex = block->getTryIndex();
             EHblkDsc* ehDsc    = ehGetDsc(tryIndex);
-            for (;;)
+            while (true)
             {
                 worklist.push_back(ehDsc->ebdHndBeg);
                 if (ehDsc->HasFilter())

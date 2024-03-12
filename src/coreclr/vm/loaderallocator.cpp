@@ -137,7 +137,7 @@ BOOL LoaderAllocator::AddReferenceIfAlive()
     CONTRACTL_END;
 
 #ifndef DACCESS_COMPILE
-    for (;;)
+    while (true)
     {
         // Local snaphost of ref-count
         UINT32 cReferencesLocalSnapshot = m_cReferences;

@@ -204,7 +204,7 @@ static MethodDesc * FindTightlyBoundUnboxingStub(MethodDesc * pMD)
     if (pCurMD == pMD)
         return NULL;
 
-    for (;;)
+    while (true)
     {
         MethodDesc * pNextMD = MethodTable::IntroducedMethodIterator::GetNext(pCurMD);
         if (pNextMD == pMD)

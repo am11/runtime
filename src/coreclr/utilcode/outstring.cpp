@@ -98,7 +98,7 @@ OutString& OutString::dec(int i, size_t minWidth) {
 	if (i < 0)
 		val = -i;	// note this happens to also work for minint!
 
-	for(;;) {
+	while (true) {
 		if (val < 10) {
 			*--ptr = (char)('0' + val);
 			break;
@@ -141,7 +141,7 @@ OutString& OutString::hex(unsigned i, int minWidth, unsigned flags) {
 
     static const char digits[] = "0123456789ABCDEF";
 
-	for(;;) {
+	while (true) {
 		if (i < 16) {
 			*--ptr = digits[i];
 			break;

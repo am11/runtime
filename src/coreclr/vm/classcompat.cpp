@@ -3109,7 +3109,7 @@ HRESULT MethodTableBuilder::LoaderFindMethodInClass(
             _ASSERTE(here->GetModule());
             MethodTable *pParent = bmtParent->pParentMethodTable;
 
-            for (;;)
+            while (true)
             {
                 Substitution *newSubst = new Substitution;
                 *newSubst = here->GetSubstitutionForParent(pSubst);

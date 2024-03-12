@@ -1113,7 +1113,7 @@ TADDR IJitManager::GetFuncletStartAddress(EECodeInfo * pCodeInfo)
     // and multiple RUNTIME_FUNCTION entries per function or funclet. However, all but the first will
     // have the "F" bit set in the unwind data, indicating a fragment (with phantom prolog unwind codes).
 
-    for (;;)
+    while (true)
     {
         if (!IsFunctionFragment(baseAddress, pFunctionEntry))
         {

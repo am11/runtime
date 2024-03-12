@@ -321,7 +321,7 @@ ULONG RecordPool::GetIndexForRecord(    // 1-based index of Record in pool.
     const BYTE  *pRecord = reinterpret_cast<const BYTE*>(pvRecord);
     const BYTE  *pSegData = NULL;
     ULONG       ulSegSize;
-    for (;;)
+    while (true)
     {    // Does the current segment contain the record?
         pSegData = pSeg->GetSegData();
         ulSegSize = pSeg->GetSegSize();

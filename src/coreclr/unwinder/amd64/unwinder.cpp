@@ -502,7 +502,7 @@ HRESULT.
     //
 
     ChainCount = 0;
-    for (;;) {
+    while (true) {
         UnwindInfo = GetUnwindInfo(FunctionEntry->UnwindInfoAddress + ImageBase);
         if (UnwindInfo == NULL)
         {

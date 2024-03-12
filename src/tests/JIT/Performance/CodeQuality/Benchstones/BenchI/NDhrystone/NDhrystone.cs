@@ -120,7 +120,7 @@ public static class NDhrystone
         Enumeration enumLoc = Enumeration.Ident2;
         intLoc = intParIO + 10;
 
-        for (;;) {
+        while (true) {
             if (s_char1Glob == 'A') {
                 --intLoc;
                 intParIO = intLoc - s_intGlob;

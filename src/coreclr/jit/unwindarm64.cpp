@@ -705,7 +705,7 @@ unsigned UnwindCodesBase::GetCodeSizeFromUnwindCodes(bool isProlog)
     BYTE*    pCodesStart = GetCodes();
     BYTE*    pCodes      = pCodesStart;
     unsigned size        = 0;
-    for (;;)
+    while (true)
     {
         BYTE b1 = *pCodes;
         if (IsEndCode(b1))

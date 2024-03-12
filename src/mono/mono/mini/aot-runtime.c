@@ -1862,7 +1862,7 @@ method_address_resolve (guint8 *code_addr)
 	if (((uintptr_t) code_addr) & 0x1)
 		return code_addr;
 #endif
-	for (;;) {
+	while (true) {
 		// `mono_arch_get_call_target` takes the IP after the branch
 		// instruction, not before. Add 4 bytes to compensate.
 		guint8 *next = mono_arch_get_call_target (code_addr + 4);
@@ -3769,7 +3769,7 @@ mono_aot_find_jit_info (MonoImage *image, gpointer addr)
 		JitInfoMap *current_item, *new_item;
 		int buckets = (amodule->info.nmethods / JIT_INFO_MAP_BUCKET_SIZE) + 1;
 
-		for (;;) {
+		while (true) {
 			current_table = amodule->async_jit_info_table;
 			LOAD_ACQUIRE_FENCE;
 			if (current_table)
@@ -3785,7 +3785,7 @@ mono_aot_find_jit_info (MonoImage *image, gpointer addr)
 		new_item->method_index = method_index;
 		new_item->jinfo = jinfo;
 
-		for (;;) {
+		while (true) {
 			current_item = amodule->async_jit_info_table [method_index % buckets];
 			LOAD_ACQUIRE_FENCE;
 			new_item->next = current_item;

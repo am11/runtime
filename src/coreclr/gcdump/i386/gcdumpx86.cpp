@@ -350,7 +350,7 @@ size_t              GCDump::DumpGCTable(PTR_CBYTE      table,
         bool     isThis = false;
         bool     iptr   = false;
 
-        for (;;)
+        while (true)
         {
             unsigned    isPop;
             unsigned    argOffs;
@@ -526,7 +526,7 @@ size_t              GCDump::DumpGCTable(PTR_CBYTE      table,
         // Dump the Partially Interruptible, EBP-frame method, pointer table
         //
 
-        for (;;)
+        while (true)
         {
             unsigned        argMask = 0, byrefArgMask = 0;
             unsigned        regMask, byrefRegMask = 0;
@@ -714,7 +714,7 @@ size_t              GCDump::DumpGCTable(PTR_CBYTE      table,
         unsigned lastSkip = 0;
         unsigned imask    = 0;
 
-        for (;;)
+        while (true)
         {
             unsigned    val = *table++;
 

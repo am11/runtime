@@ -304,7 +304,7 @@ namespace Internal.NativeFormat
 
             // Aggressive phase that only allows offsets to shrink.
             _phase = SavePhase.Shrinking;
-            for (; ; )
+            while (true)
             {
                 _iteration++;
                 _encoder.Clear();
@@ -351,7 +351,7 @@ namespace Internal.NativeFormat
 
             // Conservative phase that only allows the offsets to grow. It is guaranteed to converge.
             _phase = SavePhase.Growing;
-            for (; ; )
+            while (true)
             {
                 _iteration++;
                 _encoder.Clear();

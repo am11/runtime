@@ -731,7 +731,7 @@ bool Ref_InitializeHandleTableBucket(HandleTableBucket* bucket)
             return false;
     }
 
-    for (;;) {
+    while (true) {
         // Do we have free slot
         while (walk) {
             for (uint32_t i = 0; i < INITIAL_HANDLE_TABLE_ARRAY_SIZE; i ++) {

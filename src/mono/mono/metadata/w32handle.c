@@ -712,7 +712,7 @@ mono_w32handle_wait_one (gpointer handle, guint32 timeout, gboolean alertable)
 
 	mono_w32handle_set_in_use (handle_data, TRUE);
 
-	for (;;) {
+	while (true) {
 		gint waited;
 
 		if (own_if_signalled (handle_data, &abandoned)) {

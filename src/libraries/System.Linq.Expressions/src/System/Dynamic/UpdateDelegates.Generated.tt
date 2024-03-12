@@ -123,7 +123,7 @@ for (int i = 1; i <= 10; i++)
             rule = null;
             var args = <#=argsArray#>;
 
-            for (; ; )
+            while (true)
             {
                 @this.Target = originalRule;
                 rule = @this.Target = @this.Binder.BindCore(@this, args);
@@ -278,7 +278,7 @@ for (int i = 1; i <= 10; i++)
             rule = null;
             var args = <#=argsArray#>;
 
-            for (; ; )
+            while (true)
             {
                 @this.Target = originalRule;
                 rule = @this.Target = @this.Binder.BindCore(@this, args);

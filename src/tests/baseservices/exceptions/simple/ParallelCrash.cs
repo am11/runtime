@@ -36,7 +36,7 @@ public class ParallelCrash
         {
             Environment.FailFast("Parallel crash in main thread");
         }
-        for (;;)
+        while (true)
         {
             Thread.Sleep(50);
         }
@@ -55,7 +55,7 @@ public class ParallelCrash
         {
             Environment.FailFast(failFastMessage);
         }
-        for (;;)
+        while (true)
         {
             Thread.Sleep(50);
         }

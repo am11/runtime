@@ -553,7 +553,7 @@ ThreadExceptionState::EnumChainMemoryRegions(CLRDataEnumMemoryFlags flags)
     ExInfo*           head = &m_currentExInfo;
 #endif // FEATURE_EH_FUNCLETS
 
-    for (;;)
+    while (true)
     {
         head->EnumMemoryRegions(flags);
 

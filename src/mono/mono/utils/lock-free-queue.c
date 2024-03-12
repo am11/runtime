@@ -131,7 +131,7 @@ mono_lock_free_queue_enqueue (MonoLockFreeQueue *q, MonoLockFreeQueueNode *node)
 
 	g_assert (node->next == FREE_NEXT);
 	node->next = END_MARKER;
-	for (;;) {
+	while (true) {
 		MonoLockFreeQueueNode *next;
 
 		tail = (MonoLockFreeQueueNode *) mono_get_hazardous_pointer ((gpointer volatile*)&q->tail, hp, 0);
@@ -241,7 +241,7 @@ mono_lock_free_queue_dequeue (MonoLockFreeQueue *q)
 	MonoLockFreeQueueNode *head;
 
  retry:
-	for (;;) {
+	while (true) {
 		MonoLockFreeQueueNode *tail, *next;
 
 		head = (MonoLockFreeQueueNode *) mono_get_hazardous_pointer ((gpointer volatile*)&q->head, hp, 0);

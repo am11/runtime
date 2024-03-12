@@ -3244,7 +3244,7 @@ extern "C" VOID __cdecl DebugCheckStubUnwindInfoWorker (CONTEXT *pStubContext)
     // Unwind until IP is 0, sp is at the stack top, and callee IP is in kernel32.
     //
 
-    for (;;)
+    while (true)
     {
         ULONG64 ControlPc = (ULONG64)GetIP(&ctx);
 

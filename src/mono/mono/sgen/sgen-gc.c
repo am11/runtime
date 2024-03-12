@@ -1249,7 +1249,7 @@ finish_gray_stack (int generation, ScanCopyContext ctx)
 	 * called.
 	 */
 	g_assert (sgen_gray_object_queue_is_empty (queue));
-	for (;;) {
+	while (true) {
 		sgen_null_link_in_range (generation, ctx, TRUE);
 		if (generation == GENERATION_OLD)
 			sgen_null_link_in_range (GENERATION_NURSERY, ctx, TRUE);

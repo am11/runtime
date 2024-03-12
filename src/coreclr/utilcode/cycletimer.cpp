@@ -71,7 +71,7 @@ void CycleTimer::InterlockedAddU64(unsigned __int64* loc, unsigned __int64 amoun
 {
     volatile __int64* vloc = (volatile __int64*)loc;
     unsigned __int64 prev = *vloc;
-    for (;;)
+    while (true)
     {
         unsigned __int64 next = prev + amount;
         __int64 snext = (__int64)next;

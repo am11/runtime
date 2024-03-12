@@ -472,7 +472,7 @@ public:
         void ParseType()
         {
             CorElementType elemType;
-            for (;;)
+            while (true)
             {
                 elemType = (CorElementType)ParseByte();
                 switch (elemType)

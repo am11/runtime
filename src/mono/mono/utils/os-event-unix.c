@@ -159,7 +159,7 @@ mono_os_event_wait_multiple (MonoOSEvent **events, gsize nevents, gboolean waita
 	if (alertable)
 		g_ptr_array_add (data->event.conds, &signal_cond);
 
-	for (;;) {
+	while (true) {
 		gint count, lowest;
 		gboolean signalled;
 

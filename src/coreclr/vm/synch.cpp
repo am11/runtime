@@ -143,7 +143,7 @@ void CLREventBase::CreateMonitorEvent(SIZE_T Cookie)
     // thread-safe SetInDeadlockDetection
     InterlockedOr((LONG*)&m_dwFlags, CLREVENT_FLAGS_IN_DEADLOCK_DETECTION);
 
-    for (;;)
+    while (true)
     {
         LONG oldFlags = m_dwFlags;
 
@@ -184,7 +184,7 @@ void CLREventBase::SetMonitorEvent()
     // call CLREvent::SetMonitorEvent on event that has not been initialialized yet by CreateMonitorEvent.
     // CreateMonitorEvent will signal the event once it is created if it happens.
 
-    for (;;)
+    while (true)
     {
         LONG oldFlags = m_dwFlags;
 

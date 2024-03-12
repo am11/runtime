@@ -120,7 +120,7 @@ namespace Internal.TypeSystem.Ecma
         public void ParseType()
         {
             SignatureTypeCode typeCode;
-            for (; ; )
+            while (true)
             {
                 int sigcodeRaw = ParseCompressedInt();
                 const int ELEMENT_TYPE_CLASS = 0x12;

@@ -678,7 +678,7 @@ void SegmentRemoveFreeBlocks(TableSegment *pSegment, uint32_t uType, BOOL *pfSca
     uint32_t uLastFreed  = BLOCK_INVALID;
 
     // loop until we've processed the whole chain
-    for (;;)
+    while (true)
     {
         // fetch the next block index
         uint32_t uNext = pSegment->rgAllocation[uBlock];
@@ -1572,7 +1572,7 @@ uint32_t SegmentAllocHandlesFromTypeChain(TableSegment *pSegment, uint32_t uType
         uint32_t uLast = uBlock;
 
         // loop until we have found all handles known to be available
-        for (;;)
+        while (true)
         {
             // try to allocate handles from the current block
             uint32_t uSatisfied = BlockAllocHandles(pSegment, uBlock, pHandleBase, uAvail);
@@ -1739,7 +1739,7 @@ uint32_t TableAllocBulkHandles(HandleTable *pTable, uint32_t uType, OBJECTHANDLE
     uint8_t bLastSequence = 0;
     BOOL fNewSegment = FALSE;
 
-    for (;;)
+    while (true)
     {
         // get some handles from the current segment
         uint32_t uSatisfied = SegmentAllocHandles(pSegment, uType, pHandleBase, uRemain);

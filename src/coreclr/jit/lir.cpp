@@ -1208,7 +1208,7 @@ LIR::ReadOnlyRange LIR::Range::GetMarkedRange(unsigned  markCount,
 
     GenTree* firstNode = start;
     GenTree* lastNode  = nullptr;
-    for (;;)
+    while (true)
     {
         if ((firstNode->gtLIRFlags & LIR::Flags::Mark) != 0)
         {

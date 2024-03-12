@@ -26,7 +26,7 @@ public class TestClass_65988
         {
             int int_85 = 76;
             S1 s1_93 = new S1();
-            for (; ; )
+            while (true)
             {
                 if ((15 << 4) < (s_int_9 *= int_85))
                 {

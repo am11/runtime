@@ -173,7 +173,7 @@ BOOL Module::SetTransientFlagInterlocked(DWORD dwFlag)
 {
     LIMITED_METHOD_CONTRACT;
 
-    for (;;)
+    while (true)
     {
         DWORD dwTransientFlags = m_dwTransientFlags;
         if ((dwTransientFlags & dwFlag) != 0)

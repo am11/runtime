@@ -379,7 +379,7 @@ namespace ILCompiler.Reflection.ReadyToRun.x86
             uint lastSkip = 0;
             uint imask = 0;
 
-            for (; ; )
+            while (true)
             {
                 uint val = image[offset++];
 

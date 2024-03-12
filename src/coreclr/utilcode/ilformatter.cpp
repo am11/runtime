@@ -96,7 +96,7 @@ inline void ILFormatter::popN(size_t num) {
 void ILFormatter::setStackAsTarget(size_t ilOffset) {
 
     Target*ptr = targetStart;
-    for(;;) {
+    while (true) {
         if (ptr >= targetCur)
             return;
         if (ptr->ilOffset == ilOffset)

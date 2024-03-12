@@ -367,7 +367,7 @@ ms_get_empty_block (void)
 		 * 1.  If that doesn't work, either, we assert.
 		 */
 		int alloc_num = MS_BLOCK_ALLOC_NUM;
-		for (;;) {
+		while (true) {
 			p = (char *)sgen_alloc_os_memory_aligned (ms_block_size * alloc_num, ms_block_size,
 				(SgenAllocFlags)(SGEN_ALLOC_HEAP | SGEN_ALLOC_ACTIVATE),
 				alloc_num == 1 ? "major heap section" : NULL, MONO_MEM_ACCOUNT_SGEN_MARKSWEEP);
@@ -641,7 +641,7 @@ static void
 ensure_can_access_block_free_list (MSBlockInfo *block)
 {
  retry:
-	for (;;) {
+	while (true) {
 		switch (block->state) {
 		case BLOCK_STATE_SWEPT:
 		case BLOCK_STATE_MARKING:

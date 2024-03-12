@@ -589,7 +589,7 @@ sgen_workers_take_from_queue (int generation, SgenGrayQueue *queue)
 
 	sgen_gray_object_spread (queue, sgen_workers_get_job_split_count (generation));
 
-	for (;;) {
+	while (true) {
 		GrayQueueSection *section = sgen_gray_object_dequeue_section (queue);
 		if (!section)
 			break;

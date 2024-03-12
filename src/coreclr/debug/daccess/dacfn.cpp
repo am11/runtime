@@ -725,7 +725,7 @@ DacInstantiateStringA(TADDR addr, ULONG32 maxChars, bool throwEx)
     ULONG32 curBytes = 0;
     ULONG32 returned;
 
-    for (;;)
+    while (true)
     {
         status = g_dacImpl->m_pTarget->
             ReadVirtual(scanAddr, (PBYTE)buf, sizeof(buf),
@@ -857,7 +857,7 @@ DacInstantiateStringW(TADDR addr, ULONG32 maxChars, bool throwEx)
     ULONG32 curBytes = 0;
     ULONG32 returned;
 
-    for (;;)
+    while (true)
     {
         status = g_dacImpl->m_pTarget->
             ReadVirtual(scanAddr, (PBYTE)buf, sizeof(buf),

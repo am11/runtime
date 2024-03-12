@@ -4983,7 +4983,7 @@ namespace
                             }
                         }
 
-                        for (;;)
+                        while (true)
                         {
                             // We have the entry lock now, we can release the global lock
                             pILStubLock.Release();

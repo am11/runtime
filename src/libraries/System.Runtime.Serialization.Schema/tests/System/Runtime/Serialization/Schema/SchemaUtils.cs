@@ -301,7 +301,7 @@ namespace System.Runtime.Serialization.Schema.Tests
             {
                 CodeTypeReference arrayType = typeReference;
                 string arrayString = String.Empty;
-                for (; ; )
+                while (true)
                 {
                     int rank = typeReference.ArrayRank;
                     arrayString += "[";

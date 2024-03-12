@@ -413,7 +413,7 @@ namespace R2RDump
                         RuntimeFunction rightRuntimeFunction = commonMethod.Value.RightMethod.RuntimeFunctions[rtfIndex];
                         int leftOffset = 0;
                         int rightOffset = 0;
-                        for (; ;)
+                        while (true)
                         {
                             bool leftAtEnd = (leftOffset >= leftRuntimeFunction.Size);
                             bool rightAtEnd = (rightOffset >= rightRuntimeFunction.Size);

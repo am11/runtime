@@ -11,7 +11,7 @@ public class CMPXCHG
     public static int g_static = -1;
     internal static void Function(int bit, bool value)
     {
-        for (; ;)
+        while (true)
         {
             int oldData = g_static;
             int newData;

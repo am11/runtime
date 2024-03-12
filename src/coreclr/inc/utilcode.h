@@ -1409,7 +1409,7 @@ private:
         SSIZE_T     iLast;
         SSIZE_T     i;                      // loop variable.
 
-        for (;;)
+        while (true)
         {
             // if less than two elements you're done.
             if (iLeft >= iRight)

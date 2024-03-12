@@ -1464,7 +1464,7 @@ ClrDataModule::EnumAssembly(
         // Is there a more direct way?
         //
 
-        for (;;)
+        while (true)
         {
             if (!(module = iter->NextModule()))
             {
@@ -1733,7 +1733,7 @@ ClrDataModule::EnumTypeInstance(
 
     EX_TRY
     {
-        for (;;)
+        while (true)
         {
             AppDomain* appDomain;
             mdTypeDef token;
@@ -1937,7 +1937,7 @@ ClrDataModule::EnumTypeInstanceByName(
     {
         SplitName* split; split = FROM_CDENUM(SplitName, *handle);
 
-        for (;;)
+        while (true)
         {
             AppDomain* appDomain;
             mdTypeDef token;
@@ -2181,7 +2181,7 @@ ClrDataModule::EnumMethodInstanceByName(
     {
         SplitName* split; split = FROM_CDENUM(SplitName, *handle);
 
-        for (;;)
+        while (true)
         {
             AppDomain* appDomain;
             mdMethodDef token;

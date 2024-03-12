@@ -1779,7 +1779,7 @@ CorInfoHFAElemType MethodTable::GetHFAType()
         return CORINFO_HFA_ELEM_NONE;
 
     MethodTable * pMT = this;
-    for (;;)
+    while (true)
     {
         _ASSERTE(pMT->IsValueType());
         _ASSERTE(pMT->GetNumInstanceFields() > 0);

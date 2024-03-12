@@ -560,7 +560,7 @@ BOOL IsValidContinuingSymbol(unsigned x) { return (x < 128)&&_ValidCS[x]; }
 
 char* nextBlank(_In_ __nullterminated char* curPos)
 {
-    for(;;)
+    while (true)
     {
         switch(Sym(curPos))
         {
@@ -592,7 +592,7 @@ char* skipBlanks(_In_ __nullterminated char* curPos, unsigned* pstate)
     const unsigned multiComment = 2;
     unsigned nextSym, state = *pstate;
     char* nextPos;
-    for(;;)
+    while (true)
     {   // skip whitespace and comments
         if (curPos >= PENV->endPos)
         {
@@ -695,7 +695,7 @@ int parse_literal(unsigned curSym, __inout __nullterminated char* &curPos, BOOL 
     char* fromPtr = curPos;
     bool escape = false;
 
-    for(;;)
+    while (true)
     {     // Find matching quote
         curSym = (curPos >= PENV->endPos) ? 0 : Sym(curPos);
         if(curSym == 0)

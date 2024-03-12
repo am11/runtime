@@ -40,7 +40,7 @@ qsort_rec_##name ( \
 			qsort_swap_##name (array, right, middle, swap_tmp); \
 		pivot = middle; \
 		*pivot_tmp = array [pivot]; \
-		for (;;) { \
+		while (true) { \
 			while (left <= right && compare (array [left], *pivot_tmp) <= 0) \
 				++left; \
 			while (left <= right && compare (array [right], *pivot_tmp) > 0) \

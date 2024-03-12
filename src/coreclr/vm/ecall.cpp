@@ -497,7 +497,7 @@ PCODE ECall::GetFCallImpl(MethodDesc * pMD, BOOL * pfSharedOrDynamicFCallImpl /*
 
         // add to hash table
         ECHash** spot = &gFCallMethods[FCallHash(pImplementation)];
-        for(;;) {
+        while (true) {
             if (*spot == 0) {                   // found end of list
                 *spot = pEntry;
                 break;

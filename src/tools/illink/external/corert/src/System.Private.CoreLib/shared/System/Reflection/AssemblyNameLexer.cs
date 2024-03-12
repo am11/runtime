@@ -58,7 +58,7 @@ namespace System.Reflection
 				c = _chars[_index++];
 			}
 
-			for (; ; )
+			while (true)
 			{
 				if (c == 0)
 				{

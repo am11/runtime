@@ -31,7 +31,7 @@ public class Program
         {
             try
             {
-                for (;;)
+                while (true)
                 {
                     try
                     {

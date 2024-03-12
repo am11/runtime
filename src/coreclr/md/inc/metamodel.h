@@ -737,7 +737,7 @@ public:
         ridEnd = ridBegin + 1;
 
         // Search back to start of group.
-        for (;;)
+        while (true)
         {
             void *pRow;
             if (ridBegin <= 1)
@@ -755,7 +755,7 @@ public:
         // If desired, search forward to end of group.
         if (pEnd != NULL)
         {
-            for (;;)
+            while (true)
             {
                 void *pRow;
                 if (ridEnd > GetCountRecs(ixTbl))

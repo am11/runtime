@@ -229,7 +229,7 @@ HRESULT UTSemReadWrite::LockRead()
     // Stop spinning
 
     // Start waiting
-    for (;;)
+    while (true)
     {
         DWORD dwFlag = m_dwFlag;
 
@@ -321,7 +321,7 @@ HRESULT UTSemReadWrite::LockWrite()
     // Stop spinning
 
     // Start waiting
-    for (;;)
+    while (true)
     {
         DWORD dwFlag = m_dwFlag;
 
@@ -377,7 +377,7 @@ void UTSemReadWrite::UnlockRead()
     _ASSERTE ((m_dwFlag & READERS_MASK) != 0 && "reader count is zero before releasing read lock");
     _ASSERTE ((m_dwFlag & WRITERS_MASK) == 0 && "writer count is nonzero before releasing read lock");
 
-    for (;;)
+    while (true)
     {
         dwFlag = m_dwFlag;
 
@@ -442,7 +442,7 @@ void UTSemReadWrite::UnlockWrite()
     _ASSERTE ((m_dwFlag & READERS_MASK) == 0 && "reader count is nonzero before releasing write lock");
     _ASSERTE ((m_dwFlag & WRITERS_MASK) == WRITERS_INCR && "writer count is not 1 before releasing write lock");
 
-    for (;;)
+    while (true)
     {
         dwFlag = m_dwFlag;
 

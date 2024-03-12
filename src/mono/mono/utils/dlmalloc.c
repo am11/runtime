@@ -1433,7 +1433,7 @@ static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define MLOCK_T long
 static int win32_acquire_lock (MLOCK_T *sl) {
-  for (;;) {
+  while (true) {
 #ifdef InterlockedCompareExchangePointer
     if (!InterlockedCompareExchange(sl, 1, 0))
       return 0;
@@ -2085,7 +2085,7 @@ static struct malloc_state _gm_;
 /* Return segment holding given address */
 static msegmentptr segment_holding(mstate m, char* addr) {
   msegmentptr sp = &m->seg;
-  for (;;) {
+  while (true) {
     if (addr >= sp->base && addr < sp->base + sp->size)
       return sp;
     if ((sp = sp->next) == 0)
@@ -2096,7 +2096,7 @@ static msegmentptr segment_holding(mstate m, char* addr) {
 /* Return true if segment contains a segment link */
 static int has_segment_link(mstate m, msegmentptr ss) {
   msegmentptr sp = &m->seg;
-  for (;;) {
+  while (true) {
     if ((char*)sp >= ss->base && (char*)sp < ss->base + ss->size)
       return 1;
     if ((sp = sp->next) == 0)
@@ -2978,7 +2978,7 @@ static void internal_malloc_stats(mstate m) {
   else {\
     tchunkptr T = *H;\
     size_t K = S << leftshift_for_tree_index(I);\
-    for (;;) {\
+    while (true) {\
       if (chunksize(T) != S) {\
         tchunkptr* C = &(T->child[(K >> (SIZE_T_BITSIZE-SIZE_T_ONE)) & 1]);\
         K <<= 1;\
@@ -3328,7 +3328,7 @@ static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
   m->seg.next = ss;
 
   /* Insert trailing fenceposts */
-  for (;;) {
+  while (true) {
     mchunkptr nextp = chunk_plus_offset(p, SIZE_T_SIZE);
     p->head = FENCEPOST_HEAD;
 #ifdef DEBUG
@@ -3665,7 +3665,7 @@ static void* tmalloc_large(mstate m, size_t nb) {
     /* Traverse tree for this bin looking for node with size == nb */
     size_t sizebits = nb << leftshift_for_tree_index(idx);
     tchunkptr rst = 0;  /* The deepest untaken right subtree */
-    for (;;) {
+    while (true) {
       tchunkptr rt;
       size_t trem = chunksize(t) - nb;
       if (trem < rsize) {

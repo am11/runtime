@@ -145,7 +145,7 @@ public class LargeFuncletFrame
                 case '0':
                 {
                     int __loopvar1 = s_loopInvariant, __loopSecondaryVar1_0 = s_loopInvariant;
-                    for (;;)
+                    while (true)
                     {
                         if (__loopvar1 > 15+4)
                             break;

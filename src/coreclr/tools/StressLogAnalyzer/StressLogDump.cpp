@@ -128,7 +128,7 @@ void formatOutput(struct IDebugDataSpaces* memCallBack, ___in FILE* file, __inou
     strcpy_s(formatCopy, ARRAY_SIZE(formatCopy), format);
     char* ptr = formatCopy;
     format = formatCopy;
-    for(;;)
+    while (true)
     {
         char c = *ptr++;
         if (c == 0)
@@ -474,7 +474,7 @@ HRESULT StressLog::Dump(ULONG64 outProcLog, const char* fileName, struct IDebugD
     void** args;
     unsigned msgCtr;
     msgCtr = 0;
-    for (;;)
+    while (true)
     {
         ThreadStressLog* latestLog = logs->FindLatestThreadLog();
 

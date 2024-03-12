@@ -524,7 +524,7 @@ public:
 #if BITSET_TRACK_OPCOUNTS
             BitSetStaticsImpl::RecordOp(BitSetStaticsImpl::BSOP_NextBit);
 #endif
-            for (;;)
+            while (true)
             {
                 DWORD nextBit;
                 bool  hasBit;

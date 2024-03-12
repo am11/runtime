@@ -13,7 +13,7 @@ export function toBase64StringImpl(inArray: Uint8Array, offset?: number, length?
     const mask1 = (1 << 24) - 1, mask2 = (1 << 18) - 1, mask3 = (1 << 12) - 1, mask4 = (1 << 6) - 1;
     const shift1 = 18, shift2 = 12, shift3 = 6, shift4 = 0;
 
-    for (;;) {
+    while (true) {
         ch1 = reader.read();
         ch2 = reader.read();
         ch3 = reader.read();

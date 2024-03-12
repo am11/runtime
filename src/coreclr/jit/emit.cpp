@@ -5531,7 +5531,7 @@ AGAIN:
 
         assert(lstIG);
 
-        for (;;)
+        while (true)
         {
             lstIG = lstIG->igNext;
             if (!lstIG)

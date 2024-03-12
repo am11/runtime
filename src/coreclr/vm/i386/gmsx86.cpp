@@ -425,7 +425,7 @@ void LazyMachState::unwindLazyState(LazyMachState* baseState,
 #endif
     bool bset16bit=false;
     bool b16bit=false;
-    for(;;)
+    while (true)
     {
         _ASSERTE(count++ < 1000);       // we should never walk more than 1000 instructions!
         b16bit=bset16bit;

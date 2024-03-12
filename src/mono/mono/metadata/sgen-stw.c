@@ -352,7 +352,7 @@ unified_suspend_stop_world (MonoThreadInfoFlags flags, unified_suspend_thread_st
 			break;
 	}
 
-	for (;;) {
+	while (true) {
 		gint restart_counter = 0;
 
 		FOREACH_THREAD_EXCLUDE (info, flags) {

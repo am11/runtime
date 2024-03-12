@@ -278,7 +278,7 @@ bool CoffNativeCodeManager::FindMethodInfo(PTR_VOID        ControlPC,
 
     // The runtime function could correspond to a funclet.  We need to get to the
     // runtime function of the main method.
-    for (;;)
+    while (true)
     {
         size_t unwindDataBlobSize;
         PTR_VOID pUnwindDataBlob = GetUnwindDataBlob(m_moduleBase, pRuntimeFunction, &unwindDataBlobSize);

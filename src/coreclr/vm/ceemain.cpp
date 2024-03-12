@@ -1099,7 +1099,7 @@ void WaitForEndOfShutdown()
         pThread->SetThreadStateNC(Thread::TSNC_BlockedForShutdown);
     }
 
-    for (;;) g_pEEShutDownEvent->Wait(INFINITE, TRUE);
+    while (true) g_pEEShutDownEvent->Wait(INFINITE, TRUE);
 }
 
 // ---------------------------------------------------------------------------

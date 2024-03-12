@@ -1033,7 +1033,7 @@ test_thread_func (gpointer void_arg)
 	int thread_num = (int)(td - thread_datas);
 	gboolean modify_thread = thread_num < NUM_THREADS / 2; /* only half of the threads modify the table */
 
-	for (;;) {
+	while (true) {
 		int alloc;
 		int lookup = 1;
 

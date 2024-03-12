@@ -359,7 +359,7 @@ private:
             if (m_index >= m_tableSize)
                 return;
 
-            for (;;)
+            while (true)
             {
                 m_index++;
                 if (m_index >= m_tableSize)

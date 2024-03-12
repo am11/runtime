@@ -202,7 +202,7 @@ namespace System.Runtime
             }
 
             MethodTable* mt = obj.GetMethodTable()->NonArrayBaseType;
-            for (; ; )
+            while (true)
             {
                 if (mt == pTargetType)
                     goto done;
@@ -428,7 +428,7 @@ namespace System.Runtime
                 goto fail;
             }
 
-            for (; ; )
+            while (true)
             {
                 mt = mt->NonArrayBaseType;
                 if (mt == pTargetType)

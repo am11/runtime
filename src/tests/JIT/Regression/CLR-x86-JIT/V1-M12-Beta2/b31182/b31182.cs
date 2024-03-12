@@ -15,7 +15,7 @@ namespace Test
             try
             {
                 while (m_abStatic1[1]) { }
-                for (; ; ) { throw new Exception(); }
+                while (true) { throw new Exception(); }
                 try
                 {
                 }

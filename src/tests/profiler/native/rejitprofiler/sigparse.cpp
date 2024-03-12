@@ -226,7 +226,7 @@ Success:
 
 bool SigParser::ParseOptionalCustomModsOrConstraint()
 {
-    for (;;)
+    while (true)
     {
         if (pbCur >= pbEnd)
             return true;
@@ -255,7 +255,7 @@ bool SigParser::ParseOptionalCustomModsOrConstraint()
 
 bool SigParser::ParseOptionalCustomMods()
 {
-    for (;;)
+    while (true)
     {
         if (pbCur >= pbEnd)
             return true;

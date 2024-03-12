@@ -83,7 +83,7 @@ namespace System.Reflection.Runtime.TypeParsing
 			NonQualifiedTypeName typeName = ParseNamedOrConstructedGenericTypeName();
 
 			// Iterate through any "has-element" qualifiers ([], &, *).
-			for (;;)
+			while (true)
 			{
 				TokenType token = _lexer.Peek;
 				if (token == TokenType.End)
@@ -144,7 +144,7 @@ namespace System.Reflection.Runtime.TypeParsing
 			{
 				_lexer.Skip();
 				List<TypeName> genericTypeArguments = new List<TypeName>();
-				for (;;)
+				while (true)
 				{
 					TypeName genericTypeArgument = ParseGenericTypeArgument();
 					genericTypeArguments.Add(genericTypeArgument);

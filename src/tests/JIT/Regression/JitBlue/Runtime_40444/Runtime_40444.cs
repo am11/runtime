@@ -49,7 +49,7 @@ public class Runtime_40444
         //
         int i = 0; 
         int divisor = s_divisor;
-        for (; ; )
+        while (true)
         {
             if (TestVolatileRead(ref t2_finished)==1)
             {

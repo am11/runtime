@@ -901,7 +901,7 @@ bool GcInfoDecoder::EnumerateLiveSlots(
 
         size_t chunkPointer;
         UINT32 chunk = breakChunk;
-        for(;;)
+        while (true)
         {
             m_Reader.SetCurrentPos(pointerTablePos + chunk * numBitsPerPointer);
             chunkPointer = m_Reader.Read(numBitsPerPointer);
@@ -999,7 +999,7 @@ bool GcInfoDecoder::EnumerateLiveSlots(
                 {
                     // Read transitions
                     UINT32 normBreakOffsetDelta = pseudoBreakOffset % NUM_NORM_CODE_OFFSETS_PER_CHUNK;
-                    for(;;)
+                    while (true)
                     {
                         if(!m_Reader.ReadOneFast())
                             break;

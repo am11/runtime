@@ -4611,7 +4611,7 @@ LONG InternalUnhandledExceptionFilter_Worker(
             // if we've got an uncaught SO, we don't have enough stack to pop a debug break.  So instead,
             // loop infinitely and we can attach a debugger at that point and break in.
             LOG((LF_EH, LL_INFO100, "InternalUnhandledExceptionFilter_Worker: Infinite loop on uncaught SO\n"));
-            for ( ;; )
+            while (true)
             {
             }
         }
@@ -7625,7 +7625,7 @@ LONG WINAPI CLRVectoredExceptionHandlerShim(PEXCEPTION_POINTERS pExceptionInfo)
                 // can not use it.
                 // Find the stop point (most jitted function)
                 Frame* pFrame = pThread->GetFrame();
-                for(;;)
+                while (true)
                 {
                     // skip GC frames
                     if (pFrame == 0 || pFrame == (Frame*) -1)

@@ -142,7 +142,7 @@ namespace System.Runtime.CompilerServices
                 return obj;
 
             MethodTable* mt = RuntimeHelpers.GetMethodTable(obj)->ParentMethodTable;
-            for (; ; )
+            while (true)
             {
                 if (mt == toTypeHnd)
                     goto done;
@@ -343,7 +343,7 @@ namespace System.Runtime.CompilerServices
             MethodTable* mt = RuntimeHelpers.GetMethodTable(obj);
             Debug.Assert(mt != toTypeHnd, "The check for the trivial cases should be inlined by the JIT");
 
-            for (; ; )
+            while (true)
             {
                 mt = mt->ParentMethodTable;
                 if (mt == toTypeHnd)

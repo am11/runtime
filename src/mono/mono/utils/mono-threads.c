@@ -1382,7 +1382,7 @@ suspend_sync_nolock (MonoNativeThreadId id, gboolean interrupt_kernel)
 {
 	MonoThreadInfo *info = NULL;
 	int sleep_duration = 0;
-	for (;;) {
+	while (true) {
 		if (!(info = suspend_sync (id, interrupt_kernel))) {
 			mono_hazard_pointer_clear (mono_hazard_pointer_get (), 1);
 			return NULL;
@@ -1662,7 +1662,7 @@ sleep_interruptible (guint32 ms, gboolean *alerted)
 
 	mono_coop_mutex_lock (&sleep_mutex);
 
-	for (;;) {
+	while (true) {
 		if (ms != MONO_INFINITE_WAIT) {
 			now = mono_msec_ticks();
 			if (now >= end)

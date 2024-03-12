@@ -269,7 +269,7 @@ namespace Internal.TypeSystem.Ecma
 
         private SignatureTypeCode ParseTypeCodeImpl(bool skipPinned = true)
         {
-            for (; ; )
+            while (true)
             {
                 SignatureTypeCode typeCode = _reader.ReadSignatureTypeCode();
 

@@ -13,12 +13,7 @@
 #endif
 #endif
 
-#if __has_cpp_attribute(fallthrough)
-#define FALLTHROUGH [[fallthrough]]
-#else
-#define FALLTHROUGH
-#endif
-
+#include "../../inc/fallthrough.h"
 #include <assert.h>
 #include <immintrin.h>
 

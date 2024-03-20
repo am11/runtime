@@ -10,6 +10,7 @@ for path in "${__VersionFolder}/"*{.h,.c}; do
         IFS=
         # update commit
         commit="$(git rev-parse HEAD 2>/dev/null)"
+        commit="${commit:-$RUNTIME_GIT_COMMIT}"
         commit="${commit:-N/A}"
         substitute="$(printf 'static char sccsid[] __attribute__((used)) = "@(#)Version N/A @Commit: %s";\n' "$commit")"
         version_file_contents="$(cat "$path" | sed "s|^static.*|$substitute|")"

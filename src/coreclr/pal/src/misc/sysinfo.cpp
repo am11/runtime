@@ -145,6 +145,15 @@ PAL_GetLogicalCpuCountFromOS()
 
         cpu_set_t cpuSet;
         int st = sched_getaffinity(gPID, sizeof(cpu_set_t), &cpuSet);
+
+#ifdef TARGET_FREEBSD
+        if (st != 0)
+        {
+            // in FreeBSD 13.2 Jail environment, sched_getaffinity fails due to an implementation bug; fallback to cpuset_getaffinity
+            st = cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, gPID == 0 ? -1 : gPID, sizeof(cpu_set_t), &cpuSet);
+        }
+#endif
+
         if (st != 0)
         {
             ASSERT("sched_getaffinity failed (%d)\n", errno);

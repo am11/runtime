@@ -841,6 +841,15 @@ int32_t SystemNative_SchedGetAffinity(int32_t pid, intptr_t* mask)
 
     cpu_set_t set;
     int32_t result = sched_getaffinity(pid, sizeof(cpu_set_t), &set);
+
+#ifdef TARGET_FREEBSD
+    if (result != 0)
+    {
+        // in FreeBSD 13.2 Jail environment, sched_getaffinity fails due to an implementation bug; fallback to cpuset_getaffinity
+        result = cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, pid == 0 ? -1 : pid, sizeof(cpu_set_t), &set);
+    }
+#endif
+
     if (result == 0)
     {
         int maxCpu = sizeof(intptr_t) * 8;

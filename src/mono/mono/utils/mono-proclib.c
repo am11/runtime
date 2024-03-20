@@ -162,8 +162,15 @@ mono_cpu_count (void)
 #ifdef HAVE_SCHED_GETAFFINITY
 	{
 		cpu_set_t set;
-		if (sched_getaffinity (mono_process_current_pid (), sizeof (set), &set) == 0)
+		int pid = mono_process_current_pid ();
+		if (sched_getaffinity (pid, sizeof (cpu_set_t), &set) == 0)
 			return CPU_COUNT (&set);
+
+#ifdef TARGET_FREEBSD
+		// in FreeBSD 13.2 Jail environment, sched_getaffinity fails due to an implementation bug; fallback to cpuset_getaffinity
+		if (cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, pid == 0 ? -1 : pid, sizeof(cpu_set_t), &set) == 0)
+			return CPU_COUNT (&set);
+#endif
 	}
 #endif
 #if defined (_SC_NPROCESSORS_ONLN) && defined (HAVE_SYSCONF)

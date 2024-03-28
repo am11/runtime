@@ -13,7 +13,7 @@
 #endif
 #endif
 
-#include "../../inc/fallthrough.h"
+#include "../../inc/warning_macros.h"
 #include <assert.h>
 #include <immintrin.h>
 

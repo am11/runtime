@@ -769,7 +769,7 @@ const char StackOverflowMessage[] = "Stack overflow.\n";
 
 #endif // __cplusplus
 
-#include "../../../../inc/fallthrough.h"
+#include "../../../../inc/warning_macros.h"
 
 DWORD PALAPI GetCurrentSessionId();
 

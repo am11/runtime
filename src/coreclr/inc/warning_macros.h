@@ -1,5 +1,5 @@
-#ifndef __FALLTHROUGH_H__
-#define __FALLTHROUGH_H__
+#ifndef __WARNING_MACROS_H__
+#define __WARNING_MACROS_H__
 
 #ifndef FALLTHROUGH
 #if __has_cpp_attribute(fallthrough)
@@ -9,4 +9,4 @@
 #endif // __has_cpp_attribute(fallthrough)
 #endif //!FALLTHROUGH
 
-#endif //__FALLTHROUGH_H__
+#endif //__WARNING_MACROS_H__

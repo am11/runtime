@@ -175,7 +175,7 @@ extern bool g_arm64_atomics_present;
 #define __has_cpp_attribute(x) (0)
 #endif
 
-#include "../../inc/fallthrough.h"
+#include "../../inc/warning_macros.h"
 
 #ifndef PAL_STDCPP_COMPAT
 

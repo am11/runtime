@@ -35,7 +35,7 @@
 #define __has_cpp_attribute(x) (0)
 #endif
 
-#include "../../inc/fallthrough.h"
+#include "../../inc/warning_macros.h"
 
 #include <algorithm>
 

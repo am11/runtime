@@ -140,6 +140,4 @@
 typedef HMODULE NATIVE_LIBRARY_HANDLE;
 #endif // HOST_WINDOWS
 
-#include "warning_macros.h"
-
 #endif	// __PALCLR_WIN_H__

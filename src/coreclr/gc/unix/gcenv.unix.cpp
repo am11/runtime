@@ -35,8 +35,6 @@
 #define __has_cpp_attribute(x) (0)
 #endif
 
-#include "../../inc/warning_macros.h"
-
 #include <algorithm>
 
 #if HAVE_SYS_TIME_H

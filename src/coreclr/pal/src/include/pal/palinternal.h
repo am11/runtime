@@ -769,8 +769,6 @@ const char StackOverflowMessage[] = "Stack overflow.\n";
 
 #endif // __cplusplus
 
-#include "../../../../inc/warning_macros.h"
-
 DWORD PALAPI GetCurrentSessionId();
 
 #endif /* _PAL_INTERNAL_H_ */

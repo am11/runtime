@@ -21,10 +21,8 @@
 #define __has_cpp_attribute(x) 0
 #endif
 
-#ifdef __cplusplus
-#  if __has_cpp_attribute(fallthrough)
-#    define FALLTHROUGH [[fallthrough]]
-#  endif
+#if defined(__cplusplus) && __has_cpp_attribute(fallthrough)
+#  define FALLTHROUGH [[fallthrough]]
 #elif __has_attribute(fallthrough)
 #  define FALLTHROUGH __attribute__((fallthrough))
 #else

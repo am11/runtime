@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <immintrin.h>
 
+#include <minipal/utils.h>
+
 #include "defs.h"
 #include "alignment.h"
 #include "machine_traits.h"

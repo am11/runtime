@@ -50,6 +50,12 @@ Abstract:
 #include <unistd.h>
 #include <wctype.h>
 
+#if defined(__has_include)
+#if __has_include(<alloca.h>)
+#include <alloca.h>
+#endif // __has_include(alloca.h)
+#endif // defined(__has_include)
+
 #ifdef __cplusplus
 extern "C++"
 {

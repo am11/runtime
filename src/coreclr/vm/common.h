@@ -204,11 +204,7 @@ EXTERN_C AppDomain* STDCALL GetAppDomain();
 
 inline void RetailBreak()
 {
-#ifdef TARGET_X86
-    __asm int 3
-#else
     DebugBreak();
-#endif
 }
 
 extern BOOL isMemoryReadable(const TADDR start, unsigned len);

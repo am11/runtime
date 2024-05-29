@@ -118,16 +118,6 @@ extern bool g_arm64_atomics_present;
 #define LANG_ENGLISH                     0x09
 
 /******************* Compiler-specific glue *******************************/
-#ifndef THROW_DECL
-#define THROW_DECL
-#endif // !THROW_DECL
-
-#ifdef __sun
-#define MATH_THROW_DECL
-#else
-#define MATH_THROW_DECL THROW_DECL
-#endif
-
 #if defined(_MSC_VER)
 #define DECLSPEC_ALIGN(x)   __declspec(align(x))
 #else
@@ -3842,7 +3832,7 @@ PAL_GetCurrentThreadAffinitySet(SIZE_T size, UINT_PTR* data);
 // errno_t is only defined when the Secure CRT Extensions library is available (which no standard library that we build with implements anyway)
 typedef int errno_t;
 
-PALIMPORT DLLEXPORT errno_t __cdecl memcpy_s(void *, size_t, const void *, size_t) THROW_DECL;
+PALIMPORT DLLEXPORT errno_t __cdecl memcpy_s(void *, size_t, const void *, size_t);
 PALIMPORT errno_t __cdecl memmove_s(void *, size_t, const void *, size_t);
 PALIMPORT DLLEXPORT int __cdecl _wcsicmp(const WCHAR *, const WCHAR*);
 PALIMPORT int __cdecl _wcsnicmp(const WCHAR *, const WCHAR *, size_t);
@@ -3902,7 +3892,7 @@ inline WCHAR *PAL_wcsstr(WCHAR* S, const WCHAR* P)
 }
 #endif
 
-#if !__has_builtin(_rotl)
+#if !__has_builtin(_rotl) && !defined(_rotl)
 /*++
 Function:
 _rotl
@@ -3922,7 +3912,7 @@ unsigned int __cdecl _rotl(unsigned int value, int shift)
 }
 #endif // !__has_builtin(_rotl)
 
-#if !__has_builtin(_rotr)
+#if !__has_builtin(_rotr) && !defined(_rotr)
 
 /*++
 Function:

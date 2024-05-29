@@ -5,12 +5,6 @@
 // BaseAssemblySpec.inl
 //
 
-#if defined(__has_include)
-#if __has_include(<alloca.h>)
-#include <alloca.h>
-#endif // __has_include(alloca.h)
-#endif // defined(__has_include)
-
 //
 // Implements the BaseAssemblySpec class
 //

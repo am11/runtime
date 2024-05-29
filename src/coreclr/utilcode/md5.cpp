@@ -143,7 +143,7 @@ void MD5::GetHashValue(MD5HASHDATA* phash)
     // but our compiler has an intrinsic!
 
     #if defined(TARGET_WINDOWS)
-    #define ROTATE_LEFT(x, n) (x) = _lrotl(x, n)
+        #define ROTATE_LEFT(x, n) (x) = _lrotl(x, n)
     #elif __has_builtin(__builtin_rotateleft)
         #define ROTATE_LEFT(x, n) ((x) = __builtin_rotateleft(x, n))
     #else

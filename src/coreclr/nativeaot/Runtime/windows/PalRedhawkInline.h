@@ -143,7 +143,7 @@ FORCEINLINE void PalYieldProcessor()
 #error Unsupported architecture
 #endif
 
-#define PalDebugBreak() __debugbreak()
+#define PalDebugBreak() DebugBreak()
 
 FORCEINLINE int32_t PalOsPageSize()
 {

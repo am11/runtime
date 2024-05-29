@@ -75,7 +75,7 @@ namespace ILCompiler.DependencyAnalysis.ARM
             Builder.EmitByte(0xbf);
         }
 
-        // __debugbreak
+        // DebugBreak
         public void EmitDebugBreak()
         {
             Builder.EmitByte(0xde);

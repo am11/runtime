@@ -576,18 +576,13 @@ CHECK CheckValue(TYPENAME &val)
 #define UNREACHABLE() \
     UNREACHABLE_MSG("")
 
-#ifdef __llvm__
+#define UNREACHABLE_RET() \
+    UNREACHABLE(); \
+    return 0
 
-// LLVM complains if a function does not return what it says.
-#define UNREACHABLE_RET() do { UNREACHABLE(); return 0; } while (0)
-#define UNREACHABLE_MSG_RET(_message) UNREACHABLE_MSG(_message); return 0;
-
-#else // __llvm__
-
-#define UNREACHABLE_RET() UNREACHABLE()
-#define UNREACHABLE_MSG_RET(_message) UNREACHABLE_MSG(_message)
-
-#endif // __llvm__ else
+#define UNREACHABLE_MSG_RET(_message) \
+    UNREACHABLE_MSG(_message); \
+    return 0
 
 #ifdef _DEBUG_IMPL
 

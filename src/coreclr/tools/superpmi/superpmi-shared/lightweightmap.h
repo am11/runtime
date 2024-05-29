@@ -59,7 +59,7 @@ public:
         if (locked)
         {
             LogError("Added item that extended the buffer after it was locked by a call to GetBuffer()");
-            __debugbreak();
+            DebugBreak();
         }
 
         unsigned int   newbuffsize = bufferLength + sizeof(unsigned int) + len;
@@ -86,7 +86,7 @@ public:
         if (locked)
         {
             LogError("Added item that extended the buffer after it was locked by a call to GetBuffer()");
-            __debugbreak();
+            DebugBreak();
         }
 
         unsigned int   newbuffsize = bufferLength + sizeof(unsigned int) + len;
@@ -380,7 +380,7 @@ public:
         if (insert != (unsigned int)first)
         {
             LogDebug("index = %u f %u mid = %u l %u***************************", insert, first, mid, last);
-            __debugbreak();
+            DebugBreak();
         }
 
         if (numItems > 0)

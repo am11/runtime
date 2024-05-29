@@ -119,11 +119,7 @@ extern bool g_arm64_atomics_present;
 
 /******************* Compiler-specific glue *******************************/
 #ifndef THROW_DECL
-#if defined(_MSC_VER) || !defined(__cplusplus)
 #define THROW_DECL
-#else
-#define THROW_DECL throw()
-#endif // !_MSC_VER
 #endif // !THROW_DECL
 
 #ifdef __sun
@@ -167,16 +163,8 @@ extern bool g_arm64_atomics_present;
 #ifndef NOOPT_ATTRIBUTE
 #if defined(__llvm__)
 #define NOOPT_ATTRIBUTE optnone
-#elif defined(__GNUC__)
+#else
 #define NOOPT_ATTRIBUTE optimize("O0")
-#endif
-#endif
-
-#ifndef NODEBUG_ATTRIBUTE
-#if defined(__llvm__)
-#define NODEBUG_ATTRIBUTE __nodebug__
-#elif defined(__GNUC__)
-#define NODEBUG_ATTRIBUTE __artificial__
 #endif
 #endif
 

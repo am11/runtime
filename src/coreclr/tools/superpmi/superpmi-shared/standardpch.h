@@ -110,13 +110,6 @@
 #define DEFAULT_REAL_JIT_NAME_A MAKEDLLNAME_A("clrjit2")
 #define DEFAULT_REAL_JIT_NAME_W MAKEDLLNAME_W("clrjit2")
 
-#if !defined(_MSC_VER) && !defined(__llvm__)
-static inline void __debugbreak()
-{
-  DebugBreak();
-}
-#endif
-
 using std::min;
 using std::max;
 

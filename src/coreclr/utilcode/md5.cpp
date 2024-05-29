@@ -12,6 +12,7 @@
 #include "stdmacros.h"
 #include "md5.h"
 #include "contract.h"
+#include <minipal/utils.h>
 
 void MD5::Init(BOOL fConstructed)
     {

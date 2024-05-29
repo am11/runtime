@@ -13962,7 +13962,7 @@ void GenericHijackFuncHelper()
 // must be naked.
 //
 #if defined(TARGET_X86)
-__declspec(naked)
+NAKED_ATTRIBUTE
 #endif // defined (_x86_)
 void Debugger::GenericHijackFunc(void)
 {

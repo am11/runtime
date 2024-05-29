@@ -45,7 +45,14 @@ GPTR_IMPL(StressLog, g_pStressLog /*, &StressLog::theLog*/);
    variable-speed CPUs (for power management), this is not accurate, but may
    be good enough.
 */
-inline __declspec(naked) uint64_t getTimeStamp() {
+
+#ifdef TARGET_WINDOWS
+#define NAKED_ATTRIBUTE __declspec(naked)
+#else
+#define NAKED_ATTRIBUTE __attribute__((naked))
+#endif
+
+inline NAKED_ATTRIBUTE uint64_t getTimeStamp() {
 
    __asm {
         RDTSC   // read time stamp counter

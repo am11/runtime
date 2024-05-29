@@ -23,3 +23,10 @@ using std::max;
 #include "volatile.h"
 #include "static_assert.h"
 
+#ifdef TARGET_X86
+#ifdef TARGET_WINDOWS
+#define NAKED_ATTRIBUTE __declspec(naked)
+#else
+#define NAKED_ATTRIBUTE __attribute__((naked))
+#endif
+#endif

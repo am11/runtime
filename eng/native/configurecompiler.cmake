@@ -628,6 +628,7 @@ if (CLR_CMAKE_HOST_UNIX)
     add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-stringop-truncation>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-class-memaccess>)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-changes-meaning>)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fpermissive>)
 
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.0)
       # this warning is only reported by g++ 11 in debug mode when building

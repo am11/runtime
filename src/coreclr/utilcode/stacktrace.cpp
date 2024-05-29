@@ -955,7 +955,7 @@ void MagicDeinit(void)
 *       Exactly the contents of RtlCaptureContext for Win7 - Win2K doesn't
 *       support this, so we need it for CoreCLR 4, if we require Win2K support
 ****************************************************************************/
-extern "C" __declspec(naked) void __stdcall
+extern "C" NAKED_ATTRIBUTE void __stdcall
 ClrCaptureContext(_Out_ PCONTEXT ctx)
 {
     __asm {

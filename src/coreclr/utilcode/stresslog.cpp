@@ -34,7 +34,7 @@ thread_local bool t_triedToCreateThreadStressLog;
    variable-speed CPUs (for power management), this is not accurate, but may
    be good enough.
 */
-__forceinline __declspec(naked) uint64_t getTimeStamp() {
+__forceinline NAKED_ATTRIBUTE uint64_t getTimeStamp() {
     STATIC_CONTRACT_LEAF;
 
    __asm {

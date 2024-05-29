@@ -112,11 +112,11 @@ public:
         return (BOOL)m_value;
     }
 
-    typedef Holder<DangerousNonHostedSpinLock *, DangerousNonHostedSpinLock::AcquireLock, DangerousNonHostedSpinLock::ReleaseLock> Holder;
+    typedef Holder<DangerousNonHostedSpinLock *, DangerousNonHostedSpinLock::AcquireLock, DangerousNonHostedSpinLock::ReleaseLock> Holder1;
     typedef ConditionalStateHolder<DangerousNonHostedSpinLock *, DangerousNonHostedSpinLock::TryAcquireLock, DangerousNonHostedSpinLock::ReleaseLock> TryHolder;
 };
 
-typedef DangerousNonHostedSpinLock::Holder DangerousNonHostedSpinLockHolder;
+typedef DangerousNonHostedSpinLock::Holder1 DangerousNonHostedSpinLockHolder;
 typedef DangerousNonHostedSpinLock::TryHolder DangerousNonHostedSpinLockTryHolder;
 
 

@@ -3440,8 +3440,8 @@ Define_InterlockMethod(
     InterlockedAdd64(IN OUT LONGLONG volatile *lpAddend, IN LONGLONG value),
     InterlockedAdd64(lpAddend, value),
 #ifdef HOST_X86
-    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;                 \
-    LONGLONG result = __atomic_add_fetch(&alignedAddend, value, __ATOMIC_SEQ_CST);  \
+    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;
+    LONGLONG result = __atomic_add_fetch(&alignedAddend, value, __ATOMIC_SEQ_CST);
     *lpAddend = alignedAddend;,
 #else
     LONGLONG result = __atomic_add_fetch(lpAddend, value, __ATOMIC_SEQ_CST),
@@ -3481,8 +3481,8 @@ Define_InterlockMethod(
     InterlockedIncrement64(IN OUT LONGLONG volatile *lpAddend),
     InterlockedIncrement64(lpAddend),
 #ifdef HOST_X86
-    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;             \
-    LONGLONG result = __atomic_add_fetch(&alignedAddend, 1, __ATOMIC_SEQ_CST);  \
+    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;
+    LONGLONG result = __atomic_add_fetch(&alignedAddend, 1, __ATOMIC_SEQ_CST);
     *lpAddend = alignedAddend;,
 #else
     LONGLONG result = __atomic_add_fetch(lpAddend, 1, __ATOMIC_SEQ_CST),
@@ -3524,8 +3524,8 @@ Define_InterlockMethod(
     InterlockedDecrement64(IN OUT LONGLONG volatile *lpAddend),
     InterlockedDecrement64(lpAddend),
 #ifdef HOST_X86
-    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;            \
-    LONGLONG result = __atomic_sub_fetch(&alignedAddend, 1, __ATOMIC_SEQ_CST); \
+    __attribute__((aligned(8))) LONGLONG alignedAddend = *lpAddend;
+    LONGLONG result = __atomic_sub_fetch(&alignedAddend, 1, __ATOMIC_SEQ_CST);
     *lpAddend = alignedAddend;,
 #else
     LONGLONG result = __atomic_sub_fetch(lpAddend, 1, __ATOMIC_SEQ_CST),
@@ -3635,19 +3635,17 @@ Define_InterlockMethod(
     InterlockedCompareExchange64(IN OUT LONGLONG volatile *Destination, IN LONGLONG Exchange, IN LONGLONG Comperand),
     InterlockedCompareExchange64(Destination, Exchange, Comperand),
 #ifdef HOST_X86
-    __attribute__((aligned(8))) LONGLONG alignedDestination = *Destination;                   \
-    __atomic_compare_exchange_n(                                                              \
-        (                                                                                     \
-        &alignedDestination, /* Pointer to a variable whose value is to be compared with. */  \
-        &Comperand, /* Pointer to the value to be compared */                                 \
-        Exchange, /* The value to be stored */                                                \
-        false, /* Whether the comparison should be made equal to exchange */                  \
-        __ATOMIC_SEQ_CST, /* Memory order for both success and failure */                     \
-        __ATOMIC_SEQ_CST), /* Memory order for both success and failure */                    \
+    __attribute__((aligned(8))) LONGLONG alignedDestination = *Destination;
+    __atomic_compare_exchange_n(
+        &alignedDestination, /* Pointer to a variable whose value is to be compared with. */
+        &Comperand, /* Pointer to the value to be compared */
+        Exchange, /* The value to be stored */
+        false, /* Whether the comparison should be made equal to exchange */
+        __ATOMIC_SEQ_CST, /* Memory order for both success and failure */
+        __ATOMIC_SEQ_CST); /* Memory order for both success and failure */
     *Destination = alignedDestination;,
 #else
     __atomic_compare_exchange_n(
-        (
         Destination, /* Pointer to a variable whose value is to be compared with. */
         &Comperand, /* Pointer to the value to be compared */
         Exchange, /* The value to be stored */
@@ -3688,8 +3686,8 @@ Define_InterlockMethod(
     InterlockedExchangeAdd64(IN OUT LONGLONG volatile *Addend, IN LONGLONG Value),
     InterlockedExchangeAdd64(Addend, Value),
 #ifdef HOST_X86
-    __attribute__((aligned(8))) LONGLONG alignedAddend = *Addend;                   \
-    LONGLONG result = __atomic_fetch_add(&alignedAddend, Value, __ATOMIC_SEQ_CST);  \
+    __attribute__((aligned(8))) LONGLONG alignedAddend = *Addend;
+    LONGLONG result = __atomic_fetch_add(&alignedAddend, Value, __ATOMIC_SEQ_CST);
     *Addend = alignedAddend;,
 #else
     LONGLONG result = __atomic_fetch_add(Addend, Value, __ATOMIC_SEQ_CST),

@@ -96,10 +96,8 @@ int main(int argc, char **argv)
     return 0;
 }" HAVE_PR_SET_PTRACER)
 
-check_symbol_exists(
-    clock_gettime_nsec_np
-    time.h
-    HAVE_CLOCK_GETTIME_NSEC_NP)
+check_symbol_exists(clock_gettime_nsec_np time.h HAVE_CLOCK_GETTIME_NSEC_NP)
+check_symbol_exists(vfork unistd.h HAVE_VFORK)
 
 check_library_exists(c sched_getaffinity "" HAVE_SCHED_GETAFFINITY)
 

@@ -2604,15 +2604,17 @@ InitializeFlushProcessWriteBuffers()
     // Verify that the s_helperPage is really aligned to the GetVirtualPageSize()
     _ASSERTE((((SIZE_T)s_helperPage) & (GetVirtualPageSize() - 1)) == 0);
 
+    int status;
+#if !HAVE_VFORK
     // Locking the page ensures that it stays in memory during the two mprotect
     // calls in the FlushProcessWriteBuffers below. If the page was unmapped between
     // those calls, they would not have the expected effect of generating IPI.
-    int status = mlock(s_helperPage, GetVirtualPageSize());
-
+    status = mlock(s_helperPage, GetVirtualPageSize());
     if (status != 0)
     {
         return FALSE;
     }
+#endif
 
     status = pthread_mutex_init(&flushProcessWriteBuffersMutex, NULL);
     if (status != 0)
@@ -2655,18 +2657,40 @@ FlushProcessWriteBuffers()
         int status = pthread_mutex_lock(&flushProcessWriteBuffersMutex);
         FATAL_ASSERT(status == 0, "Failed to lock the flushProcessWriteBuffersMutex lock");
 
-        // Changing a helper memory page protection from read / write to no access
-        // causes the OS to issue IPI to flush TLBs on all processors. This also
-        // results in flushing the processor buffers.
-        status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_READ | PROT_WRITE);
-        FATAL_ASSERT(status == 0, "Failed to change helper page protection to read / write");
+#if HAVE_VFORK
+        pid_t pid = vfork();
+        if (pid == 0) // Child process
+        {
+#endif
+            // Changing a helper memory page protection from read / write to no access
+            // causes the OS to issue IPI to flush TLBs on all processors. This also
+            // results in flushing the processor buffers.
+            status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_READ | PROT_WRITE);
+            FATAL_ASSERT(status == 0, "Failed to change helper page protection to read / write");
 
-        // Ensure that the page is dirty before we change the protection so that
-        // we prevent the OS from skipping the global TLB flush.
-        InterlockedIncrement(s_helperPage);
+            // Ensure that the page is dirty before we change the protection so that
+            // we prevent the OS from skipping the global TLB flush.
+            InterlockedIncrement(s_helperPage);
 
-        status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_NONE);
-        FATAL_ASSERT(status == 0, "Failed to change helper page protection to no access");
+            // Change the helper page protection to no access
+            status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_NONE);
+            FATAL_ASSERT(status == 0, "Failed to change helper page protection to no access");
+
+#if HAVE_VFORK
+            // Exit child process
+            _exit(0);
+        }
+        else if (pid > 0) // Parent process
+        {
+            // Wait for the child process to complete
+            int wstatus;
+            waitpid(pid, &wstatus, 0);
+        }
+        else
+        {
+            FATAL_ASSERT(FALSE, "Failed to fork process");
+        }
+#endif
 
         status = pthread_mutex_unlock(&flushProcessWriteBuffersMutex);
         FATAL_ASSERT(status == 0, "Failed to unlock the flushProcessWriteBuffersMutex lock");

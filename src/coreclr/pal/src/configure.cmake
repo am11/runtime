@@ -49,6 +49,7 @@ check_include_files("sys/auxv.h;asm/hwcap.h" HAVE_AUXV_HWCAP_H)
 check_include_files("sys/ptrace.h" HAVE_SYS_PTRACE_H)
 check_include_files(ucontext.h HAVE_UCONTEXT_H)
 check_symbol_exists(getauxval sys/auxv.h HAVE_GETAUXVAL)
+check_symbol_exists(vfork unistd.h HAVE_VFORK)
 
 set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS})
 

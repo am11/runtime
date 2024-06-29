@@ -23,6 +23,7 @@
 #cmakedefine01 HAVE_SYS_PTRACE_H
 #cmakedefine01 HAVE_UCONTEXT_H
 #cmakedefine01 HAVE_GETAUXVAL
+#cmakedefine01 HAVE_VFORK
 
 #cmakedefine01 HAVE_KQUEUE
 #cmakedefine01 HAVE_PTHREAD_ATTR_GET_NP

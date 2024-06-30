@@ -2593,7 +2593,8 @@ InitializeFlushProcessWriteBuffers()
 
 #ifdef TARGET_OSX
     return TRUE;
-#else
+#endif
+
     s_helperPage = static_cast<int*>(mmap(0, GetVirtualPageSize(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));
 
     if(s_helperPage == MAP_FAILED)
@@ -2604,6 +2605,16 @@ InitializeFlushProcessWriteBuffers()
     // Verify that the s_helperPage is really aligned to the GetVirtualPageSize()
     _ASSERTE((((SIZE_T)s_helperPage) & (GetVirtualPageSize() - 1)) == 0);
 
+#ifdef TARGET_SUNOS
+    // Initialize the mutex for thread synchronization
+    int status = pthread_mutex_init(&flushProcessWriteBuffersMutex, NULL);
+    if (status != 0)
+    {
+        munmap(s_helperPage, GetVirtualPageSize());
+    }
+
+    return status == 0;
+#else
     // Locking the page ensures that it stays in memory during the two mprotect
     // calls in the FlushProcessWriteBuffers below. If the page was unmapped between
     // those calls, they would not have the expected effect of generating IPI.
@@ -2619,9 +2630,9 @@ InitializeFlushProcessWriteBuffers()
     {
         munlock(s_helperPage, GetVirtualPageSize());
     }
+#endif // TARGET_SUNOS
 
     return status == 0;
-#endif // TARGET_OSX
 }
 
 #define FATAL_ASSERT(e, msg) \
@@ -2652,6 +2663,26 @@ FlushProcessWriteBuffers()
     }
     else if (s_helperPage != 0)
     {
+#ifdef TARGET_SUNOS
+        int status = thr_suspend_allmutators();
+        FATAL_ASSERT(status == 0, "Failed to suspend all mutators");
+
+        // Changing a helper memory page protection from read / write to no access
+        // causes the OS to issue IPI to flush TLBs on all processors. This also
+        // results in flushing the processor buffers.
+        status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_READ | PROT_WRITE);
+        FATAL_ASSERT(status == 0, "Failed to change helper page protection to read / write");
+
+        // Ensure that the page is dirty before we change the protection so that
+        // we prevent the OS from skipping the global TLB flush.
+        InterlockedIncrement(s_helperPage);
+
+        status = mprotect(s_helperPage, GetVirtualPageSize(), PROT_NONE);
+        FATAL_ASSERT(status == 0, "Failed to change helper page protection to no access");
+
+        status = thr_continue_allmutators();
+        FATAL_ASSERT(status == 0, "Failed to continue all mutators");
+#else
         int status = pthread_mutex_lock(&flushProcessWriteBuffersMutex);
         FATAL_ASSERT(status == 0, "Failed to lock the flushProcessWriteBuffersMutex lock");
 
@@ -2670,6 +2701,7 @@ FlushProcessWriteBuffers()
 
         status = pthread_mutex_unlock(&flushProcessWriteBuffersMutex);
         FATAL_ASSERT(status == 0, "Failed to unlock the flushProcessWriteBuffersMutex lock");
+#endif // TARGET_SUNOS
     }
 #ifdef TARGET_OSX
     else

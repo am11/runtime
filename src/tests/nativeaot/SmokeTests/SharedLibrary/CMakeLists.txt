@@ -1,6 +1,8 @@
 project (SharedLibrary)
 include_directories(${INC_PLATFORM_DIR})
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)  # This sets -fPIC for all targets
+
 add_executable (SharedLibraryDriver SharedLibrary.cpp)
 
 if (CLR_CMAKE_TARGET_UNIX)

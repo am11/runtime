@@ -15,14 +15,10 @@ IF /I "%PROCESSOR_ARCHITECTURE%" == "arm64" (
     IF /I "%~1" == "x64" ( SET vcEnvironment=arm64_amd64 )
     IF /I "%~1" == "x86" ( SET vcEnvironment=arm64_x86 )
     IF /I "%~1" == "arm64" ( SET toolsSuffix=arm64 )
-) ELSE IF /I "%PROCESSOR_ARCHITECTURE%" == "amd64" (
+) ELSE (
     SET vcEnvironment=amd64
     IF /I "%~1" == "x86" ( SET vcEnvironment=amd64_x86 )
-    IF /I "%~1" == "arm64" ( SET vcEnvironment=amd64_arm64 )
-) ELSE (
-    SET vcEnvironment=x86
-    IF /I "%~1" == "x64" ( SET vcEnvironment=amd64_x86 )
-    IF /I "%~1" == "arm64" ( SET vcEnvironment=x86_arm64 )
+    IF /I "%~1" == "arm64" ( SET vcEnvironment=amd64_arm64 & toolsSuffix=arm64 )
 )
 
 FOR /F "tokens=*" %%i IN (

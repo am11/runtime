@@ -540,22 +540,10 @@
     <Message Importance="High" Text="[$([System.DateTime]::Now.ToString('HH:mm:ss.ff'))] Restoring all packages..." />
 
     <!-- restore all csproj's with PackageReferences in one pass -->
-    <MSBuild Projects="build.proj"
-             Properties="RestoreProj=%(RestoreProjects.Identity)"
-             Targets="RestorePackage" />
+    <MSBuild Projects="%(RestoreProjects.Identity)"
+             Targets="Restore" />
 
     <Message Importance="High" Text="[$([System.DateTime]::Now.ToString('HH:mm:ss.ff'))] Restoring all packages...Done." />
-  </Target>
-
-  <Import Project="$(RepositoryEngineeringDir)targetingpacks.targets" />
-  <Import Project="$(RepositoryEngineeringDir)codeOptimization.targets" />
-
-  <Target Name="RestorePackage">
-    <PropertyGroup>
-      <_ConfigurationProperties>/p:TargetOS=$(TargetOS) /p:TargetArchitecture=$(TargetArchitecture) /p:Configuration=$(Configuration) /p:CrossBuild=$(CrossBuild)</_ConfigurationProperties>
-      <DotnetRestoreCommand>"$(DotNetTool)" restore $(RestoreProj) $(PackageVersionArg) /p:SetTFMForRestore=true $(_ConfigurationProperties)</DotnetRestoreCommand>
-    </PropertyGroup>
-    <Exec Command="$(DotnetRestoreCommand)"/>
   </Target>
 
   <!-- Override RestorePackages from dir.traversal.targets and do a batch restore -->

@@ -3,10 +3,14 @@
   <PropertyGroup>
     <LibrariesConfiguration>Release</LibrariesConfiguration>
     <InstallV8ForTests>false</InstallV8ForTests>
+    <UseLocalAppHostPack>true</UseLocalAppHostPack>
+    <MicrosoftNetCoreAppFrameworkName>Microsoft.NETCore.App</MicrosoftNetCoreAppFrameworkName>
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)\Common\dir.sdkbuild.props" Condition="'$(UsingMicrosoftNETSdk)' == 'true'"  />
   <Import Project="$(MSBuildThisFileDirectory)\Common\dir.common.props" Condition="'$(UsingMicrosoftNETSdk)' != 'true'"  />
+  <Import Project="$(RepositoryEngineeringDir)targetingpacks.targets" />
+  <Import Project="$(RepositoryEngineeringDir)codeOptimization.targets" />
 
   <PropertyGroup>
     <RunningOnUnix Condition="('$(RunningOnUnix)' == '') And ('$(MSBuildRuntimeType)' == 'Core') And ('$(OS)'!='Windows_NT')">true</RunningOnUnix>

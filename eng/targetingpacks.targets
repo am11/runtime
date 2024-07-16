@@ -80,13 +80,14 @@
                         Crossgen2PackVersion="$(ProductVersion)"
                         Crossgen2RuntimeIdentifiers="linux-musl-x64;linux-x64;win-x64;linux-arm;linux-arm64;linux-musl-arm;linux-musl-arm64;osx-arm64;osx-x64;win-arm64;win-x86;linux-riscv64;linux-musl-riscv64;linux-loongarch64;linux-musl-loongarch64"
                         Condition="'$(UseLocalCrossgen2Pack)' == 'true' and '@(KnownCrossgen2Pack->AnyHaveMetadataValue('TargetFramework', '$(NetCoreAppCurrent)'))' != 'true'" />
-    <KnownAppHostPack Include="$(LocalFrameworkOverrideName)"
+    <_KnownAppHostPack Include="$(LocalFrameworkOverrideName)"
                       ExcludedRuntimeIdentifiers="android"
                       AppHostPackNamePattern="$(LocalFrameworkOverrideName).Host.**RID**"
                       AppHostPackVersion="$(ProductVersion)"
                       AppHostRuntimeIdentifiers="linux-arm;linux-arm64;linux-musl-arm64;linux-musl-x64;linux-x64;osx-x64;rhel.6-x64;tizen.4.0.0-armel;tizen.5.0.0-armel;win-arm64;win-x64;win-x86;linux-musl-arm;osx-arm64;linux-s390x;linux-bionic-arm;linux-bionic-arm64;linux-bionic-x64;linux-bionic-x86;linux-ppc64le;linux-riscv64;linux-musl-riscv64;linux-loongarch64;linux-musl-loongarch64"
                       TargetFramework="$(NetCoreAppCurrent)"
                       Condition="'$(UseLocalAppHostPack)' == 'true' and '@(KnownAppHostPack->AnyHaveMetadataValue('TargetFramework', '$(NetCoreAppCurrent)'))' != 'true'" />
+    <KnownAppHostPack Include="xxx_@(_KnownAppHostPack->Count())" />
   </ItemGroup>
 
   <!-- Simple name references will be resolved from the targeting pack folders and should never be copied to the output. -->

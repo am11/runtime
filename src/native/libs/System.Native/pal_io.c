@@ -371,7 +371,7 @@ int32_t SystemNative_Unlink(const char* path)
 
 int32_t SystemNative_MemfdSupported(void)
 {
-#ifdef MFD_ALLOW_SEALING
+#if HAVE_MEMFD_CREATE
 #ifdef TARGET_LINUX
     struct utsname uts;
     int32_t major, minor;
@@ -396,7 +396,7 @@ int32_t SystemNative_MemfdSupported(void)
 
 intptr_t SystemNative_MemfdCreate(const char* name)
 {
-#ifdef MFD_ALLOW_SEALING
+#if HAVE_MEMFD_CREATE
 #if defined(SHM_NAME_MAX) // macOS
     assert(strlen(name) <= SHM_NAME_MAX);
 #elif defined(PATH_MAX) // other Unixes

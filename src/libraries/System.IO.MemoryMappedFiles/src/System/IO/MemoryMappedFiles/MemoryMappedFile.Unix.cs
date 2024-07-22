@@ -233,7 +233,19 @@ namespace System.IO.MemoryMappedFiles
 
             try
             {
-                if (!Interop.Sys.IsMemfdSupported)
+                if (Interop.Sys.IsMemfdSupported)
+                {
+                    // Add a writeseal for readonly case when eadonly protection requested
+                    if ((protections & Interop.Sys.MemoryMappedProtections.PROT_READ) != 0 &&
+                        (protections & Interop.Sys.MemoryMappedProtections.PROT_WRITE) == 0 &&
+                        // seal write failed
+                        Interop.Sys.Fcntl.SetSealWrite(fd) == -1)
+                    {
+                        fd.Dispose();
+                        throw Interop.GetExceptionForIoErrno(Interop.Sys.GetLastErrorInfo());
+                    }
+                }
+                else
                 {
                     // Unlink the shared memory object immediately so that it'll go away once all handles
                     // to it are closed (as with opened then unlinked files, it'll remain usable via
@@ -251,6 +263,7 @@ namespace System.IO.MemoryMappedFiles
                 if (inheritability == HandleInheritability.Inheritable &&
                     Interop.Sys.Fcntl.SetFD(fd, 0) == -1)
                 {
+                    fd.Dispose();
                     throw Interop.GetExceptionForIoErrno(Interop.Sys.GetLastErrorInfo());
                 }
 

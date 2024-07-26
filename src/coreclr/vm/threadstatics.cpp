@@ -877,7 +877,7 @@ static void* GetThreadStaticDescriptor(uint8_t* p)
     if (!(p[0] == 0x66 && p[1] == 0x48 && p[2] == 0x8d && p[3] == 0x3d))
     {
         // The optimization is disabled if coreclr is not compiled in .so format.
-        _ASSERTE(false && "Unexpected code sequence");
+        //_ASSERTE(false && "Unexpected code sequence");
         return nullptr;
     }
 

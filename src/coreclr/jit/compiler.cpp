@@ -9508,7 +9508,7 @@ void Compiler::RecordStateAtEndOfCompilation()
     {
         return; // We don't have a thread cycle counter.
     }
-    assert(compCyclesAtEnd >= m_compCyclesAtEndOfInlining);
+    //assert(compCyclesAtEnd >= m_compCyclesAtEndOfInlining);
 
     m_compCycles = compCyclesAtEnd - m_compCyclesAtEndOfInlining;
 

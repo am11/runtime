@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // The const int PRARGSZ show up as unused.  Not sure why.
@@ -28,9 +30,7 @@ internal static partial class Interop
         }
 
         // lwp ps(1) information file.  /proc/<pid>/lwp/<lwpid>/lwpsinfo
-        // "unsafe" because it has fixed sized arrays.
-        [StructLayout(LayoutKind.Sequential)]
-        internal unsafe struct @lwpsinfo
+        internal struct @lwpsinfo
         {
             private     int     pr_flag;        /* lwp flags (DEPRECATED; do not use) */
             public      uint    pr_lwpid;       /* lwp id */
@@ -48,19 +48,20 @@ internal static partial class Interop
             private     ushort  pr_pad;
             public      timestruc_t pr_start;   /* lwp start time, from the epoch */
             public      timestruc_t pr_time;    /* usr+sys cpu time for this lwp */
-            private     fixed byte pr_clname[PRCLSZ];   /* scheduling class name */
-            private     fixed byte pr_name[PRFNSZ];     /* name of system lwp */
+            private     ClassNameBuffer pr_clname;   /* scheduling class name */
+            private     NameBuffer pr_name;     /* name of system lwp */
             private     int     pr_onpro;               /* processor which last ran this lwp */
             private     int     pr_bindpro;     /* processor to which lwp is bound */
             private     int     pr_bindpset;    /* processor set to which lwp is bound */
             private     int     pr_lgrp;        /* lwp home lgroup */
-            private     fixed int       pr_filler[4];   /* reserved for future use */
+            private     Pad4       pr_filler;   /* reserved for future use */
+
+            [InlineArray(4)]
+            private struct Pad1 { byte _byte0; }
         }
 
         // process ps(1) information file.  /proc/<pid>/psinfo
-        // "unsafe" because it has fixed sized arrays.
-        [StructLayout(LayoutKind.Sequential)]
-        internal unsafe struct @psinfo
+        internal struct @psinfo
         {
             private     int     pr_flag;        /* process flags (DEPRECATED; do not use) */
             public      int     pr_nlwp;        /* number of active lwps in the process */
@@ -82,22 +83,56 @@ internal static partial class Interop
             public      timestruc_t pr_start;   /* process start time, from the epoch */
             public      timestruc_t pr_time;    /* usr+sys cpu time for this process */
             public      timestruc_t pr_ctime;   /* usr+sys cpu time for reaped children */
-            public      fixed byte pr_fname[PRFNSZ];    /* name of execed file */
-            public      fixed byte pr_psargs[PRARGSZ];  /* initial characters of arg list */
+            public      NameBuffer pr_fname;    /* name of execed file */
+            public      ArgsBuffer pr_psargs;  /* initial characters of arg list */
+
             public      int     pr_wstat;       /* if zombie, the wait() status */
             public      int     pr_argc;        /* initial argument count */
             private     long pr_argv;   /* address of initial argument vector */
             private     long pr_envp;   /* address of initial environment vector */
             private     byte    pr_dmodel;      /* data model of the process */
-            private     fixed byte pr_pad2[3];
+            private     Pad3 pr_pad2;
             public      int     pr_taskid;      /* task id */
             public      int     pr_projid;      /* project id */
             public      int     pr_nzomb;       /* number of zombie lwps in the process */
             public      int     pr_poolid;      /* pool id */
             public      int     pr_zoneid;      /* zone id */
             public      int     pr_contract;    /* process contract */
-            private     fixed int pr_filler[1]; /* reserved for future use */
+            private     Pad1 pr_filler; /* reserved for future use */
             public      lwpsinfo pr_lwp;        /* information for representative lwp */
+
+            [InlineArray(3)]
+            private struct Pad3 { byte _byte0; }
+
+            [InlineArray(1)]
+            private struct Pad1 { byte _byte0; }
+        }
+
+        [InlineArray(PRCLSZ)]
+        internal struct ClassNameBuffer
+        {
+            private byte _byte0;
+
+            [UnscopedRef]
+            public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _byte0, PRCLSZ);
+        }
+
+        [InlineArray(PRFNSZ)]
+        internal struct NameBuffer
+        {
+            private byte _byte0;
+
+            [UnscopedRef]
+            public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _byte0, PRFNSZ);
+        }
+
+        [InlineArray(PRARGSZ)]
+        internal struct ArgsBuffer
+        {
+            private byte _byte0;
+
+            [UnscopedRef]
+            public Span<byte> AsSpan() => MemoryMarshal.CreateSpan(ref _byte0, PRARGSZ);
         }
 
         // Ouput type for TryGetThreadInfoById()

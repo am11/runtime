@@ -11,10 +11,14 @@ namespace System
         {
             get
             {
-                Interop.procfs.ProcessInfo iProcInfo;
-                if (Interop.procfs.TryGetProcessInfoById(ProcessId, out iProcInfo))
+                int size = sizeof(psinfo);
+                Debug.Assert(size <= 1024, "psinfo struct size exceeds 1024 bytes.");
+                Span<byte> buffer = stackalloc byte[size];
+
+                ref psinfo psi = ref MemoryMarshal.AsRef<psinfo>(buffer);
+                if (Interop.procfs.TryReadRawPSInfo(ProcessId, buffer))
                 {
-                    return (long)iProcInfo.ResidentSetSize;
+                    return (long)psi.pr_rssize * 1024;
                 }
                 else
                 {

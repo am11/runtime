@@ -118,13 +118,14 @@ internal static partial class Interop
             internal int Pid;
             internal int ParentPid;
             internal int SessionId;
+            internal int Priority;
+            internal int NiceVal;
             internal nuint VirtualSize;
             internal nuint ResidentSetSize;
             internal Interop.Sys.TimeSpec StartTime;
             internal Interop.Sys.TimeSpec CpuTotalTime; // user+sys
             internal string? Args;
             // add more fields when needed.
-            internal ThreadInfo Lwp1;
         }
 
         internal static string GetInfoFilePathForProcess(int pid) =>

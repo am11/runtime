@@ -147,7 +147,7 @@ namespace System.Diagnostics
             {
                 ProcessId = pid,
                 ProcessName = name,
-                BasePriority = iProcInfo.Lwp1.Priority,
+                BasePriority = iProcInfo.Priority,
                 SessionId = iProcInfo.SessionId,
                 VirtualBytes = (long)iProcInfo.VirtualSize,
                 WorkingSet = (long)iProcInfo.ResidentSetSize,
@@ -162,21 +162,11 @@ namespace System.Diagnostics
                 // Iterate through all thread IDs to load information about each thread
                 IEnumerable<int> tids = EnumerateThreadIds(pid);
 
-                // We already have the first LWP in iiProcInfo.Lwp1
-                ThreadInfo? ti = CreateThreadInfo(ref iProcInfo, ref iProcInfo.Lwp1);
-                if (ti != null)
-                {
-                    pi._threadInfoList.Add(ti);
-                }
-
                 foreach (int tid in tids)
                 {
-                    if (tid == iProcInfo.Lwp1.Tid)
-                    {
-                        continue;
-                    }
-
                     Interop.procfs.ThreadInfo iThrInfo;
+                    ThreadInfo? ti;
+
                     if (!Interop.procfs.TryGetThreadInfoById(pid, tid, out iThrInfo))
                     {
                         continue;

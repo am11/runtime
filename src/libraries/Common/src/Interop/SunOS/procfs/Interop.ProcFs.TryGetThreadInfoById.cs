@@ -13,18 +13,17 @@ internal static partial class Interop
     {
 
         /// <summary>
-        /// Attempts to get status info for the specified Thread ID.
+        /// Attempts to get status info for the specified thread ID.
         /// </summary>
         /// <param name="pid">PID of the process to read status info for.</param>
         /// <param name="tid">TID of the thread to read status info for.</param>
-        /// <param name="result">The pointer to processStatusInfo instance.</param>
+        /// <param name="result">The pointer to ThreadInfo instance.</param>
         /// <returns>
-        /// true if the process status was read; otherwise, false.
+        /// true if the thread info was read; otherwise, false.
         /// </returns>
 
         // ProcessManager.SunOS.cs calls this
         // "unsafe" due to use of fixed-size buffers
-
         internal static unsafe bool TryGetThreadInfoById(int pid, int tid, out ThreadInfo result)
         {
             result = default;
@@ -42,9 +41,16 @@ internal static partial class Interop
                 byte[] buf = br.ReadBytes(size);
                 Marshal.Copy(buf, 0, ptr, size);
 
-                procfs.lwpsinfo lwp = Marshal.PtrToStructure<lwpsinfo>(ptr);
+                procfs.lwpsinfo pr_lwp = Marshal.PtrToStructure<lwpsinfo>(ptr);
 
-                GetThreadInfoFromInternal(ref result, ref lwp);
+                result.Tid      = pr_lwp.pr_lwpid;
+                result.Priority = pr_lwp.pr_pri;
+                result.NiceVal  = (int)pr_lwp.pr_nice;
+                result.Status   = (char)pr_lwp.pr_sname;
+                result.StartTime.TvSec = pr_lwp.pr_start.tv_sec;
+                result.StartTime.TvNsec = pr_lwp.pr_start.tv_nsec;
+                result.CpuTotalTime.TvSec = pr_lwp.pr_time.tv_sec;
+                result.CpuTotalTime.TvNsec = pr_lwp.pr_time.tv_nsec;
 
                 ret = true;
             }

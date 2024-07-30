@@ -126,7 +126,7 @@ namespace System.Diagnostics
         private Interop.procfs.ThreadInfo GetThreadInfo()
         {
             Interop.procfs.ThreadInfo iinfo;
-            if (!Interop.procfs.GetThreadInfoById(_processId, tid: Id, out iinfo))
+            if (!Interop.procfs.TryGetThreadInfoById(_processId, tid: Id, out iinfo))
             {
                 throw new InvalidOperationException(SR.Format(SR.ThreadExited, Id));
             }

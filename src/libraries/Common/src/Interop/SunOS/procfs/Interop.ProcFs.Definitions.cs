@@ -100,7 +100,7 @@ internal static partial class Interop
             public      lwpsinfo pr_lwp;        /* information for representative lwp */
         }
 
-        // Ouput type for GetThreadInfoById()
+        // Ouput type for TryGetThreadInfoById()
         internal struct ThreadInfo
         {
             internal uint Tid;
@@ -112,7 +112,7 @@ internal static partial class Interop
             // add more fields when needed.
         }
 
-        // Ouput type for GetProcessInfoById()
+        // Ouput type for TryGetProcessInfoById()
         internal struct ProcessInfo
         {
             internal int Pid;

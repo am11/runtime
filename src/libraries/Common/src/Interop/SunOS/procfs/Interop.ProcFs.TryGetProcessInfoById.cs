@@ -24,7 +24,7 @@ internal static partial class Interop
         // ProcessManager.SunOS.cs calls this
         // "unsafe" due to use of fixed-size buffers
 
-        internal static unsafe bool GetProcessInfoById(int pid, out ProcessInfo result)
+        internal static unsafe bool TryGetProcessInfoById(int pid, out ProcessInfo result)
         {
             result = default;
             bool ret = false;

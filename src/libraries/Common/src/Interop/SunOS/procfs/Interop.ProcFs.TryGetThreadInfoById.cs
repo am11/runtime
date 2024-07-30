@@ -25,7 +25,7 @@ internal static partial class Interop
         // ProcessManager.SunOS.cs calls this
         // "unsafe" due to use of fixed-size buffers
 
-        internal static unsafe bool GetThreadInfoById(int pid, int tid, out ThreadInfo result)
+        internal static unsafe bool TryGetThreadInfoById(int pid, int tid, out ThreadInfo result)
         {
             result = default;
             bool ret = false;

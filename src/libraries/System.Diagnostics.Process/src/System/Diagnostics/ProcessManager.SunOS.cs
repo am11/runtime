@@ -58,7 +58,7 @@ namespace System.Diagnostics
             // TODO: is there better way to get loaded modules?
 
             Interop.procfs.ProcessInfo iProcInfo;
-            if (Interop.procfs.GetProcessInfoById(processId, out iProcInfo))
+            if (Interop.procfs.TryGetProcessInfoById(processId, out iProcInfo))
             {
                 string fullName = Process.GetUntruncatedProcessName(ref iProcInfo);
                 if (!string.IsNullOrEmpty(fullName))
@@ -81,7 +81,7 @@ namespace System.Diagnostics
             ArgumentOutOfRangeException.ThrowIfNegative(pid);
 
             Interop.procfs.ProcessInfo iProcInfo;
-            if (! Interop.procfs.GetProcessInfoById(pid, out iProcInfo))
+            if (!Interop.procfs.TryGetProcessInfoById(pid, out iProcInfo))
             {
                 return null;
             }
@@ -177,7 +177,7 @@ namespace System.Diagnostics
                     }
 
                     Interop.procfs.ThreadInfo iThrInfo;
-                    if (! Interop.procfs.GetThreadInfoById(pid, tid, out iThrInfo))
+                    if (!Interop.procfs.TryGetThreadInfoById(pid, tid, out iThrInfo))
                     {
                         continue;
                     }

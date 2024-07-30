@@ -12,7 +12,7 @@ namespace System
             get
             {
                 Interop.procfs.ProcessInfo iProcInfo;
-                if (Interop.procfs.GetProcessInfoById(ProcessId, out iProcInfo))
+                if (Interop.procfs.TryGetProcessInfoById(ProcessId, out iProcInfo))
                 {
                     return (long)iProcInfo.ResidentSetSize;
                 }

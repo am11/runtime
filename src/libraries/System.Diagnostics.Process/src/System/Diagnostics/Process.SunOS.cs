@@ -133,7 +133,7 @@ namespace System.Diagnostics
         {
             EnsureState(State.HaveNonExitedId);
             Interop.procfs.ProcessInfo iinfo;
-            if (!Interop.procfs.GetProcessInfoById(_processId, out iinfo))
+            if (!Interop.procfs.TryGetProcessInfoById(_processId, out iinfo))
             {
                 throw new Win32Exception(SR.ProcessInformationUnavailable);
             }

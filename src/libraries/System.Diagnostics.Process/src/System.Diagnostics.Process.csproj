@@ -372,10 +372,10 @@
              Link="Common\Interop\Unix\System.Native\Interop.TimeSpec.cs" />
     <Compile Include="$(CommonPath)Interop\SunOS\procfs\Interop.ProcFs.Definitions.cs"
              Link="Common\Interop\SunOS\procfs\Interop.ProcFs.Definitions.cs" />
-    <Compile Include="$(CommonPath)Interop\SunOS\procfs\Interop.ProcFs.GetProcessInfoById.cs"
-             Link="Common\Interop\SunOS\procfs\Interop.ProcFs.GetProcessInfoById.cs" />
-    <Compile Include="$(CommonPath)Interop\SunOS\procfs\Interop.ProcFs.GetThreadInfoById.cs"
-             Link="Common\Interop\SunOS\procfs\Interop.ProcFs.GetThreadInfoById.cs" />
+    <Compile Include="$(CommonPath)Interop\SunOS\procfs\Interop.ProcFs.TryGetProcessInfoById.cs"
+             Link="Common\Interop\SunOS\procfs\Interop.ProcFs.TryGetProcessInfoById.cs" />
+    <Compile Include="$(CommonPath)Interop\SunOS\procfs\Interop.ProcFs.TryGetThreadInfoById.cs"
+             Link="Common\Interop\SunOS\procfs\Interop.ProcFs.TryGetThreadInfoById.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'ios' or '$(TargetPlatformIdentifier)' == 'tvos'">

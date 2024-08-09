@@ -547,14 +547,12 @@ function load_failing_tests {
 }
 
 function load_excluded_tests {
-    local exclusionFile="${CORE_ROOT}/TestExclusionList.txt"
-
     # Read the exclusion file and populate the excludedTests array
     while IFS=, read -r dllPath reasonMessage; do
         # Extract the directory path from the dllPath and add it to the excludedTests array
         dirPath=$(dirname "$dllPath")
         excludedTests+=("$dirPath")
-    done < "$exclusionFile"
+    done < "${CORE_ROOT}/TestExclusionList.txt"
 }
 
 function load_playlist_tests {

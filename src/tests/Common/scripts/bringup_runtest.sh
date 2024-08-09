@@ -547,7 +547,7 @@ function load_failing_tests {
 }
 
 function load_excluded_tests {
-    local exclusionFile="$(dirname "${CORE_ROOT}")/TestExclusionList.txt"
+    local exclusionFile="${CORE_ROOT}/TestExclusionList.txt"
 
     # Read the exclusion file and populate the excludedTests array
     while IFS=, read -r dllPath reasonMessage; do

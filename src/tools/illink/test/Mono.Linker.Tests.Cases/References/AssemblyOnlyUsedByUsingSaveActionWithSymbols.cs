@@ -12,7 +12,7 @@ namespace Mono.Linker.Tests.Cases.References
 	/// must also be preserved.
 	/// </summary>
 
-	// Add a custom step which sets the assembly action of the test to "save"    
+	// Add a custom step which sets the assembly action of the test to "save"
     [SetupCompileBefore ("SetSaveAction_Symbols.dll", new[] { "Dependencies/CustomMarkHandlerSaveAssembly.cs" },
 		new[] { "illink.dll", "Mono.Cecil.dll", "netstandard.dll" })]
     [SetupLinkerArgument ("--custom-step", "CustomMarkHandlerSaveAssembly,SetSaveAction_Symbols.dll")]

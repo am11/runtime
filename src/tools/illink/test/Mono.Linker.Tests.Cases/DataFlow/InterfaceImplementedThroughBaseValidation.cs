@@ -262,7 +262,7 @@ namespace Mono.Linker.Tests.Cases.DataFlow
 				Call<Struct> ();
 			}
 		}
-		
+
 		class GenericVirtualMethod
 		{
 			interface Interface {

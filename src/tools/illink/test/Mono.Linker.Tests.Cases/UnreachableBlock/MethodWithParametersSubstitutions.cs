@@ -145,7 +145,7 @@ namespace Mono.Linker.Tests.Cases.UnreachableBlock
 			//
 			// This body should propagate 'true' return value but
 			// the current implementation does only simple stack backtracking and does not track any jumps
-			// 
+			//
 			return StaticMethod (arg == 11 ? new object () : new object (), null);
 		}
 

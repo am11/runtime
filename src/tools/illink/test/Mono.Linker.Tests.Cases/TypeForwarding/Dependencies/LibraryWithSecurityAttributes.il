@@ -18,7 +18,7 @@
   {
     .permissionset demand
                = {[Forwarder]System.Security.Permissions.SecurityPermissionAttribute = {property enum [Forwarder]System.Security.Permissions.SecurityPermissionFlag 'Flags' = int32(16383)}}
-    .method public hidebysig instance void 
+    .method public hidebysig instance void
             OnAMethodInNestedClass() cil managed
     {
       .permissionset demand
@@ -29,7 +29,7 @@
       IL_0001:  ret
     } // end of method NestedType::OnAMethodInNestedClass
 
-    .method public hidebysig specialname rtspecialname 
+    .method public hidebysig specialname rtspecialname
             instance void  .ctor() cil managed
     {
       // Code size       8 (0x8)
@@ -42,7 +42,7 @@
 
   } // end of class NestedType
 
-  .method public hidebysig instance void 
+  .method public hidebysig instance void
           OnAMethod() cil managed
   {
     .permissionset demand
@@ -59,7 +59,7 @@
     IL_000e:  ret
   } // end of method LibraryWithSecurityAttributes::OnAMethod
 
-  .method public hidebysig specialname rtspecialname 
+  .method public hidebysig specialname rtspecialname
           instance void  .ctor() cil managed
   {
     // Code size       8 (0x8)

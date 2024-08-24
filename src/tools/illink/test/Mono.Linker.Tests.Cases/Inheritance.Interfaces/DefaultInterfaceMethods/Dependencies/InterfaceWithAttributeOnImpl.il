@@ -7,8 +7,8 @@
 
 .class interface public auto ansi abstract IMyInterface
 {
-	.method public hidebysig newslot virtual 
-		instance void Frob () cil managed 
+	.method public hidebysig newslot virtual
+		instance void Frob () cil managed
 	{
 	    ret
 	}

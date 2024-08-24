@@ -1186,7 +1186,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 				yield return $"Mismatch in generic parameter constraints on {src} of {src.Owner}. Input has constraints?: {src.HasConstraints}, Output has constraints?: {linked.HasConstraints}";
 				yield break;
 			}
-			
+
 			if (!src.HasConstraints)
 				yield break;
 

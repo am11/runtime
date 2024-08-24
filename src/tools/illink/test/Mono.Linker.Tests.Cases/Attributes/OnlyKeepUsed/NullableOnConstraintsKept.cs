@@ -31,7 +31,7 @@ namespace Mono.Linker.Tests.Cases.Attributes.OnlyKeepUsed
 			[Kept]
 			[KeptAttributeAttribute (typeof (NullableContextAttribute))]
 			static T? Method<
-				[KeptGenericParamAttributes (GenericParameterAttributes.ReferenceTypeConstraint)] 
+				[KeptGenericParamAttributes (GenericParameterAttributes.ReferenceTypeConstraint)]
 				[KeptAttributeAttribute (typeof (NullableAttribute))]
 				T
 			> ()

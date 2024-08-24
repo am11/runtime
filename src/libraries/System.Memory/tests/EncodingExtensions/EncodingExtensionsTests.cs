@@ -155,7 +155,7 @@ namespace System.Text.Tests
             ArrayBufferWriter<char> writer = new ArrayBufferWriter<char>();
 
             // First, input with no flushing and no leftover data.
-             
+
             ReadOnlySequence<byte> inputData = SequenceFactory.Create(
                 new byte[] { 0x00, 0x20, 0x61, 0xC2, 0x80, 0xED, 0x9F, 0xBF }).Slice(1);
             EncodingExtensions.Convert(decoder, inputData, writer, flush: false, out long charsUsed, out bool completed);

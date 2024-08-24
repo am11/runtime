@@ -5,7 +5,7 @@
       <!-- IL2030 -->
       <attribute fullname="AttributeTypeName" assembly="NonExistentAssembly1"/>
       <attribute fullname="AttributeTypeName" assembly="MalformedAssemblyName, thisiswrong"/>
-      
+
       <!-- IL2031 -->
       <attribute fullname="NonExistentAttribute"/>
 

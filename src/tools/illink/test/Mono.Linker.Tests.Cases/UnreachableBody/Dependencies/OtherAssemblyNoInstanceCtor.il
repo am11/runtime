@@ -23,7 +23,7 @@
   .class auto ansi nested public beforefieldinit Foo
          extends [mscorlib]System.Object
   {
-    .method public hidebysig instance void 
+    .method public hidebysig instance void
             Method() cil managed
     {
       // Code size       7 (0x7)
@@ -33,7 +33,7 @@
       IL_0006:  ret
     } // end of method Foo::Method
 
-    .method private hidebysig instance void 
+    .method private hidebysig instance void
             UsedByMethod() cil managed
     {
       // Code size       1 (0x1)
@@ -50,7 +50,7 @@
     IL_0000:  ret
   }
 
-  .method public hidebysig specialname rtspecialname 
+  .method public hidebysig specialname rtspecialname
           instance void  .ctor() cil managed
   {
     // Code size       7 (0x7)

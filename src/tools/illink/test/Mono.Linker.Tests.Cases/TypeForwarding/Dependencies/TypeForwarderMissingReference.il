@@ -27,7 +27,7 @@
 .class public auto ansi beforefieldinit DummyClass
        extends [mscorlib]System.Object
 {
-  .method public hidebysig specialname rtspecialname 
+  .method public hidebysig specialname rtspecialname
           instance void  .ctor() cil managed
   {
     IL_0000:  ldarg.0

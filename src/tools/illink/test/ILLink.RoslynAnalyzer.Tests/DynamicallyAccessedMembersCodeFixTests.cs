@@ -329,8 +329,8 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 				source: test,
 				fixedSource: fixtest,
 				baselineExpected: new[] {
-					// /0/Test0.cs(13,3): warning IL2069: value stored in field 'C.f' does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods' requirements. 
-					//The parameter 'type' of method 'C.M(Type)' does not have matching annotations. 
+					// /0/Test0.cs(13,3): warning IL2069: value stored in field 'C.f' does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods' requirements.
+					//The parameter 'type' of method 'C.M(Type)' does not have matching annotations.
 					//The source value must declare at least the same requirements as those declared on the target location it is assigned to.
 						VerifyCS.Diagnostic (DiagnosticId.DynamicallyAccessedMembersMismatchParameterTargetsField)
 						.WithSpan(13, 3, 13, 11)
@@ -401,7 +401,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 			using System;
 			using System.Reflection;
 			using System.Diagnostics.CodeAnalysis;
-			
+
 			class C
 			{
 				public static void Main()
@@ -447,7 +447,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 							"C.M(Type)",
 							"'DynamicallyAccessedMemberTypes.NonPublicMethods'")
 				},
-				fixedExpected: new[] { 
+				fixedExpected: new[] {
 					// /0/Test0.cs(9,3): warning IL2111: Method 'C.M(Type)' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection.
 					// Trimmer can't guarantee availability of the requirements of the method.
 					VerifyCS.Diagnostic (DiagnosticId.DynamicallyAccessedMembersMethodAccessedViaReflection)
@@ -465,7 +465,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 
 			namespace System
 			{
-				static class C 
+				static class C
 				{
 					static void Main(Type t)
 					{
@@ -485,7 +485,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 
 			namespace System
 			{
-				static class C 
+				static class C
 				{
 					static void Main([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
 					{
@@ -771,8 +771,8 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 				source: test,
 				fixedSource: fixtest,
 				baselineExpected: new[] {
-					// /0/Test0.cs(11,10): warning IL2073: 'C.M()' method return value does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods' requirements. 
-					// The return value of method 'C.Main(Type)' does not have matching annotations. 
+					// /0/Test0.cs(11,10): warning IL2073: 'C.M()' method return value does not satisfy 'DynamicallyAccessedMemberTypes.PublicMethods' requirements.
+					// The return value of method 'C.Main(Type)' does not have matching annotations.
 					// The source value must declare at least the same requirements as those declared on the target location it is assigned to.
 					VerifyCS.Diagnostic(DiagnosticId.DynamicallyAccessedMembersMismatchMethodReturnTypeTargetsMethodReturnType)
 						.WithSpan(11, 10, 11, 25)
@@ -920,14 +920,14 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 			var fixtest = $$"""
 			using System;
 			using System.Diagnostics.CodeAnalysis;
-			
+
 			class C
 			{
 				public static void Main()
 				{
 					GetC().GetMethod("Foo");
 				}
-			
+
 			    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 			    private static Type GetC ()
 				{
@@ -1964,12 +1964,12 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 					{
 						new C().M();
 					}
-			
+
 					private void M()
 					{
 						f = this;
 					}
-			
+
 					[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)]
 					private static Type f;
 				}
@@ -2209,14 +2209,14 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 			var test = $$"""
 			using System;
 			using System.Diagnostics.CodeAnalysis;
-			
+
 			class C
 			{
 				public static void Main()
 				{
 					M<int>();
 				}
-			
+
 				[return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
 				private static Type M<T>()
 				{
@@ -2381,10 +2381,10 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 			var test = $$"""
 			using System;
 			using System.Diagnostics.CodeAnalysis;
-			
+
 			class C<T> {
 
-				void M() 
+				void M()
 				{
 					typeof(T).GetMethods();
 				}
@@ -2393,10 +2393,10 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 			var fixtest = $$"""
 			using System;
 			using System.Diagnostics.CodeAnalysis;
-			
+
 			class C<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] T> {
 
-				void M() 
+				void M()
 				{
 					typeof(T).GetMethods();
 				}
@@ -2428,7 +2428,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 
 			class C<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] T> {
 
-				void M() 
+				void M()
 				{
 					typeof(T).GetMethods();
 				}
@@ -2457,7 +2457,7 @@ build_property.{MSBuildPropertyOptionNames.EnableTrimAnalyzer} = true")));
 
 			class C<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.None)] T> {
 
-				void M() 
+				void M()
 				{
 					typeof(T).GetMethods();
 				}

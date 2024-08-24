@@ -12,8 +12,8 @@
     .class interface nested public auto ansi abstract beforefieldinit IBaseUnused
     {
         // Methods
-        .method public hidebysig abstract virtual static 
-            void M () cil managed 
+        .method public hidebysig abstract virtual static
+            void M () cil managed
         {
         } // end of method IBaseUnused::M
 
@@ -22,8 +22,8 @@
     .class interface nested public auto ansi abstract beforefieldinit IBaseUsed
     {
         // Methods
-        .method public hidebysig abstract virtual static 
-            void M () cil managed 
+        .method public hidebysig abstract virtual static
+            void M () cil managed
         {
         } // end of method IBaseUsed::M
 
@@ -34,8 +34,8 @@
                    Program/IBaseUsed
     {
         // Methods
-        .method public hidebysig abstract virtual static 
-            void O () cil managed 
+        .method public hidebysig abstract virtual static
+            void O () cil managed
         {
         } // end of method IMiddleUnused::O
 
@@ -45,8 +45,8 @@
         implements Program/IMiddleUnused
     {
         // Methods
-        .method public hidebysig abstract virtual static 
-            void N () cil managed 
+        .method public hidebysig abstract virtual static
+            void N () cil managed
         {
         } // end of method IDerived::N
 
@@ -57,8 +57,8 @@
         implements Program/IDerived
     {
         // Methods
-        .method public hidebysig static 
-            void M () cil managed 
+        .method public hidebysig static
+            void M () cil managed
         {
             .override method void Program/IBaseUnused::M()
 			.override method void Program/IBaseUsed::M()
@@ -69,8 +69,8 @@
             IL_0000: ret
         } // end of method A::M
 
-        .method public hidebysig static 
-            void N () cil managed 
+        .method public hidebysig static
+            void N () cil managed
         {
             .override method void Program/IDerived::N()
             // Method begins at RVA 0x2083
@@ -80,8 +80,8 @@
             IL_0000: ret
         } // end of method A::N
 
-        .method public hidebysig static 
-            void O () cil managed 
+        .method public hidebysig static
+            void O () cil managed
         {
             .override method void Program/IMiddleUnused::O()
             // Method begins at RVA 0x2083
@@ -91,8 +91,8 @@
             IL_0000: ret
         } // end of method A::O
 
-        .method public hidebysig specialname rtspecialname 
-            instance void .ctor () cil managed 
+        .method public hidebysig specialname rtspecialname
+            instance void .ctor () cil managed
         {
             // Method begins at RVA 0x207b
             // Code size 7 (0x7)
@@ -107,8 +107,8 @@
 
 
     // Methods
-    .method public hidebysig static 
-        void MyTest () cil managed 
+    .method public hidebysig static
+        void MyTest () cil managed
     {
         // Method begins at RVA 0x2050
         // Code size 16 (0x10)
@@ -121,8 +121,8 @@
         IL_0014: ret
     } // end of method Program::MyTest
 
-    .method private hidebysig static 
-        void UseNThroughIDerived<(Program/IDerived) T> () cil managed 
+    .method private hidebysig static
+        void UseNThroughIDerived<(Program/IDerived) T> () cil managed
     {
         .param constraint T, Program/IDerived
             .custom instance void [mscorlib]System.Runtime.CompilerServices.NullableAttribute::.ctor(uint8) = (
@@ -137,8 +137,8 @@
         IL_000b: ret
     } // end of method Program::UseNThroughIDerived
 
-    .method private hidebysig static 
-        void UseMThroughIDerived<(Program/IBaseUsed) T> () cil managed 
+    .method private hidebysig static
+        void UseMThroughIDerived<(Program/IBaseUsed) T> () cil managed
     {
         .param constraint T, Program/IBaseUnused
             .custom instance void [mscorlib]System.Runtime.CompilerServices.NullableAttribute::.ctor(uint8) = (
@@ -153,8 +153,8 @@
         IL_000b: ret
     } // end of method Program::UseMThroughIDerived
 
-    .method public hidebysig specialname rtspecialname 
-        instance void .ctor () cil managed 
+    .method public hidebysig specialname rtspecialname
+        instance void .ctor () cil managed
     {
         // Method begins at RVA 0x207b
         // Code size 7 (0x7)

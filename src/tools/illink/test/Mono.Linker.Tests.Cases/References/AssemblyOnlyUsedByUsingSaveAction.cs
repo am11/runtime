@@ -10,7 +10,7 @@ namespace Mono.Linker.Tests.Cases.References
 	/// When cecil writes the assembly, the unused typeref is not written out.
 	/// </summary>
 
-	// Add a custom step which sets the assembly action of the test to "save"    
+	// Add a custom step which sets the assembly action of the test to "save"
     [SetupCompileBefore ("SetSaveAction.dll", new[] { "Dependencies/CustomMarkHandlerSaveAssembly.cs" },
 		new[] { "illink.dll", "Mono.Cecil.dll", "netstandard.dll" })]
     [SetupLinkerArgument ("--custom-step", "CustomMarkHandlerSaveAssembly,SetSaveAction.dll")]

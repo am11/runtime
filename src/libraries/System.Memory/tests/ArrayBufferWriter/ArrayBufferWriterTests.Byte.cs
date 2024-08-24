@@ -45,7 +45,7 @@ namespace System.Buffers.Tests
             byte expectedFirstByte = transientSpan[0];
 
             memStream.Write(transientSpan.ToArray(), 0, transientSpan.Length);
-            
+
             if (clearContent)
             {
                 expectedFirstByte = 0;
@@ -55,10 +55,10 @@ namespace System.Buffers.Tests
             {
                 output.ResetWrittenCount();
             }
-            
+
             Assert.Equal(expectedFirstByte, transientSpan[0]);
             Assert.Equal(expectedFirstByte, transientMemory.Span[0]);
-            
+
             Assert.Equal(0, output.WrittenCount);
             byte[] streamOutput = memStream.ToArray();
 

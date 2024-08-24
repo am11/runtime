@@ -12,6 +12,6 @@
     <type fullname="Mono.Linker.Tests.Cases.Substitutions.RemoveBody/NestedType">
       <method signature="System.Void .ctor(System.Int32)" body="remove">
       </method>
-    </type>    
+    </type>
   </assembly>
 </linker>

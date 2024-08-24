@@ -24,7 +24,7 @@
         <attribute fullname="Mono.Linker.Tests.Cases.LinkAttributes.TypedArguments/ByteAttribute">
           <argument type="System.Byte">6</argument>
         </attribute>
-      </field>      
+      </field>
       <field name="field5">
         <attribute fullname="Mono.Linker.Tests.Cases.LinkAttributes.TypedArguments/StringAttribute">
           <argument type="System.String">str</argument>

@@ -46,7 +46,7 @@ namespace Mono.Linker.Tests.Cases.Libraries
 	[KeptMemberInAssembly ("optionaldependency.dll", typeof (RootAllLibrary_OptionalDependency), "Use()")]
 	[LogContains ("IL2026:.*SubstitutedProperty.get:.*RequiresUnreferencedCode\\(\\)", regexMatch: true)]
 	[LogContains ("IL2026:.*RemovedBranch\\(\\):.*RootAllLibrary_OptionalDependency.Use\\(\\)", regexMatch: true)]
-	
+
 	// Attributes are kept in copy assemblies, even if the attribute XML has RemoveAttributeInstances.
 	[KeptTypeInAssembly ("removedattribute.dll", typeof (RootAllLibrary_RemovedAttribute))]
 

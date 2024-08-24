@@ -15,7 +15,7 @@ namespace Mono.Linker.Tests.Cases.Substitutions
 	[ExpectedNoWarnings]
 	[SetupCompileBefore ("TestFeatures.dll", new[] { "Dependencies/TestFeatures.cs" })]
 	[SetupCompileResource ("FeatureGuardSubstitutions.xml", "ILLink.Substitutions.xml")]
-	[IgnoreSubstitutions (false)] 
+	[IgnoreSubstitutions (false)]
 #if NATIVEAOT
 	// ILC has different constant propagation behavior than ILLink, and we don't have
 	// the test infrastructure to check for different IL sequences between ILLink/ILC.

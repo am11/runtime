@@ -216,7 +216,7 @@ namespace {TestNamespace}{suiteNamespacePart}
 			// Find already-generated test cases
 			IncrementalValueProvider<TestCases> existingTestCases = existingTestTypes
 				// Find test methods
-				.SelectMany(static (typeSymbol, cancellationToken) => 
+				.SelectMany(static (typeSymbol, cancellationToken) =>
 					FindExistingTestCases(typeSymbol, cancellationToken))
 				.Collect()
 				.Select(static (existingTestCases, cancellationToken) => {
@@ -303,7 +303,7 @@ namespace {TestNamespace}{suiteNamespacePart}
 						continue;
 
 					string typeName = metadataReader.GetString (typeDef.Name);
-					
+
 					// Allow top-level statements with generated Program class
 					bool compilerGeneratedProgramType = false;
 					if (typeName == "Program")  {
@@ -356,7 +356,7 @@ namespace {TestNamespace}{suiteNamespacePart}
 					} else {
 						if (explicitSuiteName != null)
 							throw new InvalidOperationException ($"Suite name should be determined from namespace, but explicit suite '{explicitSuiteName}' was supplied.");
-						suiteName = ns!.Substring (TestCaseAssembly.Length + 1);						
+						suiteName = ns!.Substring (TestCaseAssembly.Length + 1);
 						testName = typeName;
 					}
 

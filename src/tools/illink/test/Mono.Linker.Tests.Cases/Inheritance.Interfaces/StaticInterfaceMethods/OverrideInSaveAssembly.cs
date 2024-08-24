@@ -9,7 +9,7 @@ using Mono.Linker.Tests.Cases.Inheritance.Interfaces.StaticInterfaceMethods.Depe
 namespace Mono.Linker.Tests.Cases.Inheritance.Interfaces.StaticInterfaceMethods
 {
 	[KeptMemberInAssembly ("library", typeof (IStaticAbstractMethods), "Method()", "get_Property()", "Property", "set_Property(System.Int32)")]
-    // Add a custom step which sets the assembly action of the test to "save"    
+    // Add a custom step which sets the assembly action of the test to "save"
     [SetupCompileBefore ("CustomStepSaveAssembly.dll", new[] { "Dependencies/CustomStepSaveAssembly.cs" }, new[] { "illink.dll", "Mono.Cecil.dll", "netstandard.dll" })]
     [SetupLinkerArgument ("--custom-step", "-MarkStep:CustomStepSaveAssembly,CustomStepSaveAssembly.dll")]
 	[SetupCompileBefore ("library.dll", new[] { "Dependencies/Library.cs" })]

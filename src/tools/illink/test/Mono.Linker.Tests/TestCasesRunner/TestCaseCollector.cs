@@ -56,7 +56,7 @@ namespace Mono.Linker.Tests.TestCasesRunner
 		{
 			if (!sourceFile.IsChildOf (_rootDirectory))
 				throw new ArgumentException ($"{sourceFile} is not a child of {_rootDirectory}");
-			
+
 			var current = sourceFile;
 			do {
 				// Find nearest .csproj in the test root source directory

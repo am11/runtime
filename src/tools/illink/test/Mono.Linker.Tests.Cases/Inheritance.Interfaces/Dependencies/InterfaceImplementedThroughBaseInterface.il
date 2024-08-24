@@ -8,8 +8,8 @@
 .class interface public auto ansi abstract beforefieldinit IBase
 {
     // Methods
-    .method public hidebysig newslot abstract virtual 
-        instance void M () cil managed 
+    .method public hidebysig newslot abstract virtual
+        instance void M () cil managed
     {
     } // end of method IBase::M
 
@@ -25,8 +25,8 @@
     implements IDerived
 {
     // Methods
-    .method private final hidebysig newslot virtual 
-        instance void IBase.M () cil managed 
+    .method private final hidebysig newslot virtual
+        instance void IBase.M () cil managed
     {
         .override method instance void IBase::M()
         // Method begins at RVA 0x2050
@@ -36,8 +36,8 @@
         IL_0001: ret
     } // end of method C::IBase.M
 
-    .method public hidebysig specialname rtspecialname 
-        instance void .ctor () cil managed 
+    .method public hidebysig specialname rtspecialname
+        instance void .ctor () cil managed
     {
         // Method begins at RVA 0x2053
         // Code size 8 (0x8)

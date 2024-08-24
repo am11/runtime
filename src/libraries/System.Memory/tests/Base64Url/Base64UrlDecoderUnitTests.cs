@@ -398,7 +398,7 @@ namespace System.Buffers.Text.Tests
         [Theory]
         [InlineData("A", 0, 0)]
         [InlineData("AQ", 0, 0)] // when FinalBlock: false incomplete bytes ignored
-        [InlineData("AQI", 0, 0)] 
+        [InlineData("AQI", 0, 0)]
         [InlineData("AQIDB", 4, 3)]
         [InlineData("AQIDBA", 4, 3)]
         [InlineData("AQIDBAU", 4, 3)]

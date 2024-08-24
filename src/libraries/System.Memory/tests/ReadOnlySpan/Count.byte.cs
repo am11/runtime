@@ -14,7 +14,7 @@ namespace System.SpanTests
         {
             Assert.Equal(0, ReadOnlySpan<byte>.Empty.Count<byte>(0));
         }
-        
+
         [Fact]
         public static void ZeroLengthCount_RosByte()
         {
@@ -23,7 +23,7 @@ namespace System.SpanTests
                 Assert.Equal(0, ReadOnlySpan<byte>.Empty.Count(new byte[i]));
             }
         }
-        
+
         [Fact]
         public static void ZeroLengthNeedleCount_RosByte()
         {
@@ -31,7 +31,7 @@ namespace System.SpanTests
 
             Assert.Equal(0, span.Count<byte>(ReadOnlySpan<byte>.Empty));
         }
-        
+
         [Fact]
         public static void DefaultFilledCount_Byte()
         {
@@ -41,7 +41,7 @@ namespace System.SpanTests
                 Assert.Equal(length, span.Count((byte)0));
             }
         }
-        
+
         [Fact]
         public static void DefaultFilledCount_RosByte()
         {
@@ -51,7 +51,7 @@ namespace System.SpanTests
                 Assert.Equal(length / 2,  span.Count(new byte[2]));
             }
         }
-        
+
         [Fact]
         public static void TestCount_Byte()
         {
@@ -65,7 +65,7 @@ namespace System.SpanTests
                 }
             }
         }
-        
+
         [Fact]
         public static void TestCount_RosByte()
         {
@@ -79,7 +79,7 @@ namespace System.SpanTests
                 }
             }
         }
-        
+
         [Fact]
         public static void TestSingleValueCount_Byte()
         {
@@ -177,7 +177,7 @@ namespace System.SpanTests
                 Assert.Equal(span.Length, span.Count<byte>(5));
             }
         }
-        
+
         [Fact]
         public static void TestAlignmentCount_RosByte()
         {
@@ -212,7 +212,7 @@ namespace System.SpanTests
                 Assert.Equal(2, span.Count<byte>(200));
             }
         }
-        
+
         [Fact]
         public static void TestMultipleCount_RosByte()
         {
@@ -256,7 +256,7 @@ namespace System.SpanTests
                 Assert.Equal(0, span.Count<byte>(new byte[] { 99, 99 }));
             }
         }
-        
+
         [Fact]
         public static void TestOverlapDoNotCount_RosByte()
         {

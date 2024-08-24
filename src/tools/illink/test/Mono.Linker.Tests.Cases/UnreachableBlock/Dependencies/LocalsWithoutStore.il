@@ -27,7 +27,7 @@
     {
       .locals init (object V_0,
           object V_1)
-      ldloc.1 
+      ldloc.1
       stloc.0
       ldnull
       ret

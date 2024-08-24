@@ -16,7 +16,7 @@
 .class public auto ansi beforefieldinit Mono.Linker.Tests.Cases.TestFramework.Dependencies.ILAssemblySample
        extends [mscorlib]System.Object
 {
-  .method public hidebysig specialname rtspecialname 
+  .method public hidebysig specialname rtspecialname
           instance void  .ctor() cil managed
   {
     .maxstack  8
@@ -25,7 +25,7 @@
     IL_0006:  ret
   } // end of method ILAssemblySample::.ctor
 
-  .method public hidebysig instance string 
+  .method public hidebysig instance string
           GiveMeAValue() cil managed
   {
     .maxstack  1

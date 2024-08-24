@@ -4,6 +4,6 @@
 	public class AnotherLibrary<T>
 	{
 		public string Prop { get; set; }
-	}	
+	}
 #endif
 }

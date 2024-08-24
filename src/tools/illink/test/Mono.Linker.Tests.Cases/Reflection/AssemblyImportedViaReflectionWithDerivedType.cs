@@ -20,7 +20,7 @@ namespace Mono.Linker.Tests.Cases.Reflection
 			var res = Type.GetType (newAssemblyType, true);
 
 			// Foo and the reflection assembly both have a class the inherits from the base type.
-			// by using `Method` here and marking the reflection type above, we've introduced a requirement that `Method` be marked on the type in the reflection assembly as well 
+			// by using `Method` here and marking the reflection type above, we've introduced a requirement that `Method` be marked on the type in the reflection assembly as well
 			var obj = new Foo ();
 			var val = obj.Method ();
 		}

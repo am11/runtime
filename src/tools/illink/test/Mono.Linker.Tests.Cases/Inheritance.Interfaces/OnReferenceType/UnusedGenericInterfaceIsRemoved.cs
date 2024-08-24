@@ -41,7 +41,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.Interfaces.OnReferenceType
 
 			// FIXME : This should be removed.  The issue is caused by a combination of
 			// * ShouldMarkInterfaceImplementation only checking if the resolved interface impl type is marked
-			// * We don't track which generic instance types are marked 
+			// * We don't track which generic instance types are marked
 			[Kept]
 			public void Method (string arg)
 			{
@@ -49,7 +49,7 @@ namespace Mono.Linker.Tests.Cases.Inheritance.Interfaces.OnReferenceType
 
 			// FIXME : This should be removed.  The issue is caused by a combination of
 			// * ShouldMarkInterfaceImplementation only checking if the resolved interface impl type is marked
-			// * We don't track which generic instance types are marked 
+			// * We don't track which generic instance types are marked
 			[Kept]
 			public void Method (Bar arg)
 			{

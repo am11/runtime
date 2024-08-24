@@ -16,7 +16,7 @@
 {
   .class interface abstract auto ansi nested public IFoo
   {
-    .method public hidebysig newslot abstract virtual 
+    .method public hidebysig newslot abstract virtual
             instance void  Foo() cil managed
     {
     } // end of method IFoo::Foo
@@ -25,7 +25,7 @@
 
   .class interface abstract auto ansi nested public IBar
   {
-    .method public hidebysig newslot abstract virtual 
+    .method public hidebysig newslot abstract virtual
             instance void  Bar() cil managed
     {
     } // end of method IBar::Bar
@@ -37,7 +37,7 @@
          implements Mono.Linker.Tests.Cases.Inheritance.Interfaces.OnReferenceType.NoInstanceCtor.Dependencies.NoInstanceCtorAndAssemblyPreserveAll_Lib/IBar,
                     Mono.Linker.Tests.Cases.Inheritance.Interfaces.OnReferenceType.NoInstanceCtor.Dependencies.NoInstanceCtorAndAssemblyPreserveAll_Lib/IFoo
   {
-    .method public hidebysig newslot virtual final 
+    .method public hidebysig newslot virtual final
             instance void  Foo() cil managed
     {
       // Code size       1 (0x1)
@@ -45,7 +45,7 @@
       IL_0000:  ret
     } // end of method A::Foo
 
-    .method public hidebysig newslot virtual final 
+    .method public hidebysig newslot virtual final
             instance void  Bar() cil managed
     {
       // Code size       1 (0x1)
@@ -55,7 +55,7 @@
 
   } // end of class A
 
-  .method public hidebysig specialname rtspecialname 
+  .method public hidebysig specialname rtspecialname
           instance void  .ctor() cil managed
   {
     // Code size       7 (0x7)

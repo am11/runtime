@@ -50,10 +50,10 @@
     <PropertyGroup Condition="'$(UsePublishedCrossgen2)' == 'true'">
       <_targetOS>$(TargetOS)</_targetOS>
       <_targetOS Condition="'$(_targetOS)' == 'windows'">win</_targetOS>
-      <_apphostPath Condition="Exists('$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(HostConfiguration)\corehost\apphost$(ExeSuffix)')">$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(HostConfiguration)\corehost\apphost$(ExeSuffix)</_apphostPath>
-      <_apphostPath Condition="'$(_apphostPath)' == '' and Exists('$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(LibrariesConfiguration)\corehost\apphost$(ExeSuffix)')">$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(LibrariesConfiguration)\corehost\apphost$(ExeSuffix)</_apphostPath>
-      <_toolsConfiguration Condition="Exists('$(ArtifactsBinDir)ILLink.Tasks\$(ToolsConfiguration)\$(NetCoreAppToolCurrent)\ILLink.Tasks.dll')">$(ToolsConfiguration)</_toolsConfiguration>
+      <_apphostPath Condition="Exists('$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(LibrariesConfiguration)\corehost\apphost$(ExeSuffix)')">$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(LibrariesConfiguration)\corehost\apphost$(ExeSuffix)</_apphostPath>
+      <_apphostPath Condition="'$(_apphostPath)' == '' and Exists('$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(HostConfiguration)\corehost\apphost$(ExeSuffix)')">$(ArtifactsBinDir)$(_targetOS)-$(TargetArchitecture).$(HostConfiguration)\corehost\apphost$(ExeSuffix)</_apphostPath>
       <_toolsConfiguration Condition="Exists('$(ArtifactsBinDir)ILLink.Tasks\$(LibrariesConfiguration)\$(NetCoreAppToolCurrent)\ILLink.Tasks.dll')">$(LibrariesConfiguration)</_toolsConfiguration>
+      <_toolsConfiguration Condition="'$(_toolsConfiguration)' == '' and Exists('$(ArtifactsBinDir)ILLink.Tasks\$(ToolsConfiguration)\$(NetCoreAppToolCurrent)\ILLink.Tasks.dll')">$(ToolsConfiguration)</_toolsConfiguration>
     </PropertyGroup>
 
     <MakeDir Condition="'$(UsePublishedCrossgen2)' == 'true'" Directories="$(ArtifactsObjDir)coreclr\crossgen2_publish\$(TargetOS).$(TargetArchitecture).$(RuntimeConfiguration)" />

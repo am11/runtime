@@ -1684,7 +1684,7 @@ StepWithCompactEncodingArm64(const libunwindInfo* info, compact_unwind_encoding_
         if (!ReadCompactEncodingRegisterPair(info, &addr, &context->Lr, &context->Fp)) {
             return false;
         }
-        // Strip pointer authentication bits 
+        // Strip pointer authentication bits
         context->Lr &= MACOS_ARM64_POINTER_AUTH_MASK;
     }
     else
@@ -2218,48 +2218,24 @@ get_proc_name(unw_addr_space_t as, unw_word_t addr, char *bufp, size_t buf_len, 
 // Function typedef for unw_get_proc_info_in_range
 typedef int (*unw_get_proc_info_in_range_fn)(unw_word_t start_ip, unw_word_t end_ip, unw_word_t eh_frame_table, unw_word_t eh_frame_table_len, unw_word_t exidx_frame_table, unw_word_t exidx_frame_table_len, unw_addr_space_t as, unw_word_t ip, unw_proc_info_t *pi, int need_unwind_info, void *arg);
 
-// Static variables to cache the function pointer and the library handle
-static unw_get_proc_info_in_range_fn cached_unw_get_proc_info_in_range = NULL;
-static bool has_failed_to_load = false; // Track if loading has failed
-
 // Function to attempt to load unw_get_proc_info_in_range dynamically
-static bool
-TryGet_unw_get_proc_info_in_range()
+static unw_get_proc_info_in_range_fn
+get_unw_get_proc_info_in_range()
 {
-    if (cached_unw_get_proc_info_in_range != NULL) return true;
+    #define STRINGIFY(x) #x
+    #define UPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_U, UNW_TARGET), _), fn))
+    #define ULPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_UL, UNW_TARGET), _), fn))
 
-    // If we already failed to load before, do not retry
-    if (has_failed_to_load) return false;
-
-    void* handle = dlopen("libunwind.so.8", RTLD_LAZY);
+    // Attempt to find the symbol in the global namespace using RTLD_DEFAULT
+    unw_get_proc_info_in_range_fn handle = (unw_get_proc_info_in_range_fn)dlsym(RTLD_DEFAULT, ULPREFIX(get_proc_info_in_range));
     if (!handle)
-    {
-        handle = dlopen("libunwind.so", RTLD_LAZY);
-        if (!handle)
-        {
-            has_failed_to_load = true;
-            return false;
-        }
-    }
+        handle = (unw_get_proc_info_in_range_fn)dlsym(RTLD_DEFAULT, UPREFIX(get_proc_info_in_range));
 
-#define STRINGIFY(x) #x
-#define UPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_U,UNW_TARGET),_), fn))
-#define ULPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_UL,UNW_TARGET),_), fn))
+    #undef STRINGIFY
+    #undef UPREFIX
+    #undef ULPREFIX
 
-    cached_unw_get_proc_info_in_range = (unw_get_proc_info_in_range_fn)dlsym(handle, ULPREFIX(get_proc_info_in_range));
-    if (!cached_unw_get_proc_info_in_range)
-    {
-        cached_unw_get_proc_info_in_range = (unw_get_proc_info_in_range_fn)dlsym(handle, UPREFIX(get_proc_info_in_range));
-        if (!cached_unw_get_proc_info_in_range)
-        {
-            dlclose(handle);
-            handle = NULL;
-            has_failed_to_load = true;
-            return false;
-        }
-    }
-
-    return true;
+    return handle;
 }
 
 #endif
@@ -2380,10 +2356,11 @@ find_proc_info(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t *pip, int nee
     }
 
 #ifdef FEATURE_USE_SYSTEM_LIBUNWIND
-    if (TryGet_unw_get_proc_info_in_range())
+    unw_get_proc_info_in_range_fn proc_info_in_range = get_unw_get_proc_info_in_range();
+    if (proc_info_in_range)
     {
         // If we successfully get the symbol from libunwind (v1.7+), call the function directly
-        return cached_unw_get_proc_info_in_range(start_ip, end_ip, ehFrameHdrAddr, ehFrameHdrLen, exidxFrameHdrAddr, exidxFrameHdrLen, as, ip, pip, need_unwind_info, arg);
+        return proc_info_in_range(start_ip, end_ip, ehFrameHdrAddr, ehFrameHdrLen, exidxFrameHdrAddr, exidxFrameHdrLen, as, ip, pip, need_unwind_info, arg);
     }
 
     if (ehFrameHdrAddr == 0) {

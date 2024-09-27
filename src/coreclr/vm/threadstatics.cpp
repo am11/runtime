@@ -821,30 +821,36 @@ bool CanJITOptimizeTLSAccess()
     // For static resolver, the TP offset is same for all threads.
     // For dynamic resolver, TP offset returned is for the current thread and
     // will be different for the other threads.
-    uint32_t* resolverAddress = reinterpret_cast<uint32_t*>(GetTLSResolverAddress());
-    int ip = 0;
-    if ((resolverAddress[ip] == 0xd503201f) || (resolverAddress[ip] == 0xd503241f))
+    // For single file, the `tls_index` might not be accurate.
+    // Do not perform this optimization in such case.
+    size_t tlsAddress = GetTLSResolverAddress()
+    if (tlsAddress != nullptr)
     {
-        // nop might not be present in older resolver, so skip it.
-
-        // nop or hint 32
-        ip++;
-    }
-
-    if (
-        // ldr x0, [x0, #8]
-        (resolverAddress[ip] == 0xf9400400) &&
-        // ret
-        (resolverAddress[ip + 1] == 0xd65f03c0)
-    )
-    {
-        optimizeThreadStaticAccess = true;
-#ifdef _DEBUG
-        if (CLRConfig::GetConfigValue(CLRConfig::EXTERNAL_AssertNotStaticTlsResolver) != 0)
+        uint32_t* resolverAddress = reinterpret_cast<uint32_t*>(tlsAddress);
+        int ip = 0;
+        if ((resolverAddress[ip] == 0xd503201f) || (resolverAddress[ip] == 0xd503241f))
         {
-            _ASSERTE(!"Detected static resolver in use when not expected");
+            // nop might not be present in older resolver, so skip it.
+
+            // nop or hint 32
+            ip++;
         }
-#endif
+
+        if (
+            // ldr x0, [x0, #8]
+            (resolverAddress[ip] == 0xf9400400) &&
+            // ret
+            (resolverAddress[ip + 1] == 0xd65f03c0)
+        )
+        {
+            optimizeThreadStaticAccess = true;
+    #ifdef _DEBUG
+            if (CLRConfig::GetConfigValue(CLRConfig::EXTERNAL_AssertNotStaticTlsResolver) != 0)
+            {
+                _ASSERTE(!"Detected static resolver in use when not expected");
+            }
+    #endif
+        }
     }
 #elif defined(TARGET_LOONGARCH64)
     // Optimization is enabled for linux/loongarch64 only for static resolver.

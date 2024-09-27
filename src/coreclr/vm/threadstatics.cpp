@@ -851,22 +851,28 @@ bool CanJITOptimizeTLSAccess()
     // For static resolver, the TP offset is same for all threads.
     // For dynamic resolver, TP offset returned is for the current thread and
     // will be different for the other threads.
-    uint32_t* resolverAddress = reinterpret_cast<uint32_t*>(GetTLSResolverAddress());
-
-    if (
-        // ld.d a0, a0, 8
-        (resolverAddress[0] == 0x28c02084) &&
-        // ret
-        (resolverAddress[1] == 0x4c000020)
-    )
+    // For single file, the `tls_index` might not be accurate.
+    // Do not perform this optimization in such case.
+    size_t tlsAddress = GetTLSResolverAddress()
+    if (tlsAddress != nullptr)
     {
-        optimizeThreadStaticAccess = true;
-#ifdef _DEBUG
-        if (CLRConfig::GetConfigValue(CLRConfig::EXTERNAL_AssertNotStaticTlsResolver) != 0)
+        uint32_t* resolverAddress = reinterpret_cast<uint32_t*>(tlsAddress);
+
+        if (
+            // ld.d a0, a0, 8
+            (resolverAddress[0] == 0x28c02084) &&
+            // ret
+            (resolverAddress[1] == 0x4c000020)
+        )
         {
-            _ASSERTE(!"Detected static resolver in use when not expected");
-        }
+            optimizeThreadStaticAccess = true;
+#ifdef _DEBUG
+            if (CLRConfig::GetConfigValue(CLRConfig::EXTERNAL_AssertNotStaticTlsResolver) != 0)
+            {
+                _ASSERTE(!"Detected static resolver in use when not expected");
+            }
 #endif
+        }
     }
 #else
     optimizeThreadStaticAccess = true;

@@ -2213,38 +2213,6 @@ get_proc_name(unw_addr_space_t as, unw_word_t addr, char *bufp, size_t buf_len, 
     return -UNW_ENOINFO;
 }
 
-#ifdef FEATURE_USE_SYSTEM_LIBUNWIND
-
-typedef int (*unw_get_proc_info_in_range_fn)(unw_word_t start_ip, unw_word_t end_ip, unw_word_t eh_frame_table, unw_word_t eh_frame_table_len, unw_word_t exidx_frame_table, unw_word_t exidx_frame_table_len, unw_addr_space_t as, unw_word_t ip, unw_proc_info_t *pi, int need_unwind_info, void *arg);
-
-static unw_get_proc_info_in_range_fn cached_unw_get_proc_info_in_range = NULL;
-static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-
-// Function to initialize the cached function pointer
-static void init_unw_get_proc_info_in_range()
-{
-    #define STRINGIFY(x) #x
-    #define UPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_U, UNW_TARGET), _), fn))
-    #define ULPREFIX(fn) STRINGIFY(UNW_PASTE(UNW_PASTE(UNW_PASTE(_UL, UNW_TARGET), _), fn))
-
-    cached_unw_get_proc_info_in_range = (unw_get_proc_info_in_range_fn)dlsym(RTLD_DEFAULT, ULPREFIX(get_proc_info_in_range));
-    if (!cached_unw_get_proc_info_in_range)
-        cached_unw_get_proc_info_in_range = (unw_get_proc_info_in_range_fn)dlsym(RTLD_DEFAULT, UPREFIX(get_proc_info_in_range));
-
-    #undef STRINGIFY
-    #undef UPREFIX
-    #undef ULPREFIX
-}
-
-// Function to get the cached function pointer
-static unw_get_proc_info_in_range_fn get_unw_get_proc_info_in_range()
-{
-    pthread_once(&once_control, init_unw_get_proc_info_in_range);
-    return cached_unw_get_proc_info_in_range;
-}
-
-#endif
-
 static int
 find_proc_info(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t *pip, int need_unwind_info, void *arg)
 {
@@ -2360,14 +2328,7 @@ find_proc_info(unw_addr_space_t as, unw_word_t ip, unw_proc_info_t *pip, int nee
         }
     }
 
-#ifdef FEATURE_USE_SYSTEM_LIBUNWIND
-    unw_get_proc_info_in_range_fn proc_info_in_range = get_unw_get_proc_info_in_range();
-    if (proc_info_in_range)
-    {
-        // If we successfully get the symbol from libunwind (v1.7+), call the function directly
-        return proc_info_in_range(start_ip, end_ip, ehFrameHdrAddr, ehFrameHdrLen, exidxFrameHdrAddr, exidxFrameHdrLen, as, ip, pip, need_unwind_info, arg);
-    }
-
+#if !HAVE_GET_PROC_INFO_IN_RANGE
     if (ehFrameHdrAddr == 0) {
         ASSERT("ELF: No PT_GNU_EH_FRAME program header\n");
         return -UNW_EINVAL;

@@ -340,7 +340,7 @@ namespace System
                 return current.Build > build;
             }
 
-            return current.Revision > -1 && current.Revision >= revision;
+            return current.Revision < 0 || current.Revision >= revision;
         }
     }
 }

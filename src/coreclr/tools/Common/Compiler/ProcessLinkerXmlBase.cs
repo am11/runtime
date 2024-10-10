@@ -142,6 +142,9 @@ namespace ILCompiler
         {
             foreach (XPathNavigator assemblyNav in nav.SelectChildren("assembly", ""))
             {
+                if (assemblyNav == null || !assemblyNav.HasChildren) 
+                    continue;
+
                 if (!ShouldProcessElement(assemblyNav))
                     continue;
 

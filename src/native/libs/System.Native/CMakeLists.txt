@@ -8,16 +8,6 @@ if (CLR_CMAKE_TARGET_OSX)
     add_definitions(-D_DARWIN_C_SOURCE)
 endif ()
 
-set (MINIPAL_SOURCES "")
-set (SHARED_MINIPAL_SOURCE_PATH "${CLR_SRC_NATIVE_DIR}/minipal")
-
-include(${CLR_SRC_NATIVE_DIR}/minipal/configure.cmake)
-list(APPEND MINIPAL_SOURCES
-    random.c
-)
-
-addprefix(MINIPAL_SOURCES ${SHARED_MINIPAL_SOURCE_PATH} "${MINIPAL_SOURCES}")
-
 set(NATIVE_SOURCES
     pal_errno.c
     pal_interfaceaddresses.c
@@ -33,10 +23,6 @@ set(NATIVE_SOURCES
     pal_time.c
     pal_datetime.c
     pal_sysctl.c
-)
-
-list(APPEND NATIVE_SOURCES
-  ${MINIPAL_SOURCES}
 )
 
 if (NOT CLR_CMAKE_TARGET_WASI)
@@ -126,6 +112,7 @@ if (GEN_SHARED_LIB)
 
     target_link_libraries(System.Native
         PRIVATE
+        minipal
         ${NATIVE_LIBS_EXTRA}
     )
 
@@ -150,6 +137,11 @@ endif()
 add_library(System.Native-Static
     STATIC
     ${NATIVE_SOURCES}
+)
+
+target_link_libraries(System.Native-Static
+    PRIVATE
+    minipal_objects
 )
 
 set_target_properties(System.Native-Static PROPERTIES OUTPUT_NAME System.Native CLEAN_DIRECT_OUTPUT 1)

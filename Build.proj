@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.Build.Traversal">
 
   <ItemGroup>
-    <!-- Subsets are already imported by Directory.Build.props. -->
+    <!-- Subsets are already imported by Directory.Build.props.  -->
     <ProjectReference Include="@(ProjectToBuild)" />
     <!-- Only include tasks.proj during restore and build incrementally via a target. -->
     <ProjectReference Include="$(RepoTasksDir)tasks.proj" Condition="'$(MSBuildRestoreSessionId)' != ''" />

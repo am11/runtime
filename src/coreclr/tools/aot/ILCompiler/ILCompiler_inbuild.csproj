@@ -4,5 +4,6 @@
     <OutputPath>$(RuntimeBinDir)/$(CrossHostArch)/ilc/</OutputPath>
     <RuntimeIdentifier>$(ToolsRID)</RuntimeIdentifier>
   </PropertyGroup>
+
   <Import Project="ILCompiler.props" />
 </Project>

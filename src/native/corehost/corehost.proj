@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(CoreClrProjectRoot)tools/InjectResource/InjectResource.csproj" ReferenceOutputAssembly="false" OutputItemType="InjectResourceTool"/>
+    <ProjectReference Include="$(CoreClrProjectRoot)tools/InjectResource/InjectResource.csproj" ReferenceOutputAssembly="false" OutputItemType="InjectResourceTool" Condition="'$(StageOneBuild)' != 'true'" />
   </ItemGroup>
 
   <Target Name="PrepareSingleFileHostWithEmbeddedDacPrereqs">

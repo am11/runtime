@@ -34,7 +34,7 @@
              Condition="'$(IsRuntimeAndReferenceAssembly)' != 'true'"  />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(GenFacadesForceZeroVersionSeeds)' == 'true'">
+  <ItemGroup Condition="'$(GenFacadesForceZeroVersionSeeds)' == 'true' and '$(StageOneBuild)' != 'true'">
     <PackageReference Include="Microsoft.DotNet.GenFacades"
                       Version="$(MicrosoftDotNetGenFacadesVersion)"
                       PrivateAssets="all"

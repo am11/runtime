@@ -451,15 +451,17 @@ namespace Microsoft.Extensions.Primitives
         [MemberData(nameof(EmptyStringValues))]
         public void DefaultNullOrEmpty_Concat(StringValues stringValues)
         {
-            string[] expected = new[] { "abc", "bcd", "foo" };
-            StringValues expectedStringValues = new StringValues(expected);
+            string[] expectedSource = ["abc", "bcd", "foo"];
+            ReadOnlySpan<string> expected = expectedSource;
+            StringValues expectedStringValues = new StringValues(expectedSource);
             Assert.Equal(expected, StringValues.Concat(stringValues, expectedStringValues));
             Assert.Equal(expected, StringValues.Concat(expectedStringValues, stringValues));
             Assert.Equal(expected, StringValues.Concat((string)null, in expectedStringValues));
             Assert.Equal(expected, StringValues.Concat(in expectedStringValues, (string)null));
 
-            string[] empty = new string[0];
-            StringValues emptyStringValues = new StringValues(empty);
+            string[] emptySource = new string[0];
+            ReadOnlySpan<string> empty = emptySource;
+            StringValues emptyStringValues = new StringValues(emptySource);
             Assert.Equal(empty, StringValues.Concat(stringValues, StringValues.Empty));
             Assert.Equal(empty, StringValues.Concat(StringValues.Empty, stringValues));
             Assert.Equal(empty, StringValues.Concat(stringValues, new StringValues()));
@@ -474,10 +476,10 @@ namespace Microsoft.Extensions.Primitives
         {
             string[] filled = new[] { "abc", "bcd", "foo" };
 
-            string[] expectedPrepended = array.Concat(filled).ToArray();
+            ReadOnlySpan<string> expectedPrepended = array.Concat(filled).ToArray();
             Assert.Equal(expectedPrepended, StringValues.Concat(stringValues, new StringValues(filled)));
 
-            string[] expectedAppended = filled.Concat(array).ToArray();
+            ReadOnlySpan<string> expectedAppended = filled.Concat(array).ToArray();
             Assert.Equal(expectedAppended, StringValues.Concat(new StringValues(filled), stringValues));
 
             StringValues values = stringValues;

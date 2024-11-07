@@ -74,12 +74,6 @@ namespace envvar
 
 static void wait_for_debugger()
 {
-    if (!minipal_can_check_for_native_debugger())
-    {
-        pal::fprintf(stdout, W("Debugger attach is not available on this platform\n"));
-        return;
-    }
-
     bool attached = minipal_is_native_debugger_present();
     if (!attached)
     {

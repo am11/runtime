@@ -265,6 +265,9 @@
     <_outputOS>$(_parseDistroRid.SubString(0, $(_distroRidIndex)))</_outputOS>
     <_outputOS Condition="'$(PortableBuild)' == 'true'">$(_portableOS)</_outputOS>
 
+    <PortableTargetOS>$(_portableOS)</PortableTargetOS>
+    <NonPortableTargetOS>$(_outputOS)</NonPortableTargetOS>
+
     <OutputRID Condition="'$(OutputRID)' == ''">$(_outputOS)-$(TargetArchitecture)</OutputRID>
   </PropertyGroup>
 

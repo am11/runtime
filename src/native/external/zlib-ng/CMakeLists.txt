@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.5.1)
+
+# Set the policy version depending on CMake's version
 if(CMAKE_VERSION VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_VERSION})
 else()
-    cmake_policy(VERSION 3.5.1...3.29.0)
+    cmake_policy(VERSION 3.12)
 endif()
 message(STATUS "Using CMake version ${CMAKE_VERSION}")
 

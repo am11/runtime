@@ -85,8 +85,6 @@ using std::isnan;
 //
 //========================================================================
 
-
-
 //========================================================================
 //
 //      INTEGER ARITHMETIC HELPERS
@@ -127,145 +125,264 @@ HCIMPL2_VV(INT64, JIT_LMul, INT64 val1, INT64 val2)
 HCIMPLEND
 #endif // !TARGET_X86 || TARGET_UNIX
 
-/*********************************************************************/
-HCIMPL2(INT32, JIT_Div, INT32 dividend, INT32 divisor)
-{
-    FCALL_CONTRACT;
+#ifdef TARGET_32BIT
 
-    RuntimeExceptionKind ehKind;
+/*********************************************************************/
+extern "C" INT32 QCALLTYPE DivInt32Internal(INT32 dividend, INT32 divisor)
+{
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    INT32 result = 0;
+
+    BEGIN_QCALL;
 
     if (((UINT32) (divisor + 1)) <= 1)  // Unsigned test for divisor in [-1 .. 0]
     {
         if (divisor == 0)
         {
-            ehKind = kDivideByZeroException;
-            goto ThrowExcep;
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
         }
         else if (divisor == -1)
         {
             if (dividend == INT32_MIN)
             {
-                ehKind = kOverflowException;
-                goto ThrowExcep;
+                COMPlusThrow(kOverflowException);
+                goto END;
             }
-            return -dividend;
+
+            result = -dividend;
+            goto END;
         }
     }
 
-    return(dividend / divisor);
+    result = dividend / divisor;
 
-ThrowExcep:
-    FCThrow(ehKind);
+    END_QCALL;
+
+END:
+    return result;
 }
-HCIMPLEND
 
 /*********************************************************************/
-HCIMPL2(INT32, JIT_Mod, INT32 dividend, INT32 divisor)
+extern "C" UINT32 QCALLTYPE DivUInt32Internal(UINT32 dividend, UINT32 divisor)
 {
-    FCALL_CONTRACT;
-
-    RuntimeExceptionKind ehKind;
-
-    if (((UINT32) (divisor + 1)) <= 1)  // Unsigned test for divisor in [-1 .. 0]
+    CONTRACTL
     {
-        if (divisor == 0)
-        {
-            ehKind = kDivideByZeroException;
-            goto ThrowExcep;
-        }
-        else if (divisor == -1)
-        {
-            if (dividend == INT32_MIN)
-            {
-                ehKind = kOverflowException;
-                goto ThrowExcep;
-            }
-            return 0;
-        }
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    UINT32 result = 0;
+
+    BEGIN_QCALL;
+
+    if (divisor == 0)
+    {
+        COMPlusThrow(kDivideByZeroException);
+        goto END;
     }
 
-    return(dividend % divisor);
+    result = dividend / divisor;
 
-ThrowExcep:
-    FCThrow(ehKind);
+    END_QCALL;
+
+END:
+    return result;
 }
-HCIMPLEND
 
 /*********************************************************************/
-HCIMPL2(UINT32, JIT_UDiv, UINT32 dividend, UINT32 divisor)
+extern "C" INT64 QCALLTYPE DivInt64Internal(INT64 dividend, INT64 divisor)
 {
-    FCALL_CONTRACT;
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
 
-    if (divisor == 0)
-        FCThrow(kDivideByZeroException);
+    INT64 result = 0;
 
-    return(dividend / divisor);
-}
-HCIMPLEND
-
-/*********************************************************************/
-HCIMPL2(UINT32, JIT_UMod, UINT32 dividend, UINT32 divisor)
-{
-    FCALL_CONTRACT;
-
-    if (divisor == 0)
-        FCThrow(kDivideByZeroException);
-
-    return(dividend % divisor);
-}
-HCIMPLEND
-
-/*********************************************************************/
-HCIMPL2_VV(INT64, JIT_LDiv, INT64 dividend, INT64 divisor)
-{
-    FCALL_CONTRACT;
-
-    RuntimeExceptionKind ehKind;
+    BEGIN_QCALL;
 
     if (Is32BitSigned(divisor))
     {
         if ((INT32)divisor == 0)
         {
-            ehKind = kDivideByZeroException;
-            goto ThrowExcep;
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
         }
 
         if ((INT32)divisor == -1)
         {
             if ((UINT64) dividend == UI64(0x8000000000000000))
             {
-                ehKind = kOverflowException;
-                goto ThrowExcep;
+                COMPlusThrow(kOverflowException);
+                goto END;
             }
-            return -dividend;
+
+            result = -dividend;
+            goto END;
         }
 
         // Check for -ive or +ive numbers in the range -2**31 to 2**31
         if (Is32BitSigned(dividend))
-            return((INT32)dividend / (INT32)divisor);
+        {
+            result = (INT32)dividend / (INT32)divisor;
+            goto END;
+        }
     }
 
     // For all other combinations fallback to int64 div.
-    return(dividend / divisor);
+    result = dividend / divisor;
 
-ThrowExcep:
-    FCThrow(ehKind);
+    END_QCALL;
+
+END:
+    return result;
 }
-HCIMPLEND
+
 
 /*********************************************************************/
-HCIMPL2_VV(INT64, JIT_LMod, INT64 dividend, INT64 divisor)
+extern "C" UINT64 QCALLTYPE DivUInt64Internal(UINT64 dividend, UINT64 divisor)
 {
-    FCALL_CONTRACT;
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
 
-    RuntimeExceptionKind ehKind;
+    UINT64 result = 0;
+
+    BEGIN_QCALL;
+
+    if (Hi32Bits(divisor) == 0)
+    {
+        if ((UINT32)(divisor) == 0)
+        {
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
+        }
+
+        if (Hi32Bits(dividend) == 0)
+        {
+            result = (UINT32)dividend / (UINT32)divisor;
+            goto END;
+        }
+    }
+
+    result = dividend / divisor;
+
+    END_QCALL;
+
+END:
+    return result;
+}
+
+/*********************************************************************/
+extern "C" INT32 QCALLTYPE ModInt32Internal(INT32 dividend, INT32 divisor)
+{
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    INT32 result = 0;
+
+    BEGIN_QCALL;
+
+    if (((UINT32) (divisor + 1)) <= 1)  // Unsigned test for divisor in [-1 .. 0]
+    {
+        if (divisor == 0)
+        {
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
+        }
+        else if (divisor == -1)
+        {
+            if (dividend == INT32_MIN)
+            {
+                COMPlusThrow(kOverflowException);
+                goto END;
+            }
+
+            result = 0;
+            goto END;
+        }
+    }
+
+    result = dividend % divisor;
+
+    END_QCALL;
+
+END:
+    return result;
+}
+
+/*********************************************************************/
+extern "C" UINT32 QCALLTYPE ModUInt32Internal(UINT32 dividend, UINT32 divisor)
+{
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    UINT32 result = 0;
+
+    BEGIN_QCALL;
+
+    if (divisor == 0)
+    {
+        COMPlusThrow(kDivideByZeroException);
+        goto END;
+    }
+
+    result = dividend % divisor;
+
+    END_QCALL;
+
+END:
+    return result;
+}
+
+/*********************************************************************/
+extern "C" INT64 QCALLTYPE ModInt64Internal(INT64 dividend, INT64 divisor)
+{
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    INT64 result = 0;
+
+    BEGIN_QCALL;
 
     if (Is32BitSigned(divisor))
     {
         if ((INT32)divisor == 0)
         {
-            ehKind = kDivideByZeroException;
-            goto ThrowExcep;
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
         }
 
         if ((INT32)divisor == -1)
@@ -274,60 +391,67 @@ HCIMPL2_VV(INT64, JIT_LMod, INT64 dividend, INT64 divisor)
             // and the spec really says that it should not throw an exception. </TODO>
             if ((UINT64) dividend == UI64(0x8000000000000000))
             {
-                ehKind = kOverflowException;
-                goto ThrowExcep;
+                COMPlusThrow(kOverflowException);
             }
-            return 0;
+
+            goto END;
         }
 
         // Check for -ive or +ive numbers in the range -2**31 to 2**31
         if (Is32BitSigned(dividend))
-            return((INT32)dividend % (INT32)divisor);
+        {
+            result = (INT32)dividend % (INT32)divisor;
+            goto END;
+        }
     }
 
-    // For all other combinations fallback to int64 div.
-    return(dividend % divisor);
+    result = dividend % divisor;
 
-ThrowExcep:
-    FCThrow(ehKind);
+    END_QCALL;
+
+END:
+    return result;
 }
-HCIMPLEND
 
 /*********************************************************************/
-HCIMPL2_VV(UINT64, JIT_ULDiv, UINT64 dividend, UINT64 divisor)
+extern "C" UINT64 QCALLTYPE ModUInt64Internal(UINT64 dividend, UINT64 divisor)
 {
-    FCALL_CONTRACT;
+    CONTRACTL
+    {
+        THROWS;
+        GC_TRIGGERS;
+        MODE_COOPERATIVE;
+    }
+    CONTRACTL_END;
+
+    UINT64 result = 0;
+
+    BEGIN_QCALL;
 
     if (Hi32Bits(divisor) == 0)
     {
         if ((UINT32)(divisor) == 0)
-        FCThrow(kDivideByZeroException);
+        {
+            COMPlusThrow(kDivideByZeroException);
+            goto END;
+        }
 
         if (Hi32Bits(dividend) == 0)
-            return((UINT32)dividend / (UINT32)divisor);
+        {
+            result = (UINT32)dividend % (UINT32)divisor;
+            goto END;
+        }
     }
 
-    return(dividend / divisor);
+    result = dividend % divisor;
+
+    END_QCALL;
+
+END:
+    return result;
 }
-HCIMPLEND
 
-/*********************************************************************/
-HCIMPL2_VV(UINT64, JIT_ULMod, UINT64 dividend, UINT64 divisor)
-{
-    FCALL_CONTRACT;
-
-    if (Hi32Bits(divisor) == 0)
-    {
-        if ((UINT32)(divisor) == 0)
-        FCThrow(kDivideByZeroException);
-
-        if (Hi32Bits(dividend) == 0)
-            return((UINT32)dividend % (UINT32)divisor);
-    }
-
-    return(dividend % divisor);
-}
-HCIMPLEND
+#endif // TARGET_32BIT
 
 #if !defined(HOST_64BIT) && !defined(TARGET_X86)
 /*********************************************************************/

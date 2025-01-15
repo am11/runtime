@@ -6,6 +6,15 @@
 #include "AsmOffsets.inc"
 
 .global RhpTrapThreads
+.global TLSCheckInitialized
+.global IsTLSNative
+
+//
+// TLS Support Cache
+//
+.data
+TLSCheckInitialized: .word 0  // 0 = not initialized, 1 = initialized
+IsTLSNative:         .word 0  // 0 = emulated, 1 = native
 
 //
 // RhpPInvoke
@@ -25,20 +34,36 @@ NESTED_ENTRY RhpPInvoke, _TEXT, NoHandler
         mov     x9, #PTFF_SAVE_SP
         str     x9, [x0, #OFFSETOF__PInvokeTransitionFrame__m_Flags]
 
-        // get TLS global variable address
+        // Check if TLS support determination has been done
+        ldr     w9, TLSCheckInitialized
+        cbnz    w9, 1f  // If initialized, skip to cached handling
 
-#ifdef FEATURE_EMULATED_TLS
-        GETTHREAD_ETLS_1
-#else
+        // Determine if native TLS is supported
+        bl      CheckTLSNative  // Call runtime helper to check TLS type
+        mov     w9, #1          // Mark TLS check as initialized
+        str     w9, TLSCheckInitialized
+1:
+        // Load cached TLS type
+        ldr     w9, IsTLSNative
+        cbz     w9, UseEmulatedTLS  // If 0, use emulated TLS
+
+        // Native TLS path
         INLINE_GETTHREAD x1
-#endif
+        b       Continue
 
+UseEmulatedTLS:
+        GETTHREAD_ETLS_1  // Use emulated TLS logic
+
+Continue:
         str     x1, [x0, #OFFSETOF__PInvokeTransitionFrame__m_pThread]
         str     x0, [x1, #OFFSETOF__Thread__m_pTransitionFrame]
         ret
 NESTED_END RhpPInvoke, _TEXT
 
 
+//
+// RhpPInvokeReturn
+//
 LEAF_ENTRY RhpPInvokeReturn, _TEXT
         ldr         x9, [x0, #OFFSETOF__PInvokeTransitionFrame__m_pThread]
         mov         x10, 0
@@ -49,7 +74,32 @@ LEAF_ENTRY RhpPInvokeReturn, _TEXT
         cbnz    w9, 0f  // TrapThreadsFlags_None = 0
         ret
 0:
-        // passing transition frame pointer in x0
+        // Passing transition frame pointer in x0
         b         C_FUNC(RhpWaitForGC2)
 LEAF_END RhpPInvokeReturn, _TEXT
 
+
+//
+// CheckTLSNative
+// Determines if native TLS is supported at runtime.
+//
+LEAF_ENTRY CheckTLSNative, _TEXT
+        // Platform-specific check for native TLS support
+        // Example: Check a system feature, hardware flag, or OS capability
+
+        // Assume result of check in w0:
+        // w0 = 1 -> native TLS supported
+        // w0 = 0 -> use emulated TLS
+
+        cbz     w0, 0f          // If not supported, fall through
+
+        // Cache result as native
+        mov     w9, #1
+        str     w9, IsTLSNative
+        ret
+
+0:      // Cache result as emulated
+        mov     w9, #0
+        str     w9, IsTLSNative
+        ret
+LEAF_END CheckTLSNative, _TEXT

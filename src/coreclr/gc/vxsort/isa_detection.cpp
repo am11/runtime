@@ -6,31 +6,8 @@
 
 #include <minipal/cpufeatures.h>
 
-enum class SupportedISA
-{
-    None = 0,
-    AVX2 = 1 << (int)InstructionSet::AVX2,
-    AVX512F = 1 << (int)InstructionSet::AVX512F
-};
-
-SupportedISA DetermineSupportedISA()
-{
-    int cpuFeatures = minipal_getcpufeatures();
-    if ((cpuFeatures & XArchIntrinsicConstants_Avx2) != 0)
-    {
-        if ((cpuFeatures & XArchIntrinsicConstants_Avx512) != 0)
-            return (SupportedISA)((int)SupportedISA::AVX2 | (int)SupportedISA::AVX512F);
-        else
-            return SupportedISA::AVX2;
-    }
-    else
-    {
-        return SupportedISA::None;
-    }
-}
-
 static bool s_initialized;
-static SupportedISA s_supportedISA;
+static int s_supportedISA;
 
 bool IsSupportedInstructionSet (InstructionSet instructionSet)
 {
@@ -41,10 +18,22 @@ bool IsSupportedInstructionSet (InstructionSet instructionSet)
 
 void InitSupportedInstructionSet (int32_t configSetting)
 {
-    s_supportedISA = (SupportedISA)((int)DetermineSupportedISA() & configSetting);
-    // we are assuming that AVX2 can be used if AVX512F can,
-    // so if AVX2 is disabled, we need to disable AVX512F as well
-    if (!((int)s_supportedISA & (int)SupportedISA::AVX2))
-        s_supportedISA = SupportedISA::None;
+    int cpuFeatures = minipal_getcpufeatures();
+    int determinedISA = 0;
+
+    if ((cpuFeatures & XArchIntrinsicConstants_Avx2) != 0)
+    {
+        if ((cpuFeatures & XArchIntrinsicConstants_Avx512) != 0)
+            determinedISA = (1 << (int)InstructionSet::AVX2) | (1 << (int)InstructionSet::AVX512F);
+        else
+            determinedISA = (1 << (int)InstructionSet::AVX2);
+    }
+
+    s_supportedISA = determinedISA & configSetting;
+
+    // If AVX2 is disabled, disable AVX512F as well
+    if (!(s_supportedISA & (1 << (int)InstructionSet::AVX2)))
+        s_supportedISA = 0;
+
     s_initialized = true;
 }

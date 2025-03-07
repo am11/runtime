@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <AssemblyName>ilc</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -12,11 +12,11 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <Configurations>Debug;Release;Checked</Configurations>
-    <UseLocalTargetingRuntimePack Condition="'$(StageTwoBuild)' == 'true'">true</UseLocalTargetingRuntimePack>
+    <UseLocalTargetingRuntimePack Condition="'$(StageTwoBuild)' == 'true' and '$(MSBuildProjectName)' != 'ILCompiler_inbuild'">true</UseLocalTargetingRuntimePack>
   </PropertyGroup>
 
   <Import Project="../AotCompilerCommon.props" />
-  <Import Project="$(RepositoryEngineeringDir)targetingpacks.targets" Condition="'$(StageTwoBuild)' == 'true'" />
+  <Import Project="$(RepositoryEngineeringDir)targetingpacks.targets" Condition="'$(StageTwoBuild)' == 'true' and '$(MSBuildProjectName)' != 'ILCompiler_inbuild'" />
 
   <PropertyGroup>
     <SelfContained>true</SelfContained>

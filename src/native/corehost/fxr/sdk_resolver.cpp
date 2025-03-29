@@ -330,38 +330,33 @@ bool sdk_resolver::parse_global_file(pal::string_t global_file_path)
         return false;
     }
 
-    const auto& sdk = json.document().FindMember(_X("sdk"));
-    if (sdk == json.document().MemberEnd() || sdk->value.IsNull())
+    auto sdk_obj = json.document()[_X("sdk")].get_object();
+    if (sdk_obj.begin() == sdk_obj.end() || sdk_obj[_X("version")].is_null())
     {
         // Missing SDK is treated as success (use default resolver)
         trace::verbose(_X("Value 'sdk' is missing or null in [%s]"), global_file_path.c_str());
         return true;
     }
 
-    if (!sdk->value.IsObject())
-    {
-        trace::warning(_X("Expected a JSON object for the 'sdk' value in [%s]"), global_file_path.c_str());
-        return false;
-    }
-
-    const auto& version_value = sdk->value.FindMember(_X("version"));
-    if (version_value == sdk->value.MemberEnd() || version_value->value.IsNull())
+    auto version_value = sdk_obj[_X("version")];
+    if (version_value.is_null())
     {
         trace::verbose(_X("Value 'sdk/version' is missing or null in [%s]"), global_file_path.c_str());
     }
     else
     {
-        if (!version_value->value.IsString())
+        if (!version_value.is_string())
         {
             trace::warning(_X("Expected a string for the 'sdk/version' value in [%s]"), global_file_path.c_str());
             return false;
         }
 
-        if (!fx_ver_t::parse(version_value->value.GetString(), &requested_version, false))
+        const char* version_str = version_value.get_string().value().data();
+        if (!fx_ver_t::parse(version_str, &requested_version, false))
         {
             trace::warning(
                 _X("Version '%s' is not valid for the 'sdk/version' value in [%s]"),
-                version_value->value.GetString(),
+                version_str,
                 global_file_path.c_str()
             );
             return false;
@@ -371,25 +366,26 @@ bool sdk_resolver::parse_global_file(pal::string_t global_file_path)
         roll_forward = sdk_roll_forward_policy::patch;
     }
 
-    const auto& roll_forward_value = sdk->value.FindMember(_X("rollForward"));
-    if (roll_forward_value == sdk->value.MemberEnd() || roll_forward_value->value.IsNull())
+    auto roll_forward_value = sdk_obj[_X("rollForward")];
+    if (roll_forward_value.is_null())
     {
         trace::verbose(_X("Value 'sdk/rollForward' is missing or null in [%s]"), global_file_path.c_str());
     }
     else
     {
-        if (!roll_forward_value->value.IsString())
+        if (!roll_forward_value.is_string())
         {
             trace::warning(_X("Expected a string for the 'sdk/rollForward' value in [%s]"), global_file_path.c_str());
             return false;
         }
 
-        roll_forward = to_policy(roll_forward_value->value.GetString());
+        const char* roll_forward_str = roll_forward_value.get_string().value().data();
+        roll_forward = to_policy(roll_forward_str);
         if (roll_forward == sdk_roll_forward_policy::unsupported)
         {
             trace::warning(
                 _X("The roll-forward policy '%s' is not supported for the 'sdk/rollForward' value in [%s]"),
-                roll_forward_value->value.GetString(),
+                roll_forward_str,
                 global_file_path.c_str()
             );
             return false;
@@ -400,27 +396,27 @@ bool sdk_resolver::parse_global_file(pal::string_t global_file_path)
         {
             trace::warning(
                 _X("The roll-forward policy '%s' requires a 'sdk/version' value in [%s]"),
-                roll_forward_value->value.GetString(),
+                roll_forward_str,
                 global_file_path.c_str()
             );
             return false;
         }
     }
 
-    const auto& allow_prerelease_value = sdk->value.FindMember(_X("allowPrerelease"));
-    if (allow_prerelease_value == sdk->value.MemberEnd() || allow_prerelease_value->value.IsNull())
+    auto allow_prerelease_value = sdk_obj[_X("allowPrerelease")];
+    if (allow_prerelease_value.is_null())
     {
         trace::verbose(_X("Value 'sdk/allowPrerelease' is missing or null in [%s]"), global_file_path.c_str());
     }
     else
     {
-        if (!allow_prerelease_value->value.IsBool())
+        if (!allow_prerelease_value.is_bool())
         {
             trace::warning(_X("Expected a boolean for the 'sdk/allowPrerelease' value in [%s]"), global_file_path.c_str());
             return false;
         }
 
-        allow_prerelease = allow_prerelease_value->value.GetBool();
+        allow_prerelease = allow_prerelease_value.get_bool().value();
 
         if (!allow_prerelease && requested_version.is_prerelease())
         {
@@ -429,41 +425,42 @@ bool sdk_resolver::parse_global_file(pal::string_t global_file_path)
         }
     }
 
-    const auto& paths_value = sdk->value.FindMember(_X("paths"));
-    if (paths_value != sdk->value.MemberEnd() && !paths_value->value.IsNull())
+    auto paths_value = sdk_obj[_X("paths")];
+    if (!paths_value.is_null())
     {
-        if (!paths_value->value.IsArray())
+        if (!paths_value.is_array())
         {
             trace::warning(_X("Expected an array for 'sdk/paths' value in [%s]"), global_file_path.c_str());
             return false;
         }
 
         has_custom_paths = true;
-        const auto& paths_array = paths_value->value.GetArray();
-        paths.reserve(paths_array.Size());
-        for (uint32_t i = 0; i < paths_array.Size(); ++i)
+        const auto& paths_array = paths_value.get_array().value();
+        paths.reserve(paths_array.size());
+        for (uint32_t i = 0; i < paths_array.size(); ++i)
         {
-            const auto& path = paths_array[i];
-            if (!path.IsString())
+            auto path = paths_array.at(i);
+            if (!path.is_string())
             {
                 trace::warning(_X("Ignoring non-string 'sdk/paths[%u]' value in [%s]"), i, global_file_path.c_str());
                 continue;
             }
 
-            paths.push_back(path.GetString());
+            const char* path_str = path.get_string().value().data();
+            paths.push_back(path_str);
         }
     }
 
-    const auto& error_message_value = sdk->value.FindMember(_X("errorMessage"));
-    if (error_message_value != sdk->value.MemberEnd() && !error_message_value->value.IsNull())
+    auto error_message_value = sdk_obj[_X("errorMessage")];
+    if (!error_message_value.is_null())
     {
-        if (!error_message_value->value.IsString())
+        if (!error_message_value.is_string())
         {
             trace::warning(_X("Expected a string for the 'sdk/errorMessage' value in [%s]"), global_file_path.c_str());
             return false;
         }
 
-        error_message = error_message_value->value.GetString();
+        error_message = error_message_value.get_string().value().data();
     }
 
     global_file = std::move(global_file_path);

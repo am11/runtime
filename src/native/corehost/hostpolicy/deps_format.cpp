@@ -20,15 +20,15 @@ const std::array<const pal::char_t*, deps_entry_t::asset_types::count> deps_entr
 namespace
 {
     pal::string_t get_optional_property(
-        const json_parser_t::value_t& properties,
+        const simdjson::dom::element& properties,
         const pal::string_t& key)
     {
-        const auto& prop = properties.FindMember(key.c_str());
-        return (prop != properties.MemberEnd() && prop->value.IsString()) ? prop->value.GetString() : _X("");
+        auto prop = properties[key.c_str()];
+        return (!prop.error() && !prop.get_string().error()) ? std::string(prop.get_string().value()) : _X("");
     }
 
     pal::string_t get_optional_path(
-        const json_parser_t::value_t& properties,
+        const simdjson::dom::element& properties,
         const pal::string_t& key)
     {
         pal::string_t path = get_optional_property(properties, key);
@@ -41,19 +41,36 @@ namespace
         return path;
     }
 
-    void populate_rid_fallback_graph(const json_parser_t::value_t& json, deps_json_t::rid_fallback_graph_t& rid_fallback_graph)
+    void populate_rid_fallback_graph(const simdjson::dom::element& json, deps_json_t::rid_fallback_graph_t& rid_fallback_graph)
     {
-        const auto& json_object = json.GetObject();
-        if (json_object.HasMember(_X("runtimes")))
+        if (!json.is_object())
+            return;
+
+        auto runtimes_elem = json.at_pointer(_X("/runtimes"));
+        if (runtimes_elem.error() || !runtimes_elem.is_object())
+            return;
+
+        if (runtimes_elem.begin() != runtimes_elem.end())
         {
-            for (const auto& rid : json[_X("runtimes")].GetObject())
+            auto runtimes_obj = runtimes_elem.get_object();
+            if (!runtimes_obj.error())
             {
-                auto& vec = rid_fallback_graph[rid.name.GetString()];
-                const auto& fallback_array = rid.value.GetArray();
-                vec.reserve(fallback_array.Size());
-                for (const auto& fallback : fallback_array)
+                for (auto rid : runtimes_obj)
                 {
-                    vec.push_back(fallback.GetString());
+                    auto& vec = rid_fallback_graph[std::string(rid.key)];
+                    simdjson::dom::array fallback_array;
+                    if (rid.value.get_array().get(fallback_array) == simdjson::SUCCESS)
+                    {
+                        vec.reserve(fallback_array.size());
+                        for (auto fallback : fallback_array)
+                        {
+                            auto fallback_str = fallback.get_string();
+                            if (!fallback_str.error())
+                            {
+                                vec.push_back(std::string(fallback_str.value()));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -102,36 +119,41 @@ deps_json_t::rid_fallback_graph_t deps_json_t::get_rid_fallback_graph(const pal:
 }
 
 void deps_json_t::reconcile_libraries_with_targets(
-    const json_parser_t::value_t& json,
+    const simdjson::dom::element& json,
     const std::function<bool(const pal::string_t&)>& library_has_assets_fn,
     const std::function<const vec_asset_t&(const pal::string_t&, size_t, bool*)>& get_assets_fn)
 {
     pal::string_t deps_file = get_filename(m_deps_file);
 
-    for (const auto& library : json[_X("libraries")].GetObject())
-    {
-        trace::info(_X("Reconciling library %s"), library.name.GetString());
+    simdjson::dom::object libraries;
+    if (json[_X("libraries")].get_object().get(libraries) != simdjson::SUCCESS)
+        return;
 
-        pal::string_t lib_name{library.name.GetString()};
+    for (auto library : libraries)
+    {
+        trace::info(_X("Reconciling library %s"), library.key.data());
+
+        pal::string_t lib_name{library.key.data()};
         if (!library_has_assets_fn(lib_name))
         {
-            trace::info(_X("  No assets for library %s"), library.name.GetString());
+            trace::info(_X("  No assets for library %s"), library.key.data());
             continue;
         }
 
-        const pal::string_t& hash = library.value[_X("sha512")].GetString();
-        bool serviceable = library.value[_X("serviceable")].GetBool();
+        pal::string_t hash = get_optional_property(library.value, _X("sha512"));
+        bool serviceable = library.value[_X("serviceable")].get_bool().value();
 
         pal::string_t library_path = get_optional_path(library.value, _X("path"));
         pal::string_t library_hash_path = get_optional_path(library.value, _X("hashPath"));
         pal::string_t runtime_store_manifest_list = get_optional_path(library.value, _X("runtimeStoreManifestName"));
-        pal::string_t library_type = to_lower(library.value[_X("type")].GetString());
+        pal::string_t library_type = to_lower(library.value[_X("type")].get_string().value().data());
 
         size_t pos = lib_name.find(_X("/"));
         pal::string_t library_name = lib_name.substr(0, pos);
         pal::string_t library_version = lib_name.substr(pos + 1);
 
         trace::info(_X("  %s: %s, version: %s"), library_type.c_str(), library_name.c_str(), library_version.c_str());
+
         for (size_t i = 0; i < deps_entry_t::s_known_asset_types.size(); ++i)
         {
             bool rid_specific = false;
@@ -141,6 +163,7 @@ void deps_json_t::reconcile_libraries_with_targets(
 
             trace::info(_X("  Adding %s assets"), deps_entry_t::s_known_asset_types[i]);
             m_deps_entries[i].reserve(assets.size());
+
             for (const auto& asset : assets)
             {
                 auto asset_name = asset.name;
@@ -379,60 +402,83 @@ void deps_json_t::perform_rid_fallback(rid_specific_assets_t* portable_assets)
     }
 }
 
-void deps_json_t::process_runtime_targets(const json_parser_t::value_t& json, const pal::string_t& target_name, rid_specific_assets_t* p_assets)
+void deps_json_t::process_runtime_targets(const simdjson::dom::element& json, const pal::string_t& target_name, rid_specific_assets_t* p_assets)
 {
     rid_specific_assets_t& assets = *p_assets;
-    for (const auto& package : json[_X("targets")][target_name.c_str()].GetObject())
+
+    auto targets = json[_X("targets")].get_object();
+    if (targets.error())
+        return;
+
+    auto target_it = targets[target_name].get_object();
+    if (target_it.error() || target_it.begin() == target_it.end())
+        return;
+
+    simdjson::dom::object target_packages = target_it.value();
+    for (auto package : target_packages)
     {
-        const auto& runtimeTargets = package.value.FindMember(_X("runtimeTargets"));
-        if (runtimeTargets == package.value.MemberEnd())
-        {
+        auto package_obj = package.value.get_object();
+        if (package_obj.error())
             continue;
-        }
 
-        trace::info(_X("Processing runtimeTargets for package %s"), package.name.GetString());
+        auto runtime_targets_it = package_obj[_X("runtimeTargets")];
+        if (runtime_targets_it.error() || package_obj.begin() == package_obj.end())
+            continue;
 
-        for (const auto& file : runtimeTargets->value.GetObject())
+        trace::info(_X("Processing runtimeTargets for package %s"), package.key.data());
+
+        auto runtime_targets = runtime_targets_it.value().get_object();
+        for (auto file : runtime_targets)
         {
-            const auto& type = file.value[_X("assetType")].GetString();
+            auto file_obj = file.value.get_object();
+            if (file_obj.error())
+                continue;
+
+            auto type_it = file_obj[_X("assetType")];
+            if (type_it.error() || type_it.begin() == type_it.end() || !type_it.is_string())
+                continue;
+
+            const auto& type = type_it.get_string().value().data();
 
             for (size_t asset_type_index = 0; asset_type_index < deps_entry_t::s_known_asset_types.size(); ++asset_type_index)
             {
                 if (pal::strcasecmp(type, deps_entry_t::s_known_asset_types[asset_type_index]) != 0)
-                {
                     continue;
-                }
 
                 version_t assembly_version, file_version;
 
-                const pal::string_t& assembly_version_str = get_optional_property(file.value, _X("assemblyVersion"));
+                const pal::string_t assembly_version_str = get_optional_property(file.value, _X("assemblyVersion"));
                 if (!assembly_version_str.empty())
                 {
                     version_t::parse(assembly_version_str, &assembly_version);
                 }
 
-                const pal::string_t& file_version_str = get_optional_property(file.value, _X("fileVersion"));
+                const pal::string_t file_version_str = get_optional_property(file.value, _X("fileVersion"));
                 if (!file_version_str.empty())
                 {
                     version_t::parse(file_version_str, &file_version);
                 }
 
-                pal::string_t file_name{file.name.GetString()};
+                pal::string_t file_name{file.key.data()};
                 deps_asset_t asset(get_filename_without_ext(file_name), file_name, assembly_version, file_version);
 
-                const auto& rid = file.value[_X("rid")].GetString();
+                auto rid_it = file_obj[_X("rid")];
+                if (rid_it.error() || rid_it.begin() == rid_it.end() || !rid_it.is_string())
+                    continue;
+
+                const auto& rid = rid_it.get_string().value();
 
                 if (trace::is_enabled())
                 {
                     trace::info(_X("  %s asset: %s rid=%s assemblyVersion=%s fileVersion=%s"),
                         deps_entry_t::s_known_asset_types[asset_type_index],
                         asset.relative_path.c_str(),
-                        rid,
+                        rid.data(),
                         asset.assembly_version.as_str().c_str(),
                         asset.file_version.as_str().c_str());
                 }
 
-                assets.libs[package.name.GetString()][asset_type_index].rid_assets[rid].push_back(asset);
+                assets.libs[package.key.data()][asset_type_index].rid_assets[rid.data()].push_back(asset);
             }
         }
     }
@@ -440,43 +486,56 @@ void deps_json_t::process_runtime_targets(const json_parser_t::value_t& json, co
     perform_rid_fallback(&assets);
 }
 
-void deps_json_t::process_targets(const json_parser_t::value_t& json, const pal::string_t& target_name, deps_assets_t* p_assets)
+void deps_json_t::process_targets(const simdjson::dom::element& json, const pal::string_t& target_name, deps_assets_t* p_assets)
 {
     deps_assets_t& assets = *p_assets;
-    for (const auto& package : json[_X("targets")][target_name.c_str()].GetObject())
-    {
-        trace::info(_X("Processing package %s"), package.name.GetString());
 
-        const auto& asset_types = package.value.GetObject();
+    auto targets = json[_X("targets")].get_object();
+    if (targets.error())
+        return;
+
+    auto target_it = targets[target_name];
+    if (target_it.error() || target_it.begin() == target_it.end() || !target_it.is_object())
+        return;
+
+    auto packages = target_it.get_object();
+    for (auto package : packages)
+    {
+        trace::info(_X("Processing package %s"), package.key.data());
+
+        auto asset_types = package.value.get_object();
+        if (asset_types.error())
+            continue;
+
         for (size_t i = 0; i < deps_entry_t::s_known_asset_types.size(); ++i)
         {
-            const auto& iter = asset_types.FindMember(deps_entry_t::s_known_asset_types[i]);
-            if (iter == asset_types.MemberEnd())
-            {
+            auto iter = asset_types[deps_entry_t::s_known_asset_types[i]];
+            if (iter.begin() == iter.end() || !iter.is_object())
                 continue;
-            }
 
             trace::info(_X("  Adding %s assets"), deps_entry_t::s_known_asset_types[i]);
-            const auto& files = iter->value.GetObject();
-            vec_asset_t& asset_files = assets.libs[package.name.GetString()][i];
-            asset_files.reserve(files.MemberCount());
-            for (const auto& file : files)
+
+            auto files = iter.get_object();
+            vec_asset_t& asset_files = assets.libs[package.key.data()][i];
+            asset_files.reserve(files.size());
+
+            for (auto file : files)
             {
                 version_t assembly_version, file_version;
 
-                const pal::string_t& assembly_version_str = get_optional_property(file.value, _X("assemblyVersion"));
-                if (assembly_version_str.length() > 0)
+                const pal::string_t assembly_version_str = get_optional_property(file.value, _X("assemblyVersion"));
+                if (!assembly_version_str.empty())
                 {
                     version_t::parse(assembly_version_str, &assembly_version);
                 }
 
-                const pal::string_t& file_version_str = get_optional_property(file.value, _X("fileVersion"));
-                if (file_version_str.length() > 0)
+                const pal::string_t file_version_str = get_optional_property(file.value, _X("fileVersion"));
+                if (!file_version_str.empty())
                 {
                     version_t::parse(file_version_str, &file_version);
                 }
 
-                pal::string_t file_name{file.name.GetString()};
+                pal::string_t file_name{file.key.data()};
                 deps_asset_t asset(get_filename_without_ext(file_name), file_name, assembly_version, file_version);
 
                 if (trace::is_enabled())
@@ -493,7 +552,7 @@ void deps_json_t::process_targets(const json_parser_t::value_t& json, const pal:
     }
 }
 
-void deps_json_t::load_framework_dependent(const json_parser_t::value_t& json, const pal::string_t& target_name)
+void deps_json_t::load_framework_dependent(const simdjson::dom::element& json, const pal::string_t& target_name)
 {
     process_runtime_targets(json, target_name, &m_rid_assets);
     process_targets(json, target_name, &m_assets);
@@ -507,7 +566,6 @@ void deps_json_t::load_framework_dependent(const json_parser_t::value_t& json, c
 
         *rid_specific = false;
 
-        // Is there any rid specific assets for this type ("native" or "runtime" or "resources")
         if (m_rid_assets.libs.count(package) && !m_rid_assets.libs[package][asset_type_index].rid_assets.empty())
         {
             const auto& assets_for_type = m_rid_assets.libs[package][asset_type_index].rid_assets.begin()->second;
@@ -531,7 +589,7 @@ void deps_json_t::load_framework_dependent(const json_parser_t::value_t& json, c
     reconcile_libraries_with_targets(json, package_exists, get_relpaths);
 }
 
-void deps_json_t::load_self_contained(const json_parser_t::value_t& json, const pal::string_t& target_name)
+void deps_json_t::load_self_contained(const simdjson::dom::element& json, const pal::string_t& target_name)
 {
     process_targets(json, target_name, &m_assets);
 
@@ -574,7 +632,7 @@ bool deps_json_t::has_package(const pal::string_t& name, const pal::string_t& ve
 // Load the deps file and parse its "entry" lines which contain the "fields" of
 // the entry. Populate an array of these entries.
 //
-void deps_json_t::load(bool is_framework_dependent, std::function<void(const json_parser_t::value_t&)> post_process)
+void deps_json_t::load(bool is_framework_dependent, std::function<void(const simdjson::dom::element&)> post_process)
 {
     m_file_exists = deps_file_exists(m_deps_file);
 
@@ -590,10 +648,17 @@ void deps_json_t::load(bool is_framework_dependent, std::function<void(const jso
         return;
 
     m_valid = true;
-    const auto& runtime_target = json.document()[_X("runtimeTarget")];
-    const pal::string_t& name = runtime_target.IsString() ?
-        runtime_target.GetString() :
-        runtime_target[_X("name")].GetString();
+    auto runtime_target = json.document()[_X("runtimeTarget")];
+
+    pal::string_t name;
+    if (runtime_target.is_string())
+    {
+        name = runtime_target.get_string().value().data();
+    }
+    else
+    {
+        name = runtime_target[_X("name")].get_string().value().data();
+    }
 
     trace::verbose(_X("Loading deps file... [%s]: is_framework_dependent=%d, use_fallback_graph=%d"), m_deps_file.c_str(), is_framework_dependent, m_rid_resolution_options.use_fallback_graph);
 
@@ -613,14 +678,14 @@ void deps_json_t::load(bool is_framework_dependent, std::function<void(const jso
 std::unique_ptr<deps_json_t> deps_json_t::create_for_self_contained(const pal::string_t& deps_path, rid_resolution_options_t& rid_resolution_options)
 {
     std::unique_ptr<deps_json_t> deps = std::unique_ptr<deps_json_t>(new deps_json_t(deps_path, rid_resolution_options));
+    
     if (rid_resolution_options.use_fallback_graph)
     {
         assert(rid_resolution_options.rid_fallback_graph != nullptr && rid_resolution_options.rid_fallback_graph->empty());
-        deps->load(false,
-            [&](const json_parser_t::value_t& json)
-            {
-                populate_rid_fallback_graph(json, *rid_resolution_options.rid_fallback_graph);
-            });
+        deps->load(false, [&](const simdjson::dom::element& json)
+        {
+            populate_rid_fallback_graph(json, *rid_resolution_options.rid_fallback_graph);
+        });
     }
     else
     {

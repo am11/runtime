@@ -37,9 +37,12 @@ namespace
         // Look up the root package instead of the "runtime" package because we can't do a full rid resolution.
         // i.e., look for "Microsoft.NETCore.DotNetHostPolicy/" followed by version.
         const pal::char_t prefix[] = _X("Microsoft.NETCore.DotNetHostPolicy/");
-        for (const auto& library : json.document()[_X("libraries")].GetObject())
+        auto libraries = json.document()[_X("libraries")].get_object();
+
+        for (auto library : libraries)
         {
-            pal::string_t lib_name{library.name.GetString()};
+            pal::string_t lib_name(library.key.begin(), library.key.end());
+
             if (utils::starts_with(lib_name, prefix, false))
             {
                 // Extract the version information that occurs after '/'

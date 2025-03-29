@@ -6,6 +6,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/../fxr)
 
 # CMake does not recommend using globbing since it messes with the freshness checks
 list(APPEND SOURCES
+    ${CLR_SRC_NATIVE_DIR}/external/simdjson/simdjson.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../json_parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../host_startup_info.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../roll_forward_option.cpp

@@ -81,14 +81,14 @@ private:
         , m_rid_resolution_options(rid_resolution_options)
     { }
 
-    void load(bool is_framework_dependent, std::function<void(const json_parser_t::value_t&)> post_process = {});
-    void load_self_contained(const json_parser_t::value_t& json, const pal::string_t& target_name);
-    void load_framework_dependent(const json_parser_t::value_t& json, const pal::string_t& target_name);
-    void process_runtime_targets(const json_parser_t::value_t& json, const pal::string_t& target_name, rid_specific_assets_t* p_assets);
-    void process_targets(const json_parser_t::value_t& json, const pal::string_t& target_name, deps_assets_t* p_assets);
+    void load(bool is_framework_dependent, std::function<void(const simdjson::dom::element&)> post_process = {});
+    void load_self_contained(const simdjson::dom::element& json, const pal::string_t& target_name);
+    void load_framework_dependent(const simdjson::dom::element& json, const pal::string_t& target_name);
+    void process_runtime_targets(const simdjson::dom::element& json, const pal::string_t& target_name, rid_specific_assets_t* p_assets);
+    void process_targets(const simdjson::dom::element& json, const pal::string_t& target_name, deps_assets_t* p_assets);
 
     void reconcile_libraries_with_targets(
-        const json_parser_t::value_t& json,
+        const simdjson::dom::element& json,
         const std::function<bool(const pal::string_t&)>& library_exists_fn,
         const std::function<const vec_asset_t&(const pal::string_t&, size_t, bool*)>& get_assets_fn);
 

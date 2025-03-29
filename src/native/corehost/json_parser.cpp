@@ -1,16 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-// These are only used by rapidjson/error/en.h to declare the error messages,
-// and have to be set to these values before any files are included.  They're
-// defined here because it's the only place that calls GetParseError().
-#undef RAPIDJSON_ERROR_CHARTYPE
-#undef RAPIDJSON_ERROR_STRING
-#define RAPIDJSON_ERROR_CHARTYPE pal::char_t
-#define RAPIDJSON_ERROR_STRING(x) _X(x)
-
 #include <json_parser.h>
-#include <rapidjson/error/en.h>
 #include "utils.h"
 #include <cassert>
 #include <cstdint>
@@ -48,31 +39,19 @@ bool json_parser_t::parse_raw_data(char* data, int64_t size, const pal::string_t
 {
     assert(data != nullptr);
 
-    constexpr auto flags = rapidjson::ParseFlag::kParseStopWhenDoneFlag | rapidjson::ParseFlag::kParseCommentsFlag;
-#ifdef _WIN32
-    // Can't use in-situ parsing on Windows, as JSON data is encoded in
-    // UTF-8 and the host expects wide strings.  m_document will store
-    // data in UTF-16 (with pal::char_t as the character type), but it
-    // has to know that data is encoded in UTF-8 to convert during parsing.
-    m_document.Parse<flags, rapidjson::UTF8<>>(data);
-#else // _WIN32
-    m_document.ParseInsitu<flags>(data);
-#endif // _WIN32
-
-    if (m_document.HasParseError())
+    // simdjson will parse in-situ, so the input buffer must remain valid.
+    simdjson::dom::parser m_parser;
+    auto result = m_parser.parse(data, size);
+    if (result.error())
     {
-        int line, column;
-        size_t offset = m_document.GetErrorOffset();
-
-        get_line_column_from_offset(data, size, offset, &line, &column);
-
-        trace::error(_X("A JSON parsing exception occurred in [%s], offset %zu (line %d, column %d): %s"),
-            context.c_str(), offset, line, column,
-            rapidjson::GetParseError_En(m_document.GetParseError()));
+        trace::error(_X("A JSON parsing exception occurred in [%s]: %s"),
+                     context.c_str(), simdjson::error_message(result.error()));
         return false;
     }
 
-    if (!m_document.IsObject())
+    m_document = result.value();
+
+    if (m_document.is_object())
     {
         trace::error(_X("Expected a JSON object in [%s]"), context.c_str());
         return false;

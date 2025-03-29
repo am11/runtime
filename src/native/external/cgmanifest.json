@@ -36,8 +36,8 @@
       "component": {
         "type": "git",
         "git": {
-          "repositoryUrl": "https://github.com/Tencent/rapidjson",
-          "commitHash": "d87b698d0fcc10a5f632ecbc80a9cb2a8fa094a5"
+          "repositoryUrl": "https://github.com/simdjson/simdjson",
+          "commitHash": "7382dc2be88e53fbc35cb50369b831855656f0fd"
         }
       },
       "developmentDependency": false

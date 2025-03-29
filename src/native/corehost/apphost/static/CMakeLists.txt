@@ -27,10 +27,6 @@ add_subdirectory(../../hostmisc hostmisc)
 configure_file(${CLR_SRC_NATIVE_DIR}/corehost/configure.h.in ${GENERATED_INCLUDE_DIR}/corehost/configure.h)
 target_include_directories(hostmisc_interface INTERFACE ${GENERATED_INCLUDE_DIR}/corehost)
 
-if ((NOT DEFINED CLR_CMAKE_USE_SYSTEM_RAPIDJSON) OR (NOT CLR_CMAKE_USE_SYSTEM_RAPIDJSON))
-    include_directories(${CLR_SRC_NATIVE_DIR}/external/)
-endif()
-
 set(SOURCES
     ../bundle_marker.cpp
     ./hostfxr_resolver.cpp
@@ -38,6 +34,7 @@ set(SOURCES
     ../../hostpolicy/static/coreclr_resolver.cpp
     ../../fxr_resolver.cpp
     ../../corehost.cpp
+    ${CLR_SRC_NATIVE_DIR}/external/simdjson/simdjson.cpp
 )
 
 set(HEADERS

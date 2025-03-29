@@ -36,7 +36,7 @@ public:
     bool get_is_multilevel_lookup_disabled() const;
     const std::list<pal::string_t>& get_probe_paths() const;
     bool get_is_framework_dependent() const;
-    bool parse_opts(const json_parser_t::value_t& opts);
+    bool parse_opts(const simdjson::dom::element& opts);
     void combine_properties(std::unordered_map<pal::string_t, pal::string_t>& combined_properties) const;
     const fx_reference_vector_t& get_frameworks() const { return m_frameworks; }
     const fx_reference_vector_t& get_included_frameworks() const { return m_included_frameworks; }
@@ -79,8 +79,8 @@ private:
     // If set to true, all versions (including pre-release) are considered even if starting from a release framework reference.
     bool m_roll_forward_to_prerelease;
 
-    bool parse_framework(const json_parser_t::value_t& fx_obj, fx_reference_t& fx_out, bool name_and_version_only = false);
-    bool read_framework_array(const json_parser_t::value_t& frameworks, fx_reference_vector_t& frameworks_out, bool name_and_version_only = false);
+    bool parse_framework(const simdjson::dom::element& fx_obj, fx_reference_t& fx_out, bool name_and_version_only = false);
+    bool read_framework_array(const simdjson::dom::element& frameworks, fx_reference_vector_t& frameworks_out, bool name_and_version_only = false);
 
     bool mark_specified_setting(specified_setting setting);
 };

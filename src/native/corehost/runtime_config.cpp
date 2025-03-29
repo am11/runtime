@@ -3,7 +3,6 @@
 
 #include "json_parser.h"
 #include "pal.h"
-#include <rapidjson/writer.h>
 #include "roll_fwd_on_no_candidate_fx_option.h"
 #include "runtime_config.h"
 #include "trace.h"
@@ -70,63 +69,82 @@ void runtime_config_t::parse(const pal::string_t& path, const pal::string_t& dev
     trace::verbose(_X("Runtime config [%s] is valid=[%d]"), path.c_str(), m_valid);
 }
 
-bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
+bool runtime_config_t::parse_opts(const simdjson::dom::element& opts)
 {
     // Note: both runtime_config and dev_runtime_config call into the function.
     // runtime_config will override whatever dev_runtime_config populated.
-    if (opts.IsNull())
+    if (opts.is_null())
     {
         return true;
     }
 
-    if (!opts.IsObject())
+    if (!opts.is_object())
     {
         return false;
     }
 
-    const auto& opts_obj = opts.GetObject();
+    simdjson::dom::object opts_obj = opts.get_object().value();
 
-    const auto& properties = opts_obj.FindMember(_X("configProperties"));
-    if (properties != opts_obj.MemberEnd())
+    // Process "configProperties" section.
+    simdjson::dom::element properties = opts_obj["configProperties"];
+    if (properties.is_object())
     {
-        const auto& properties_obj = properties->value.GetObject();
-        m_properties.reserve(properties_obj.MemberCount());
-        for (const auto& property : properties_obj)
+        simdjson::dom::object properties_obj = properties.get_object().value();
+        m_properties.reserve(properties_obj.size());
+        for (auto field : properties_obj)
         {
-            if (property.value.IsString())
+            // field.key is a std::string_view; field.value is a simdjson::dom::element.
+            if (field.value.is_string())
             {
-                m_properties[property.name.GetString()] = property.value.GetString();
+                auto str_res = field.value.get_string();
+                if (!str_res.error())
+                {
+                    m_properties[std::string(field.key)] = std::string(str_res.value());
+                }
             }
             else
             {
-                using string_buffer_t = rapidjson::GenericStringBuffer<json_parser_t::internal_encoding_type_t>;
-
-                string_buffer_t sb;
-                rapidjson::Writer<string_buffer_t, json_parser_t::internal_encoding_type_t,
-                                  json_parser_t::internal_encoding_type_t> writer{sb};
-
-                property.value.Accept(writer);
-                m_properties[property.name.GetString()] = sb.GetString();
+                // For non-string values, serialize them back to JSON.
+                m_properties[std::string(field.key)] = std::string(field.value.get_string().value());
             }
         }
     }
 
-    const auto& probe_paths = opts_obj.FindMember(_X("additionalProbingPaths"));
-    if (probe_paths != opts_obj.MemberEnd())
+    // Process "additionalProbingPaths" section.
+    auto probe_paths = opts_obj["additionalProbingPaths"];
+    if (!probe_paths.error())
     {
-        if (probe_paths->value.IsString())
+        if (probe_paths.is_string())
         {
-            m_probe_paths.insert(m_probe_paths.begin(), probe_paths->value.GetString());
-        }
-        else if (probe_paths->value.IsArray())
-        {
-            using const_value_iter_t = json_parser_t::value_t::ConstValueIterator;
-            std::reverse_iterator<const_value_iter_t> begin{probe_paths->value.End()};
-            std::reverse_iterator<const_value_iter_t> end{probe_paths->value.Begin()};
-
-            for (; begin != end; begin++)
+            auto str_res = probe_paths.get_string();
+            if (!str_res.error())
             {
-                m_probe_paths.push_front(begin->GetString());
+                m_probe_paths.insert(m_probe_paths.begin(), std::string(str_res.value()));
+            }
+        }
+        else if (probe_paths.is_array())
+        {
+            auto arr = probe_paths.get_array();
+            if (!arr.error())
+            {
+                return false;
+            }
+            // Reverse iterate over the array.
+            std::vector<std::string_view> path_list;
+            for (auto elem : arr)
+            {
+                if (elem.is_string())
+                {
+                    auto str_res = elem.get_string();
+                    if (!str_res.error())
+                    {
+                        path_list.push_back(str_res.value());
+                    }
+                }
+            }
+            for (auto it = path_list.rbegin(); it != path_list.rend(); ++it)
+            {
+                m_probe_paths.push_front(std::string(*it));
             }
         }
         else
@@ -137,86 +155,97 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
     }
 
     // Step #2: set the defaults from the "runtimeOptions"
-    const auto& roll_forward = opts_obj.FindMember(_X("rollForward"));
-    if (roll_forward != opts_obj.MemberEnd())
+    auto roll_forward = opts_obj["rollForward"];
+    if (!roll_forward.error())
     {
-        auto val = roll_forward_option_from_string(roll_forward->value.GetString());
-        if (val == roll_forward_option::__Last)
+        auto str_res = roll_forward.get_string();
+        if (!str_res.error())
         {
-            trace::error(_X("Invalid value for property 'rollForward'."));
-            return false;
-        }
-        m_default_settings.set_roll_forward(val);
-
-        if (!mark_specified_setting(specified_roll_forward))
-        {
-            return false;
-        }
-    }
-
-    const auto& apply_patches = opts_obj.FindMember(_X("applyPatches"));
-    if (apply_patches != opts_obj.MemberEnd())
-    {
-        m_default_settings.set_apply_patches(apply_patches->value.GetBool());
-        if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
-        {
-            return false;
+            auto val = roll_forward_option_from_string(std::string(str_res.value()));
+            if (val == roll_forward_option::__Last)
+            {
+                trace::error(_X("Invalid value for property 'rollForward'."));
+                return false;
+            }
+            m_default_settings.set_roll_forward(val);
+            if (!mark_specified_setting(specified_roll_forward))
+            {
+                return false;
+            }
         }
     }
 
-    const auto& roll_fwd_on_no_candidate_fx = opts_obj.FindMember(_X("rollForwardOnNoCandidateFx"));
-    if (roll_fwd_on_no_candidate_fx != opts_obj.MemberEnd())
+    auto apply_patches = opts_obj["applyPatches"];
+    if (!apply_patches.error())
     {
-        auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(roll_fwd_on_no_candidate_fx->value.GetInt());
-        m_default_settings.set_roll_forward(roll_fwd_on_no_candidate_fx_to_roll_forward(val));
-        if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+        auto bool_res = apply_patches.get_bool();
+        if (!bool_res.error())
         {
-            return false;
+            m_default_settings.set_apply_patches(bool_res.value());
+            if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+            {
+                return false;
+            }
         }
     }
 
-    const auto& tfm = opts_obj.FindMember(_X("tfm"));
-    if (tfm != opts_obj.MemberEnd())
+    auto roll_fwd_on_no_candidate_fx = opts_obj["rollForwardOnNoCandidateFx"];
+    if (!roll_fwd_on_no_candidate_fx.error())
     {
-        m_tfm = tfm->value.GetString();
+        auto int_res = roll_fwd_on_no_candidate_fx.get_int64();
+        if (!int_res.error())
+        {
+            auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(int_res.value());
+            m_default_settings.set_roll_forward(roll_fwd_on_no_candidate_fx_to_roll_forward(val));
+            if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+            {
+                return false;
+            }
+        }
+    }
+
+    auto tfm = opts_obj["tfm"];
+    if (!tfm.error())
+    {
+        auto str_res = tfm.get_string();
+        if (!str_res.error())
+        {
+            m_tfm = std::string(str_res.value());
+        }
     }
 
     // Step #3: read the "framework" and "frameworks" section
-    const auto& framework = opts_obj.FindMember(_X("framework"));
-    if (framework != opts_obj.MemberEnd())
+    auto framework = opts_obj["framework"];
+    if (!framework.error())
     {
         m_is_framework_dependent = true;
-
         fx_reference_t fx_out;
-        if (!parse_framework(framework->value, fx_out))
+        if (!parse_framework(framework.value(), fx_out))
         {
             return false;
         }
-
         m_frameworks.push_back(fx_out);
     }
 
-    const auto& iter = opts_obj.FindMember(_X("frameworks"));
-    if (iter != opts_obj.MemberEnd())
+    auto iter = opts_obj["frameworks"];
+    if (!iter.error())
     {
         m_is_framework_dependent = true;
-
-        if (!read_framework_array(iter->value, m_frameworks))
+        if (!read_framework_array(iter.value(), m_frameworks))
         {
             return false;
         }
     }
 
-    const auto& includedFrameworks = opts_obj.FindMember(_X("includedFrameworks"));
-    if (includedFrameworks != opts_obj.MemberEnd())
+    auto includedFrameworks = opts_obj["includedFrameworks"];
+    if (!includedFrameworks.error())
     {
         if (m_is_framework_dependent)
         {
             trace::error(_X("It's invalid to specify both `framework`/`frameworks` and `includedFrameworks` properties."));
             return false;
         }
-
-        if (!read_framework_array(includedFrameworks->value, m_included_frameworks, /*name_and_version_only*/ true))
+        if (!read_framework_array(includedFrameworks.value(), m_included_frameworks, /*name_and_version_only*/ true))
         {
             return false;
         }
@@ -241,29 +270,37 @@ namespace
     }
 }
 
-bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, fx_reference_t& fx_out, bool name_and_version_only)
+bool runtime_config_t::parse_framework(const simdjson::dom::element& fx_obj, fx_reference_t& fx_out, bool name_and_version_only)
 {
     if (!name_and_version_only)
     {
         apply_settings_to_fx_reference(m_default_settings, fx_out);
     }
 
-    const auto& fx_name = fx_obj.FindMember(_X("name"));
-    if (fx_name != fx_obj.MemberEnd())
+    const auto fx_name = fx_obj["name"];
+    if (!fx_name.error())
     {
-        fx_out.set_fx_name(fx_name->value.GetString());
+        auto name_res = fx_name.get_string();
+        if (!name_res.error())
+        {
+            fx_out.set_fx_name(std::string(name_res.value()));
+        }
     }
 
-    const auto& fx_ver = fx_obj.FindMember(_X("version"));
-    if (fx_ver != fx_obj.MemberEnd())
+    const auto fx_ver = fx_obj["version"];
+    if (!fx_ver.error())
     {
-        fx_out.set_fx_version(fx_ver->value.GetString());
-
-        // Release version should prefer release versions, unless the rollForwardToPrerelease is set
-        // in which case no preference should be applied.
-        if (!name_and_version_only && !fx_out.get_fx_version_number().is_prerelease() && !m_roll_forward_to_prerelease)
+        auto ver_res = fx_ver.get_string();
+        if (!ver_res.error())
         {
-            fx_out.set_prefer_release(true);
+            fx_out.set_fx_version(std::string(ver_res.value()));
+
+            // Release version should prefer release versions, unless the rollForwardToPrerelease is set
+            // in which case no preference should be applied.
+            if (!name_and_version_only && !fx_out.get_fx_version_number().is_prerelease() && !m_roll_forward_to_prerelease)
+            {
+                fx_out.set_prefer_release(true);
+            }
         }
     }
 
@@ -272,40 +309,52 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, fx_
         return true;
     }
 
-    const auto& roll_forward = fx_obj.FindMember(_X("rollForward"));
-    if (roll_forward != fx_obj.MemberEnd())
+    const auto roll_forward = fx_obj["rollForward"];
+    if (!roll_forward.error())
     {
-        auto val = roll_forward_option_from_string(roll_forward->value.GetString());
-        if (val == roll_forward_option::__Last)
+        auto roll_forward_res = roll_forward.get_string();
+        if (!roll_forward_res.error())
         {
-            trace::error(_X("Invalid value for property 'rollForward'."));
-            return false;
-        }
-        fx_out.set_roll_forward(val);
-        if (!mark_specified_setting(specified_roll_forward))
-        {
-            return false;
-        }
-    }
-
-    const auto& apply_patches = fx_obj.FindMember(_X("applyPatches"));
-    if (apply_patches != fx_obj.MemberEnd())
-    {
-        fx_out.set_apply_patches(apply_patches->value.GetBool());
-        if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
-        {
-            return false;
+            auto val = roll_forward_option_from_string(std::string(roll_forward_res.value()));
+            if (val == roll_forward_option::__Last)
+            {
+                trace::error(_X("Invalid value for property 'rollForward'."));
+                return false;
+            }
+            fx_out.set_roll_forward(val);
+            if (!mark_specified_setting(specified_roll_forward))
+            {
+                return false;
+            }
         }
     }
 
-    const auto& roll_fwd_on_no_candidate_fx = fx_obj.FindMember(_X("rollForwardOnNoCandidateFx"));
-    if (roll_fwd_on_no_candidate_fx != fx_obj.MemberEnd())
+    const auto apply_patches = fx_obj["applyPatches"];
+    if (!apply_patches.error())
     {
-        auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(roll_fwd_on_no_candidate_fx->value.GetInt());
-        fx_out.set_roll_forward(roll_fwd_on_no_candidate_fx_to_roll_forward(val));
-        if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+        auto bool_res = apply_patches.get_bool();
+        if (!bool_res.error())
         {
-            return false;
+            fx_out.set_apply_patches(bool_res.value());
+            if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+            {
+                return false;
+            }
+        }
+    }
+
+    const auto roll_fwd_on_no_candidate_fx = fx_obj["rollForwardOnNoCandidateFx"];
+    if (!roll_fwd_on_no_candidate_fx.error())
+    {
+        auto int_res = roll_fwd_on_no_candidate_fx.get_int64();
+        if (!int_res.error())
+        {
+            auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(int_res.value());
+            fx_out.set_roll_forward(roll_fwd_on_no_candidate_fx_to_roll_forward(val));
+            if (!mark_specified_setting(specified_roll_forward_on_no_candidate_fx_or_apply_patched))
+            {
+                return false;
+            }
         }
     }
 
@@ -348,20 +397,25 @@ bool runtime_config_t::ensure_dev_config_parsed()
         return false;
     }
 
-    const auto& runtime_opts = json.document().FindMember(_X("runtimeOptions"));
-    if (runtime_opts != json.document().MemberEnd())
+    auto runtime_opts = json.document()["runtimeOptions"];
+    if (!runtime_opts.error())
     {
-        parse_opts(runtime_opts->value);
+        parse_opts(runtime_opts.value());
     }
 
     return true;
 }
 
-bool runtime_config_t::read_framework_array(const json_parser_t::value_t& frameworks_json, fx_reference_vector_t& frameworks_out, bool name_and_version_only)
+bool runtime_config_t::read_framework_array(const simdjson::dom::element& frameworks_json, fx_reference_vector_t& frameworks_out, bool name_and_version_only)
 {
     bool rc = true;
+    simdjson::dom::array frameworks_array;
+    auto err = frameworks_json.get_array().get(frameworks_array);
+    if (err) {
+        return false;
+    }
 
-    for (const auto& fx_json : frameworks_json.GetArray())
+    for (const auto& fx_json : frameworks_array)
     {
         fx_reference_t fx_out;
         rc = parse_framework(fx_json, fx_out, name_and_version_only);
@@ -415,10 +469,10 @@ bool runtime_config_t::ensure_parsed()
         return false;
     }
 
-    const auto& runtimeOpts = json.document().FindMember(_X("runtimeOptions"));
-    if (runtimeOpts != json.document().MemberEnd())
+    auto runtime_opts = json.document()["runtimeOptions"];
+    if (!runtime_opts.error())
     {
-        return parse_opts(runtimeOpts->value);
+        return parse_opts(runtime_opts.value());
     }
 
     return false;

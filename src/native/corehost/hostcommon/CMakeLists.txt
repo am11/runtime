@@ -3,6 +3,9 @@
 
 include(files.cmake)
 
+list(APPEND SOURCES
+    ${CLR_SRC_NATIVE_DIR}/external/simdjson/simdjson.cpp)
+
 add_library(libhostcommon STATIC ${SOURCES})
 
 target_compile_definitions(libhostcommon PRIVATE EXPORT_SHARED_API)

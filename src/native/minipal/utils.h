@@ -102,4 +102,15 @@
     #define __asan_handle_no_return()
 #endif
 
+// Executable file formats
+#if defined(TARGET_WINDOWS)
+#define MINIPAL_TARGET_PE 1
+#elif defined(TARGET_APPLE)
+#define MINIPAL_TARGET_MACHO 1
+#elif defined(TARGET_BROWSER) || defined(TARGET_WASI)
+#define MINIPAL_TARGET_WASM 1
+#else
+#define MINIPAL_TARGET_ELF 1
+#endif
+
 #endif // HAVE_MINIPAL_UTILS_H

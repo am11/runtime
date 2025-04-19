@@ -8,6 +8,7 @@ using System.Linq;
 using ILCompiler.DependencyAnalysis;
 using ILCompiler.DependencyAnalysis.ReadyToRun;
 using ILCompiler.DependencyAnalysisFramework;
+using ILCompiler.Reflection.ReadyToRun;
 using ILCompiler.Win32Resources;
 using Internal.IL;
 using Internal.JitInterface;
@@ -246,11 +247,28 @@ namespace ILCompiler
                 return true;
             });
 
+            bool allModulesPlatformNeutral = true;
+            foreach (var module in inputModules)
+            {
+                if (module.IsPlatformNeutral) continue;
+
+                if (ReadyToRunReader.IsReadyToRunImage(module.PEReader))
+                {
+                    ReadyToRunReader reader = new(default, default, module.PEReader, default);
+                    if ((reader.ReadyToRunHeader.Flags & (uint)ReadyToRunFlags.READYTORUN_FLAG_PlatformNeutralSource) != 0)
+                        continue;
+                }
+
+                allModulesPlatformNeutral = false;
+                break;
+            }
+
             ReadyToRunFlags flags = ReadyToRunFlags.READYTORUN_FLAG_NonSharedPInvokeStubs;
-            if (inputModules.All(module => module.IsPlatformNeutral))
+            if (allModulesPlatformNeutral)
             {
                 flags |= ReadyToRunFlags.READYTORUN_FLAG_PlatformNeutralSource;
             }
+
             bool automaticTypeValidation = _nodeFactoryOptimizationFlags.TypeValidation == TypeValidationRule.Automatic || _nodeFactoryOptimizationFlags.TypeValidation == TypeValidationRule.AutomaticWithLogging;
             if (_nodeFactoryOptimizationFlags.TypeValidation == TypeValidationRule.SkipTypeValidation)
             {

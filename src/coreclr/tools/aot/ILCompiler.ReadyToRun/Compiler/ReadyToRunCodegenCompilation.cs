@@ -15,11 +15,12 @@ using Internal.IL.Stubs;
 using Internal.JitInterface;
 using Internal.ReadyToRunConstants;
 using Internal.TypeSystem;
+using Internal.TypeSystem.Ecma;
 
 using ILCompiler.DependencyAnalysis;
 using ILCompiler.DependencyAnalysis.ReadyToRun;
 using ILCompiler.DependencyAnalysisFramework;
-using Internal.TypeSystem.Ecma;
+using ILCompiler.Reflection.ReadyToRun;
 
 namespace ILCompiler
 {
@@ -452,6 +453,13 @@ namespace ILCompiler
             {
                 flags |= ReadyToRunFlags.READYTORUN_FLAG_PlatformNeutralSource;
             }
+            else if (ReadyToRunReader.IsReadyToRunImage(inputModule.PEReader))
+            {
+                ReadyToRunReader reader = new(default, default, inputModule.PEReader, default);
+                if ((reader.ReadyToRunHeader.Flags & (uint)ReadyToRunFlags.READYTORUN_FLAG_PlatformNeutralSource) != 0)
+                    flags |= ReadyToRunFlags.READYTORUN_FLAG_PlatformNeutralSource;
+            }
+
             bool automaticTypeValidation = _nodeFactory.OptimizationFlags.TypeValidation == TypeValidationRule.Automatic || _nodeFactory.OptimizationFlags.TypeValidation == TypeValidationRule.AutomaticWithLogging;
             if (_nodeFactory.OptimizationFlags.TypeValidation == TypeValidationRule.SkipTypeValidation)
             {

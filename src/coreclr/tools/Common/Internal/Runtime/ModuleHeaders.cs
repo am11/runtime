@@ -11,7 +11,7 @@ namespace Internal.Runtime
     //  src/coreclr/nativeaot/Runtime/inc/ModuleHeaders.h
     //
 
-    internal struct ReadyToRunHeaderConstants
+    public struct ReadyToRunHeaderConstants
     {
         public const uint Signature = 0x00525452; // 'RTR'
 

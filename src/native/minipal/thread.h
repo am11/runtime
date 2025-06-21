@@ -70,7 +70,7 @@ static inline size_t minipal_get_current_thread_id(void)
 #elif defined(__HAIKU__)
         tid = (size_t)find_thread(NULL);
 #else
-        tid = (size_t)(void*)pthread_self();
+        tid = (size_t)pthread_self();
 #endif
 
     return tid;

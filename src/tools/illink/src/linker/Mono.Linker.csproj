@@ -24,6 +24,7 @@
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddReferenceAssemblyToPackage</TargetsForTfmSpecificContentInPackage>
     <DefineConstants>$(DefineConstants);ILLINK</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DisableTransitiveProjectReferences>$(UseBootstrap)</DisableTransitiveProjectReferences>
   </PropertyGroup>
 
   <Target Name="_ComputePackRuntimeConfigFilePath">

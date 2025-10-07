@@ -263,6 +263,7 @@ namespace System
         // The string must be of the form dddddddd-dddd-dddd-dddd-dddddddddddd. where
         // d is a hex digit. (That is 8 hex digits, followed by 4, then 4, then 4,
         // then 12) such as: "CA761232-ED42-11CE-BACD-00AA0057B223"
+        [Intrinsic]
         public Guid(string g)
         {
             ArgumentNullException.ThrowIfNull(g);
@@ -330,6 +331,7 @@ namespace System
             return result;
         }
 
+        [Intrinsic]
         public static Guid Parse(string input)
         {
             ArgumentNullException.ThrowIfNull(input);

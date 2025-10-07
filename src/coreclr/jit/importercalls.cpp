@@ -4744,6 +4744,14 @@ GenTree* Compiler::impIntrinsic(CORINFO_CLASS_HANDLE    clsHnd,
                 break;
             }
 
+            case NI_System_Guid_NewGuid:
+            case NI_System_Guid_Parse:
+            {
+                // Mark these as special intrinsics so they get special handling
+                isSpecial = true;
+                break;
+            }
+
             case NI_System_Text_UTF8Encoding_UTF8EncodingSealed_ReadUtf8:
             case NI_System_SpanHelpers_SequenceEqual:
             case NI_System_SpanHelpers_ClearWithoutReferences:
@@ -10350,6 +10358,19 @@ NamedIntrinsic Compiler::lookupNamedIntrinsic(CORINFO_METHOD_HANDLE method)
                         if (strcmp(methodName, "KeepAlive") == 0)
                         {
                             result = NI_System_GC_KeepAlive;
+                        }
+                    }
+                    else if (strcmp(className, "Guid") == 0)
+                    {
+                        if (strcmp(methodName, ".ctor") == 0)
+                        {
+                            // Only the string constructor is marked with [Intrinsic]
+                            // so we don't need to check the signature
+                            result = NI_System_Guid_NewGuid;
+                        }
+                        else if (strcmp(methodName, "Parse") == 0)
+                        {
+                            result = NI_System_Guid_Parse;
                         }
                     }
                     break;

@@ -315,7 +315,6 @@ void CrawlFrame::SetCurGSCookie(GSCookie * pGSCookie)
 #endif // !DACCESS_COMPILE
 }
 
-#if defined(FEATURE_EH_FUNCLETS)
 bool CrawlFrame::IsFilterFunclet()
 {
     WRAPPER_NO_CONTRACT;
@@ -333,8 +332,6 @@ bool CrawlFrame::IsFilterFunclet()
 
     return isFilterFunclet;
 }
-
-#endif // FEATURE_EH_FUNCLETS
 
 //******************************************************************************
 #if defined(ELIMINATE_FEF)
@@ -427,8 +424,6 @@ void ExInfoWalker::WalkToManaged()
     // At this point, m_pExInfo is NULL, or points to a pContext that has an IP in managed code.
 } // void ExInfoWalker::WalkToManaged()
 #endif // defined(ELIMINATE_FEF)
-
-#ifdef FEATURE_EH_FUNCLETS
 
 // static
 UINT_PTR Thread::VirtualUnwindCallFrame(PREGDISPLAY pRD, EECodeInfo* pCodeInfo /*= NULL*/)
@@ -759,7 +754,6 @@ UINT_PTR Thread::VirtualUnwindToFirstManagedCallFrame(T_CONTEXT* pContext)
 }
 
 #endif // !DACCESS_COMPILE
-#endif // FEATURE_EH_FUNCLETS
 
 #ifdef _DEBUG
 void Thread::DebugLogStackWalkInfo(CrawlFrame* pCF, _In_z_ LPCSTR pszTag, UINT32 uFramesProcessed)
@@ -770,13 +764,11 @@ void Thread::DebugLogStackWalkInfo(CrawlFrame* pCF, _In_z_ LPCSTR pszTag, UINT32
     {
         LPCSTR pszType = "";
 
-#ifdef FEATURE_EH_FUNCLETS
         if (pCF->IsFunclet())
         {
             pszType = "[funclet]";
         }
         else
-#endif // FEATURE_EH_FUNCLETS
         if (pCF->pFunc->IsNoMetadata())
         {
             pszType = "[no metadata]";
@@ -852,11 +844,6 @@ StackWalkAction Thread::MakeStackwalkerCallback(
 
     return swa;
 }
-
-
-#if !defined(DACCESS_COMPILE) && defined(TARGET_X86) && !defined(FEATURE_EH_FUNCLETS)
-#define STACKWALKER_MAY_POP_FRAMES
-#endif
 
 
 StackWalkAction Thread::StackWalkFramesEx(
@@ -1081,12 +1068,10 @@ void StackFrameIterator::CommonCtor(Thread * pThread, PTR_Frame pFrame, ULONG32 
 
     m_pCachedGSCookie = NULL;
 
-#if defined(FEATURE_EH_FUNCLETS)
     m_sfParent = StackFrame();
     ResetGCRefReportingState();
     m_fDidFuncletReportGCReferences = true;
     m_isRuntimeWrappedExceptions = false;
-#endif // FEATURE_EH_FUNCLETS
     m_fFoundFirstFunclet = false;
 #if defined(RECORD_RESUMABLE_FRAME_SP)
     m_pvResumableFrameTargetSP = NULL;
@@ -1128,10 +1113,8 @@ BOOL StackFrameIterator::Init(Thread *    pThread,
     _ASSERTE(pThread  != NULL);
     _ASSERTE(pRegDisp != NULL);
 
-#ifdef FEATURE_EH_FUNCLETS
     _ASSERTE(!(flags & POPFRAMES));
     _ASSERTE(pRegDisp->pCurrentContext);
-#endif // FEATURE_EH_FUNCLETS
 
     BEGIN_FORBID_TYPELOAD();
 
@@ -1182,10 +1165,7 @@ BOOL StackFrameIterator::Init(Thread *    pThread,
     m_exInfoWalk.WalkToPosition(dac_cast<TADDR>(m_pStartFrame), false);
 #endif // ELIMINATE_FEF
 
-#ifdef FEATURE_EH_FUNCLETS
-
     m_pNextExInfo = (PTR_ExInfo)pThread->GetExceptionState()->GetCurrentExceptionTracker();
-#endif // FEATURE_EH_FUNCLETS
 
     //
     // These fields are used in the iteration and will be updated on a per-frame basis:
@@ -1201,12 +1181,10 @@ BOOL StackFrameIterator::Init(Thread *    pThread,
 
     // process the REGDISPLAY and stop at the first frame
     ProcessIp(GetControlPC(m_crawl.pRD));
-#ifdef FEATURE_EH_FUNCLETS
     if (m_crawl.isFrameless && !!(m_crawl.pRD->pCurrentContext->ContextFlags & CONTEXT_EXCEPTION_ACTIVE))
     {
         m_crawl.hasFaulted = true;
     }
-#endif // FEATURE_EH_FUNCLETS
     ProcessCurrentFrame();
 
     // advance to the next frame which matches the stackwalk flags
@@ -1429,12 +1407,10 @@ void StackFrameIterator::ResetCrawlFrame()
 
     m_crawl.taNoFrameTransitionMarker = (TADDR)NULL;
 
-#if defined(FEATURE_EH_FUNCLETS)
     m_crawl.isFilterFunclet       = false;
     m_crawl.isFilterFuncletCached = false;
     m_crawl.fShouldParentToFuncletSkipReportingGCReferences = false;
     m_crawl.fShouldParentFrameUseUnwindTargetPCforGCReporting = false;
-#endif // FEATURE_EH_FUNCLETS
 
     m_crawl.pThread = this->m_pThread;
 
@@ -1518,7 +1494,6 @@ BOOL StackFrameIterator::IsValid(void)
 } // StackFrameIterator::IsValid()
 
 #ifndef DACCESS_COMPILE
-#ifdef FEATURE_EH_FUNCLETS
 //---------------------------------------------------------------------------------------
 //
 // Advance to the position that the other iterator is currently at.
@@ -1586,7 +1561,6 @@ void StackFrameIterator::SkipTo(StackFrameIterator *pOtherStackFrameIterator)
     }
     SyncRegDisplayToCurrentContext(pRD);
 }
-#endif // FEATURE_EH_FUNCLETS
 #endif // DACCESS_COMPILE
 
 //---------------------------------------------------------------------------------------
@@ -1644,10 +1618,8 @@ StackWalkAction StackFrameIterator::Filter(void)
     bool fStop            = false;
     bool fSkippingFunclet = false;
 
-#if defined(FEATURE_EH_FUNCLETS)
     bool fRecheckCurrentFrame = false;
     bool fSkipFuncletCallback = true;
-#endif // defined(FEATURE_EH_FUNCLETS)
 
     StackWalkAction retVal = SWA_CONTINUE;
 
@@ -1656,7 +1628,6 @@ StackWalkAction StackFrameIterator::Filter(void)
         fStop = false;
         fSkippingFunclet = false;
 
-#if defined(FEATURE_EH_FUNCLETS)
         ExInfo* pExInfo = NULL;
 
         pExInfo = (PTR_ExInfo)m_crawl.pThread->GetExceptionState()->GetCurrentExceptionTracker();
@@ -1683,12 +1654,10 @@ StackWalkAction StackFrameIterator::Filter(void)
             // we are now skipping frames to get to the funclet's parent
             fSkippingFunclet = true;
         }
-#endif // FEATURE_EH_FUNCLETS
 
         switch (m_frameState)
         {
             case SFITER_FRAMELESS_METHOD:
-#if defined(FEATURE_EH_FUNCLETS)
 ProcessFuncletsForGCReporting:
                 do
                 {
@@ -2110,22 +2079,6 @@ ProcessFuncletsForGCReporting:
                     }
                 }
 
-#else // FEATURE_EH_FUNCLETS
-                // Skip IL stubs
-                if (m_flags & FUNCTIONSONLY)
-                {
-                    if (m_crawl.pFunc->IsDiagnosticsHidden())
-                    {
-                        LOG((LF_GCROOTS, LL_INFO100000,
-                             "STACKWALK: IS_DIAGNOSTICS_HIDDEN: not making callback for this frame, m_crawl.pFunc = %s\n",
-                             m_crawl.pFunc->m_pszDebugMethodName));
-
-                        // don't stop here
-                        break;
-                    }
-                }
-#endif // FEATURE_EH_FUNCLETS
-
                 fStop = true;
                 break;
 
@@ -2137,7 +2090,6 @@ ProcessFuncletsForGCReporting:
             case SFITER_SKIPPED_FRAME_FUNCTION:
                 if (!fSkippingFunclet)
                 {
-#if defined(FEATURE_EH_FUNCLETS)
                     if (m_flags & GC_FUNCLET_REFERENCE_REPORTING)
                     {
                         // If we are enumerating frames for GC reporting and we determined that
@@ -2159,7 +2111,6 @@ ProcessFuncletsForGCReporting:
                             break;
                         }
                     }
-#endif // FEATURE_EH_FUNCLETS
                     if ( (m_crawl.pFunc != NULL) || !(m_flags & FUNCTIONSONLY) )
                     {
                         fStop = true;
@@ -2532,13 +2483,6 @@ StackWalkAction StackFrameIterator::NextRaw(void)
                     m_pvResumableFrameTargetSP = (LPVOID)GetSP(m_crawl.pRD->pCallerContext);
                 }
 #endif // RECORD_RESUMABLE_FRAME_SP
-
-
-#if defined(_DEBUG) && !defined(DACCESS_COMPILE) && !defined(FEATURE_EH_FUNCLETS)
-                // We are transitioning from unmanaged code to managed code... lets do some validation of our
-                // EH mechanism on platforms that we can.
-                VerifyValidTransitionFromManagedCode(m_crawl.pThread, &m_crawl);
-#endif // _DEBUG && !DACCESS_COMPILE &&  !FEATURE_EH_FUNCLETS
             }
         }
 
@@ -2865,9 +2809,7 @@ void StackFrameIterator::ProcessCurrentFrame(void)
             // This must be a JITed/managed native method. There is no explicit frame.
             //------------------------------------------------------------------------
 
-#if defined(FEATURE_EH_FUNCLETS)
             m_crawl.isFilterFuncletCached = false;
-#endif // FEATURE_EH_FUNCLETS
 
             m_crawl.pFunc = m_crawl.codeInfo.GetMethodDesc();
 
@@ -3048,39 +2990,6 @@ void StackFrameIterator::PreProcessingForManagedFrames(void)
 
     INDEBUG(m_crawl.pThread->DebugLogStackWalkInfo(&m_crawl, "CONSIDER", m_uFramesProcessed));
 
-#if defined(_DEBUG) && !defined(FEATURE_EH_FUNCLETS) && !defined(DACCESS_COMPILE)
-    //
-    // VM is responsible for synchronization on non-funclet EH model.
-    //
-    // m_crawl.GetThisPointer() requires full unwind
-    // In GC's relocate phase, objects is not verifiable
-    if ( !(m_flags & (LIGHTUNWIND | QUICKUNWIND | ALLOW_INVALID_OBJECTS)) &&
-         m_crawl.pFunc->IsSynchronized() &&
-         !m_crawl.pFunc->IsStatic()      &&
-         m_crawl.GetCodeManager()->IsInSynchronizedRegion(m_crawl.GetRelOffset(),
-                                                         m_crawl.GetGCInfoToken(),
-                                                         m_crawl.GetCodeManagerFlags()))
-    {
-        BEGIN_GCX_ASSERT_COOP;
-
-        OBJECTREF obj = m_crawl.GetThisPointer();
-
-        _ASSERTE(obj != NULL);
-        VALIDATEOBJECTREF(obj);
-
-        GCPROTECT_BEGIN(obj);
-
-        DWORD owningThreadId = 0;
-        DWORD recursionLevel;
-        obj->GetSyncBlock()->TryGetLockInfo(&owningThreadId, &recursionLevel);
-        _ASSERTE(owningThreadId == m_crawl.pThread->GetThreadId());
-
-        GCPROTECT_END();
-
-        END_GCX_ASSERT_COOP;
-    }
-#endif // _DEBUG && !FEATURE_EH_FUNCLETS && !DACCESS_COMPILE
-
     m_frameState = SFITER_FRAMELESS_METHOD;
 } // StackFrameIterator::PreProcessingForManagedFrames()
 
@@ -3187,7 +3096,6 @@ void StackFrameIterator::PostProcessingForNoFrameTransition()
 #endif // ELIMINATE_FEF
 } // StackFrameIterator::PostProcessingForNoFrameTransition()
 
-#ifdef FEATURE_EH_FUNCLETS
 void StackFrameIterator::ResetNextExInfoForSP(TADDR SP)
 {
     while (m_pNextExInfo && (SP > (TADDR)(m_pNextExInfo)))
@@ -3195,7 +3103,6 @@ void StackFrameIterator::ResetNextExInfoForSP(TADDR SP)
         m_pNextExInfo = (PTR_ExInfo)m_pNextExInfo->m_pPrevNestedInfo;
     }
 }
-#endif // FEATURE_EH_FUNCLETS
 
 //----------------------------------------------------------------------------
 //

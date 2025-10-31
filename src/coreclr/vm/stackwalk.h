@@ -29,28 +29,16 @@ class ICodeManager;
 class IJitManager;
 struct EE_ILEXCEPTION;
 class AppDomain;
-#ifdef FEATURE_EH_FUNCLETS
 struct ExInfo;
-#endif
 
 // This define controls handling of faults in managed code.  If it is defined,
 //  the exception is handled (retried, actually), with a FaultingExceptionFrame
 //  on the stack.  The FEF is used for unwinding.  If not defined, the unwinding
 //  uses the exception context.
 #define USE_FEF // to mark where code needs to be changed to eliminate the FEF
-#if defined(TARGET_X86) && !defined(FEATURE_EH_FUNCLETS)
- #undef USE_FEF // Turn off the FEF use on x86.
- #define ELIMINATE_FEF
-#else
- #if defined(ELIMINATE_FEF)
-  #undef ELIMINATE_FEF
- #endif
-#endif // TARGET_X86 && !FEATURE_EH_FUNCLETS
 
-#if defined(FEATURE_EH_FUNCLETS)
 #define RECORD_RESUMABLE_FRAME_SP
 #define PROCESS_EXPLICIT_FRAME_BEFORE_MANAGED_FRAME
-#endif
 
 //************************************************************************
 // Enumerate all functions.
@@ -61,9 +49,7 @@ namespace AsmOffsetsAsserts
     class AsmOffsets;
 };
 
-#ifdef FEATURE_EH_FUNCLETS
 extern "C" void QCALLTYPE AppendExceptionStackFrame(QCall::ObjectHandleOnStack exceptionObj, SIZE_T ip, SIZE_T sp, int flags, ExInfo *pExInfo);
-#endif
 
 class CrawlFrame
 {
@@ -282,12 +268,10 @@ public:
             }
         }
 
-#if defined(FEATURE_EH_FUNCLETS)
         if (ShouldParentToFuncletSkipReportingGCReferences())
         {
             flags |= ParentOfFuncletStackFrame;
         }
-#endif // defined(FEATURE_EH_FUNCLETS)
 
         return flags;
     }
@@ -375,7 +359,6 @@ public:
         return pThread;
     }
 
-#if defined(FEATURE_EH_FUNCLETS)
     bool IsFunclet()
     {
         WRAPPER_NO_CONTRACT;
@@ -416,8 +399,6 @@ public:
         return ehClauseForCatch;
     }
 
-#endif // FEATURE_EH_FUNCLETS
-
 protected:
     // CrawlFrames are temporarily created by the enumerator.
     // Do not create one from C++. This protected constructor polices this rule.
@@ -430,10 +411,8 @@ private:
     friend class Thread;
     friend class EECodeManager;
     friend class StackFrameIterator;
-#ifdef FEATURE_EH_FUNCLETS
     friend struct ExInfo;
     friend void QCALLTYPE AppendExceptionStackFrame(QCall::ObjectHandleOnStack exceptionObj, SIZE_T ip, SIZE_T sp, int flags, ExInfo *pExInfo);
-#endif // FEATURE_EH_FUNCLETS
 
     bool              isFrameless;
     bool              isFirst;
@@ -455,14 +434,12 @@ private:
     PREGDISPLAY       pRD; // "thread context"/"virtual register set"
 
     EECodeInfo        codeInfo;
-#if defined(FEATURE_EH_FUNCLETS)
     bool              isFilterFunclet;
     bool              isFilterFuncletCached;
     bool              fShouldParentToFuncletSkipReportingGCReferences;
     bool              fShouldCrawlframeReportGCReferences;
     bool              fShouldParentFrameUseUnwindTargetPCforGCReporting;
     EE_ILEXCEPTION_CLAUSE ehClauseForCatch;
-#endif //FEATURE_EH_FUNCLETS
     Thread*           pThread;
 
     GSCookie         *pCurGSCookie;
@@ -578,13 +555,10 @@ public:
     StackWalkAction Next(void);
 
 #ifndef DACCESS_COMPILE
-#ifdef FEATURE_EH_FUNCLETS
     // advance to the position that the other iterator is currently at
     void SkipTo(StackFrameIterator *pOtherStackFrameIterator);
-#endif // FEATURE_EH_FUNCLETS
 #endif // DACCESS_COMPILE
 
-#ifdef FEATURE_EH_FUNCLETS
     void ResetNextExInfoForSP(TADDR SP);
 
     ExInfo* GetNextExInfo()
@@ -612,12 +586,10 @@ public:
         }
         CONTRACTL_END
 
-#if defined(FEATURE_EH_FUNCLETS) && !defined(DACCESS_COMPILE)
+#ifndef DACCESS_COMPILE
         m_isRuntimeWrappedExceptions = (m_crawl.pFunc != NULL) && m_crawl.pFunc->GetModule()->IsRuntimeWrapExceptionsDuringEH();
-#endif // FEATURE_EH_FUNCLETS && !DACCESS_COMPILE
+#endif // DACCESS_COMPILE
     }
-
-#endif // FEATURE_EH_FUNCLETS
 
     enum FrameState
     {
@@ -681,7 +653,6 @@ private:
     // the CONTEXT stored in the ExInfo and updating the REGDISPLAY to the faulting managed stack frame.
     void PostProcessingForNoFrameTransition(void);
 
-#if defined(FEATURE_EH_FUNCLETS)
     void ResetGCRefReportingState(bool ResetOnlyIntermediaryState = false)
     {
         LIMITED_METHOD_CONTRACT;
@@ -695,7 +666,6 @@ private:
         m_sfIntermediaryFuncletParent = StackFrame();
         m_fProcessIntermediaryNonFilterFunclet = false;
     }
-#endif // defined(FEATURE_EH_FUNCLETS)
 
     // Iteration state.
     FrameState m_frameState;
@@ -722,7 +692,6 @@ private:
     ExInfoWalker m_exInfoWalk;
 #endif // ELIMINATE_FEF
 
-#if defined(FEATURE_EH_FUNCLETS)
     // used in funclet-skipping
     StackFrame    m_sfParent;
 
@@ -733,7 +702,6 @@ private:
     bool          m_fProcessIntermediaryNonFilterFunclet;
     bool          m_fDidFuncletReportGCReferences;
     bool          m_isRuntimeWrappedExceptions;
-#endif // FEATURE_EH_FUNCLETS
     // Indicates that the stack walk has moved past a funclet
     bool          m_fFoundFirstFunclet;
 #ifdef FEATURE_INTERPRETER
@@ -752,10 +720,8 @@ private:
 #if defined(RECORD_RESUMABLE_FRAME_SP)
     LPVOID m_pvResumableFrameTargetSP;
 #endif // RECORD_RESUMABLE_FRAME_SP
-#ifdef FEATURE_EH_FUNCLETS
     ExInfo* m_pNextExInfo;
     TADDR m_AdjustedControlPC;
-#endif // FEATURE_EH_FUNCLETS
 };
 
 void SetUpRegdisplayForStackWalk(Thread * pThread, T_CONTEXT * pContext, REGDISPLAY * pRegdisplay);

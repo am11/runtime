@@ -6,8 +6,6 @@
  *
  * GCToEEInterface implementation
  *
-
- *
  */
 
 #include "common.h"
@@ -202,9 +200,9 @@ static void ScanStackRoots(Thread * pThread, promote_func* fn, ScanContext* sc)
 #endif
     {
         unsigned flagsStackWalk = ALLOW_ASYNC_STACK_WALK | ALLOW_INVALID_OBJECTS;
-#if defined(FEATURE_EH_FUNCLETS)
+
         flagsStackWalk |= GC_FUNCLET_REFERENCE_REPORTING;
-#endif // defined(FEATURE_EH_FUNCLETS)
+
         gcctx.pScannedSlots = NULL;
         pThread->StackWalkFrames( GcStackCrawlCallBack, &gcctx, flagsStackWalk);
         delete gcctx.pScannedSlots;

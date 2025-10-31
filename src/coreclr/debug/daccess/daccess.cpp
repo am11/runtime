@@ -27,10 +27,12 @@
 
 #ifdef USE_DAC_TABLE_RVA
 #include <dactablerva.h>
+#error "we are in USE_DAC_TABLE_RVA"
 #else
 extern "C" bool TryGetSymbol(ICorDebugDataTarget* dataTarget, uint64_t baseAddress, const char* symbolName, uint64_t* symbolAddress);
 // cDAC depends on symbol lookup to find the contract descriptor
 #define CAN_USE_CDAC
+#error "we are in CAN_USE_CDAC"
 #endif
 
 extern TADDR g_ClrModuleBase;

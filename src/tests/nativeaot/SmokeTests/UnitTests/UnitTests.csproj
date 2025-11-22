@@ -12,14 +12,15 @@
     <ReferenceXUnitWrapperGenerator>false</ReferenceXUnitWrapperGenerator>
 
     <IlcOrderFile>order.txt</IlcOrderFile>
-    <StackTraceLineNumberSupport>true</StackTraceLineNumberSupport>
-  </PropertyGroup>
 
-  <!-- Enable runtime async; delete this block once it's on by default -->
-  <!-- Conditioned to x64 only due to https://github.com/dotnet/runtime/issues/121871 -->
-  <PropertyGroup Condition="'$(TargetArchitecture)' == 'x64'">
+    <!-- Enable runtime-async preview feature -->
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <Features>$(Features);runtime-async=on</Features>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CLRTestEnvironmentVariable Include="DOTNET_RuntimeAsync" Value="1" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="BasicThreading.cs" />
@@ -28,8 +29,10 @@
     <Compile Include="Generics.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Ordering.cs" />
+    <Compile Include="RuntimeAsync.cs" />
     <Compile Include="Threading.cs" />
     <Compile Include="StackTraces.cs" />
     <Compile Include="Main.cs" />
+    <Compile Include="..\..\..\async\RuntimeAsyncMethodGenerationAttribute.cs" Link="RuntimeAsyncMethodGenerationAttribute.cs" />
   </ItemGroup>
 </Project>

@@ -1357,10 +1357,6 @@ void emitter::emitBegFN(bool hasFramePtr
     ig->igPrev          = nullptr;
 #endif
 
-#ifdef DEBUG
-    emitScratchSigInfo = nullptr;
-#endif // DEBUG
-
     /* Append another group, to start generating the method body */
 
     emitNewIG();
@@ -8525,7 +8521,7 @@ void emitter::emitOutputDataSec(dataSecDsc* sec, BYTE* dst)
                 bDstRW[i] = (target_size_t)(size_t)target;
                 if (emitComp->opts.compReloc)
                 {
-                    uint16_t relocType = TARGET_POINTER_SIZE == 8 ? IMAGE_REL_BASED_DIR64 : IMAGE_REL_BASED_HIGHLOW;
+                    CorInfoReloc relocType = TARGET_POINTER_SIZE == 8 ? CorInfoReloc::DIR64 : CorInfoReloc::DIR32;
                     emitRecordRelocation(&(bDstRW[i]), target, relocType);
                 }
 
@@ -8572,7 +8568,7 @@ void emitter::emitOutputDataSec(dataSecDsc* sec, BYTE* dst)
                 aDstRW[i].DiagnosticIP = (target_size_t)(uintptr_t)target;
                 if (emitComp->opts.compReloc)
                 {
-                    uint16_t relocType = TARGET_POINTER_SIZE == 8 ? IMAGE_REL_BASED_DIR64 : IMAGE_REL_BASED_HIGHLOW;
+                    CorInfoReloc relocType = TARGET_POINTER_SIZE == 8 ? CorInfoReloc::DIR64 : CorInfoReloc::DIR32;
                     emitRecordRelocation(&aDstRW[i].Resume, emitAsyncResumeStubEntryPoint, relocType);
                     if (target != nullptr)
                     {
@@ -10102,7 +10098,7 @@ void emitter::emitRemoveLastInstruction()
  *  emitGetInsSC: Get the instruction's constant value.
  */
 
-cnsval_ssize_t emitter::emitGetInsSC(const instrDesc* id) const
+cnsval_ssize_t emitter::emitGetInsSC(const instrDesc* id)
 {
 #ifdef TARGET_ARM // should it be TARGET_ARMARCH? Why do we need this? Note that on ARM64 we store scaled immediates
                   // for some formats
@@ -10518,25 +10514,25 @@ void emitter::emitStackKillArgs(BYTE* addr, unsigned count, unsigned char callIn
 
 #ifdef DEBUG
 
-void emitter::emitRecordRelocationHelp(void*       location,        /* IN */
-                                       void*       target,          /* IN */
-                                       uint16_t    fRelocType,      /* IN */
-                                       const char* relocTypeName,   /* IN */
-                                       int32_t     addlDelta /* = 0 */) /* IN */
+void emitter::emitRecordRelocationHelp(void*        location,       /* IN */
+                                       void*        target,         /* IN */
+                                       CorInfoReloc fRelocType,     /* IN */
+                                       const char*  relocTypeName,  /* IN */
+                                       int32_t      addlDelta /* = 0 */) /* IN */
 
 #else // !DEBUG
 
-void emitter::emitRecordRelocation(void*    location,           /* IN */
-                                   void*    target,             /* IN */
-                                   uint16_t fRelocType,         /* IN */
-                                   int32_t  addlDelta /* = 0 */) /* IN */
+void emitter::emitRecordRelocation(void*        location,       /* IN */
+                                   void*        target,         /* IN */
+                                   CorInfoReloc fRelocType,     /* IN */
+                                   int32_t      addlDelta /* = 0 */) /* IN */
 
 #endif // !DEBUG
 {
     void* locationRW = (BYTE*)location + writeableOffset;
 
     JITDUMP("recordRelocation: %p (rw: %p) => %p, type %u (%s), delta %d\n", dspPtr(location), dspPtr(locationRW),
-            dspPtr(target), fRelocType, relocTypeName, addlDelta);
+            dspPtr(target), (unsigned)fRelocType, relocTypeName, addlDelta);
 
     // If we're an unmatched altjit, don't tell the VM anything. We still record the relocation for
     // late disassembly; maybe we'll need it?
@@ -10563,11 +10559,11 @@ void emitter::emitHandlePCRelativeMov32(void* location, /* IN */
 {
     if (emitComp->opts.jitFlags->IsSet(JitFlags::JIT_FLAG_RELATIVE_CODE_RELOCS))
     {
-        emitRecordRelocation(location, target, IMAGE_REL_BASED_REL_THUMB_MOV32_PCREL);
+        emitRecordRelocation(location, target, CorInfoReloc::ARM32_THUMB_MOV32_PCREL);
     }
     else
     {
-        emitRecordRelocation(location, target, IMAGE_REL_BASED_THUMB_MOV32);
+        emitRecordRelocation(location, target, CorInfoReloc::ARM32_THUMB_MOV32);
     }
 }
 #endif // TARGET_ARM

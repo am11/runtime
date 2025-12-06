@@ -1,4 +1,10 @@
 <Project>
-    <Import Project="..\..\..\Directory.Build.props" />
-    <Import Project=".\native-library.props" Condition="'$(IsSourceProject)' == 'true' and '$(Language)' == 'C#'" />
+  <Import Project="..\..\..\Directory.Build.props" />
+  <Import Project=".\native-library.props" Condition="'$(IsSourceProject)' == 'true' and '$(Language)' == 'C#'" />
+
+  <PropertyGroup Condition="'$(UseBootstrapLayout)' == 'true'">
+    <EnableAppHostPackDownload>false</EnableAppHostPackDownload>
+    <EnableTargetingPackDownload>false</EnableTargetingPackDownload>
+    <EnableRuntimePackDownload>false</EnableRuntimePackDownload>
+  </PropertyGroup>
 </Project>

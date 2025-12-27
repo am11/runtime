@@ -1204,13 +1204,34 @@ endif ; FEATURE_INTERPRETER
 ; Capture a transition block with register values and call the IL_Throw_Impl
 ; implementation written in C.
 ;
+; Stack layout (from high to low address after prologue):
+;   Return address
+;   CalleeSavedRegisters (r15, r14, r13, r12, rbp, rbx, rsi, rdi - 64 bytes)
+;   Outgoing argument homes (32 bytes) + alignment (8 bytes) <- TransitionBlock
+;   FloatArgumentRegisters (xmm0-xmm3, 64 bytes)
+;   sp points here
+;
 ; Input state:
 ;   RCX = Pointer to exception object
 ;==========================================================================
 NESTED_ENTRY IL_Throw, _TEXT
-        PUSH_COOP_PINVOKE_FRAME rdx
+
+        PUSH_CALLEE_SAVED_REGISTERS
+
+        ; Allocate space for: outgoing args (32) + align (8) + float args (64) = 104 bytes
+        alloc_stack     104
+
+        ; Save argument registers to shadow space area
+        ; Shadow space is at offset 64 (after float args) from sp
+        SAVE_ARGUMENT_REGISTERS 64
+
+        ; Save float argument registers at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
         ; RCX already contains exception object
-        ; RDX contains pointer to TransitionBlock
+        lea     rdx, [rsp + 64]  ; RDX = TransitionBlock* (after float args)
         call    IL_Throw_Impl
         ; Should never return
         int     3
@@ -1224,9 +1245,22 @@ NESTED_END IL_Throw, _TEXT
 ;   RCX = Pointer to exception object
 ;==========================================================================
 NESTED_ENTRY IL_ThrowExact, _TEXT
-        PUSH_COOP_PINVOKE_FRAME rdx
+
+        PUSH_CALLEE_SAVED_REGISTERS
+
+        ; Allocate space for: outgoing args (32) + align (8) + float args (64) = 104 bytes
+        alloc_stack     104
+
+        ; Save argument registers to shadow space area
+        SAVE_ARGUMENT_REGISTERS 64
+
+        ; Save float argument registers at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
         ; RCX already contains exception object
-        ; RDX contains pointer to TransitionBlock
+        lea     rdx, [rsp + 64]  ; RDX = TransitionBlock* (after float args)
         call    IL_ThrowExact_Impl
         ; Should never return
         int     3
@@ -1237,8 +1271,21 @@ NESTED_END IL_ThrowExact, _TEXT
 ; implementation written in C.
 ;==========================================================================
 NESTED_ENTRY IL_Rethrow, _TEXT
-        PUSH_COOP_PINVOKE_FRAME rcx
-        ; RCX contains pointer to TransitionBlock
+
+        PUSH_CALLEE_SAVED_REGISTERS
+
+        ; Allocate space for: outgoing args (32) + align (8) + float args (64) = 104 bytes
+        alloc_stack     104
+
+        ; Save argument registers to shadow space area
+        SAVE_ARGUMENT_REGISTERS 64
+
+        ; Save float argument registers at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
+        lea     rcx, [rsp + 64]  ; RCX = TransitionBlock* (after float args)
         call    IL_Rethrow_Impl
         ; Should never return
         int     3

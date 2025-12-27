@@ -882,22 +882,32 @@ LEAF_END ThisPtrRetBufPrecodeWorker, _TEXT
 // Capture a transition block with register values and call the IL_Throw_Impl
 // implementation written in C.
 //
+// Stack layout (from low to high address):
+//   sp+0:     FloatArgumentRegisters (fa0-fa7, 64 bytes)
+//   sp+64:    TransitionBlock start
+//             - CalleeSavedRegisters (fp, ra, s1-s11, tp, gp - 120 bytes)
+//             - padding (8 bytes)
+//             - ArgumentRegisters (a0-a7, 64 bytes)
+//
 // Input state:
 //   a0 = Pointer to exception object
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_Throw, _TEXT, NoHandler
-    PROLOG_SAVE_REG_PAIR_INDEXED   fp, ra, 0xa0
-    // Spill callee saved registers
-    PROLOG_SAVE_REG_PAIR   s1, s2, 16
-    PROLOG_SAVE_REG_PAIR   s3, s4, 32
-    PROLOG_SAVE_REG_PAIR   s5, s6, 48
-    PROLOG_SAVE_REG_PAIR   s7, s8, 64
-    PROLOG_SAVE_REG_PAIR   s9, s10, 80
-    PROLOG_SAVE_REG_PAIR   s11, gp, 96
-    PROLOG_SAVE_REG        tp, 112
+    // Stack: FloatArgs(64) + CalleeSaved(120) + pad(8) + Args(64) = 256 bytes
+    PROLOG_STACK_ALLOC 256
+    PROLOG_SAVE_REG_PAIR   fp, ra, 64, 1
+
+    // Save callee-saved registers at offset 64 (after FloatArgumentRegisters)
+    SAVE_CALLEESAVED_REGISTERS sp, 64
+
+    // Save argument registers (a0-a7) at offset 192
+    SAVE_ARGUMENT_REGISTERS sp, 192
+
+    // Save floating-point argument registers (fa0-fa7) at offset 0
+    SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
 
     // a0 already contains exception object
-    addi  a1, sp, 0  // a1 = TransitionBlock*
+    addi  a1, sp, 64  // a1 = TransitionBlock* (after FloatArgumentRegisters)
     call  C_FUNC(IL_Throw_Impl)
     // Should never return
     ebreak
@@ -911,18 +921,21 @@ NESTED_END IL_Throw, _TEXT
 //   a0 = Pointer to exception object
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_ThrowExact, _TEXT, NoHandler
-    PROLOG_SAVE_REG_PAIR_INDEXED   fp, ra, 0xa0
-    // Spill callee saved registers
-    PROLOG_SAVE_REG_PAIR   s1, s2, 16
-    PROLOG_SAVE_REG_PAIR   s3, s4, 32
-    PROLOG_SAVE_REG_PAIR   s5, s6, 48
-    PROLOG_SAVE_REG_PAIR   s7, s8, 64
-    PROLOG_SAVE_REG_PAIR   s9, s10, 80
-    PROLOG_SAVE_REG_PAIR   s11, gp, 96
-    PROLOG_SAVE_REG        tp, 112
+    // Stack: FloatArgs(64) + CalleeSaved(120) + pad(8) + Args(64) = 256 bytes
+    PROLOG_STACK_ALLOC 256
+    PROLOG_SAVE_REG_PAIR   fp, ra, 64, 1
+
+    // Save callee-saved registers at offset 64 (after FloatArgumentRegisters)
+    SAVE_CALLEESAVED_REGISTERS sp, 64
+
+    // Save argument registers (a0-a7) at offset 192
+    SAVE_ARGUMENT_REGISTERS sp, 192
+
+    // Save floating-point argument registers (fa0-fa7) at offset 0
+    SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
 
     // a0 already contains exception object
-    addi  a1, sp, 0  // a1 = TransitionBlock*
+    addi  a1, sp, 64  // a1 = TransitionBlock* (after FloatArgumentRegisters)
     call  C_FUNC(IL_ThrowExact_Impl)
     // Should never return
     ebreak
@@ -933,17 +946,20 @@ NESTED_END IL_ThrowExact, _TEXT
 // implementation written in C.
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_Rethrow, _TEXT, NoHandler
-    PROLOG_SAVE_REG_PAIR_INDEXED   fp, ra, 0xa0
-    // Spill callee saved registers
-    PROLOG_SAVE_REG_PAIR   s1, s2, 16
-    PROLOG_SAVE_REG_PAIR   s3, s4, 32
-    PROLOG_SAVE_REG_PAIR   s5, s6, 48
-    PROLOG_SAVE_REG_PAIR   s7, s8, 64
-    PROLOG_SAVE_REG_PAIR   s9, s10, 80
-    PROLOG_SAVE_REG_PAIR   s11, gp, 96
-    PROLOG_SAVE_REG        tp, 112
+    // Stack: FloatArgs(64) + CalleeSaved(120) + pad(8) + Args(64) = 256 bytes
+    PROLOG_STACK_ALLOC 256
+    PROLOG_SAVE_REG_PAIR   fp, ra, 64, 1
 
-    addi  a0, sp, 0  // a0 = TransitionBlock*
+    // Save callee-saved registers at offset 64 (after FloatArgumentRegisters)
+    SAVE_CALLEESAVED_REGISTERS sp, 64
+
+    // Save argument registers (a0-a7) at offset 192
+    SAVE_ARGUMENT_REGISTERS sp, 192
+
+    // Save floating-point argument registers (fa0-fa7) at offset 0
+    SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
+
+    addi  a0, sp, 64  // a0 = TransitionBlock* (after FloatArgumentRegisters)
     call  C_FUNC(IL_Rethrow_Impl)
     // Should never return
     ebreak

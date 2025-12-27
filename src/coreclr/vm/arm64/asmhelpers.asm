@@ -2985,13 +2985,37 @@ CopyLoop
 ; Capture a transition block with register values and call the IL_Throw_Impl
 ; implementation written in C.
 ;
+; Stack layout (from low to high address):
+;   sp+0:     FloatArgumentRegisters (q0-q7, 128 bytes)
+;   sp+128:   TransitionBlock start (176 bytes)
+;             - CalleeSavedRegisters (fp, lr, x19-x28 - 96 bytes)
+;             - padding (8 bytes)
+;             - x8 (8 bytes)
+;             - ArgumentRegisters (x0-x7, 64 bytes)
+;
 ; Input state:
 ;   x0 = Pointer to exception object
 ; ------------------------------------------------------------------
     NESTED_ENTRY IL_Throw, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME x1
+        ; Allocate 176 bytes for TransitionBlock (callee-saved area)
+        PROLOG_SAVE_REG_PAIR   fp, lr, #-176!
+        PROLOG_SAVE_REG_PAIR   x19, x20, #16
+        PROLOG_SAVE_REG_PAIR   x21, x22, #32
+        PROLOG_SAVE_REG_PAIR   x23, x24, #48
+        PROLOG_SAVE_REG_PAIR   x25, x26, #64
+        PROLOG_SAVE_REG_PAIR   x27, x28, #80
+
+        ; Allocate 128 bytes for FloatArgumentRegisters
+        PROLOG_STACK_ALLOC 128
+
+        ; Save argument registers (x8, x0-x7) at offset 128+104 from sp
+        SAVE_ARGUMENT_REGISTERS sp, (128 + 104)
+
+        ; Save floating-point argument registers (q0-q7) at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
+
         ; x0 already contains exception object
-        ; x1 contains pointer to TransitionBlock
+        add     x1, sp, #128  ; x1 = TransitionBlock* (after FloatArgumentRegisters)
         bl      IL_Throw_Impl
         ; Should never return
         brk     #0
@@ -3005,9 +3029,25 @@ CopyLoop
 ;   x0 = Pointer to exception object
 ; ------------------------------------------------------------------
     NESTED_ENTRY IL_ThrowExact, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME x1
+        ; Allocate 176 bytes for TransitionBlock (callee-saved area)
+        PROLOG_SAVE_REG_PAIR   fp, lr, #-176!
+        PROLOG_SAVE_REG_PAIR   x19, x20, #16
+        PROLOG_SAVE_REG_PAIR   x21, x22, #32
+        PROLOG_SAVE_REG_PAIR   x23, x24, #48
+        PROLOG_SAVE_REG_PAIR   x25, x26, #64
+        PROLOG_SAVE_REG_PAIR   x27, x28, #80
+
+        ; Allocate 128 bytes for FloatArgumentRegisters
+        PROLOG_STACK_ALLOC 128
+
+        ; Save argument registers (x8, x0-x7) at offset 128+104 from sp
+        SAVE_ARGUMENT_REGISTERS sp, (128 + 104)
+
+        ; Save floating-point argument registers (q0-q7) at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
+
         ; x0 already contains exception object
-        ; x1 contains pointer to TransitionBlock
+        add     x1, sp, #128  ; x1 = TransitionBlock* (after FloatArgumentRegisters)
         bl      IL_ThrowExact_Impl
         ; Should never return
         brk     #0
@@ -3018,8 +3058,24 @@ CopyLoop
 ; implementation written in C.
 ; ------------------------------------------------------------------
     NESTED_ENTRY IL_Rethrow, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME x0
-        ; x0 contains pointer to TransitionBlock
+        ; Allocate 176 bytes for TransitionBlock (callee-saved area)
+        PROLOG_SAVE_REG_PAIR   fp, lr, #-176!
+        PROLOG_SAVE_REG_PAIR   x19, x20, #16
+        PROLOG_SAVE_REG_PAIR   x21, x22, #32
+        PROLOG_SAVE_REG_PAIR   x23, x24, #48
+        PROLOG_SAVE_REG_PAIR   x25, x26, #64
+        PROLOG_SAVE_REG_PAIR   x27, x28, #80
+
+        ; Allocate 128 bytes for FloatArgumentRegisters
+        PROLOG_STACK_ALLOC 128
+
+        ; Save argument registers (x8, x0-x7) at offset 128+104 from sp
+        SAVE_ARGUMENT_REGISTERS sp, 0 + 128 + 104
+
+        ; Save floating-point argument registers (q0-q7) at offset 0
+        SAVE_FLOAT_ARGUMENT_REGISTERS sp, 0
+
+        add     x0, sp, #128  ; x0 = TransitionBlock* (after FloatArgumentRegisters)
         bl      IL_Rethrow_Impl
         ; Should never return
         brk     #0

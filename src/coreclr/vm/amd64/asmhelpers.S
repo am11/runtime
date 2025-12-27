@@ -1918,13 +1918,31 @@ NESTED_END CallJittedMethodRetDoubleDouble, _TEXT
 // Capture a transition block with register values and call the IL_Throw_Impl
 // implementation written in C.
 //
+// Stack layout (from high to low address after prologue):
+//   Return address
+//   CalleeSavedRegisters (rbp, rbx, r15, r14, r13, r12 - 48 bytes)
+//   ArgumentRegisters (r9, r8, rcx, rdx, rsi, rdi - 48 bytes)  <- TransitionBlock
+//   Padding (8 bytes for 16-byte alignment)
+//   FloatArgumentRegisters (xmm0-xmm7, 128 bytes)
+//   sp points here
+//
 // Input state:
 //   rdi = Pointer to exception object
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_Throw, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME rsi
+        set_cfa_register rsp, 8
+
+        PUSH_CALLEE_SAVED_REGISTERS
+        PUSH_ARGUMENT_REGISTERS
+
+        // Allocate space for float argument registers (128 bytes) + alignment (8 bytes)
+        alloc_stack     136
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
         // rdi already contains exception object
-        // rsi contains pointer to TransitionBlock
+        lea     rsi, [rsp + 136]  // rsi = TransitionBlock* (after float args, pointing to ArgumentRegisters)
         call    C_FUNC(IL_Throw_Impl)
         // Should never return
         int3
@@ -1938,9 +1956,19 @@ NESTED_END IL_Throw, _TEXT
 //   rdi = Pointer to exception object
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_ThrowExact, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME rsi
+        set_cfa_register rsp, 8
+
+        PUSH_CALLEE_SAVED_REGISTERS
+        PUSH_ARGUMENT_REGISTERS
+
+        // Allocate space for float argument registers (128 bytes) + alignment (8 bytes)
+        alloc_stack     136
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
         // rdi already contains exception object
-        // rsi contains pointer to TransitionBlock
+        lea     rsi, [rsp + 136]  // rsi = TransitionBlock* (after float args, pointing to ArgumentRegisters)
         call    C_FUNC(IL_ThrowExact_Impl)
         // Should never return
         int3
@@ -1951,8 +1979,18 @@ NESTED_END IL_ThrowExact, _TEXT
 // implementation written in C.
 // ------------------------------------------------------------------
 NESTED_ENTRY IL_Rethrow, _TEXT, NoHandler
-        PUSH_COOP_PINVOKE_FRAME rdi
-        // rdi contains pointer to TransitionBlock
+        set_cfa_register rsp, 8
+
+        PUSH_CALLEE_SAVED_REGISTERS
+        PUSH_ARGUMENT_REGISTERS
+
+        // Allocate space for float argument registers (128 bytes) + alignment (8 bytes)
+        alloc_stack     136
+        SAVE_FLOAT_ARGUMENT_REGISTERS 0
+
+        END_PROLOGUE
+
+        lea     rdi, [rsp + 136]  // rdi = TransitionBlock* (after float args, pointing to ArgumentRegisters)
         call    C_FUNC(IL_Rethrow_Impl)
         // Should never return
         int3

@@ -11405,7 +11405,7 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
 {
     LIMITED_METHOD_CONTRACT;
 
-    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
     m_Context.SegCs = 0;
     m_Context.SegSs = 0;
     m_Context.EFlags = 0;
@@ -11426,6 +11426,17 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_ContextPointers.Rcx = &m_Context.Rcx;
     m_ContextPointers.R8 = &m_Context.R8;
     m_ContextPointers.R9 = &m_Context.R9;
+
+    // Copy floating point argument registers (xmm0-xmm7)
+    FloatArgumentRegisters *pFloatArgs = (FloatArgumentRegisters*)((BYTE*)pTransitionBlock + TransitionBlock::GetOffsetOfFloatArgumentRegisters());
+    m_Context.Xmm0 = pFloatArgs->d[0];
+    m_Context.Xmm1 = pFloatArgs->d[1];
+    m_Context.Xmm2 = pFloatArgs->d[2];
+    m_Context.Xmm3 = pFloatArgs->d[3];
+    m_Context.Xmm4 = pFloatArgs->d[4];
+    m_Context.Xmm5 = pFloatArgs->d[5];
+    m_Context.Xmm6 = pFloatArgs->d[6];
+    m_Context.Xmm7 = pFloatArgs->d[7];
 #else
     // On Windows AMD64, argument registers are not saved in the transition block
     m_Context.Rax = 0;
@@ -11433,6 +11444,10 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_Context.Rdx = 0;
     m_Context.R8 = 0;
     m_Context.R9 = 0;
+
+    // Note: On Windows AMD64, floating point argument registers (xmm0-xmm3) are not currently saved
+    // in the transition block for IL_Throw helpers. If needed, the assembly stubs would need to be
+    // updated to save them.
 #endif
 
 #define CALLEE_SAVED_REGISTER(reg) \
@@ -11452,7 +11467,7 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
 {
     LIMITED_METHOD_CONTRACT;
 
-    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
 
     // Copy argument registers (R0-R3)
     m_Context.R0 = pTransitionBlock->m_argumentRegisters.r[0];
@@ -11470,6 +11485,13 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_Context.R10 = pTransitionBlock->m_calleeSavedRegisters.r10;
     m_Context.R11 = pTransitionBlock->m_calleeSavedRegisters.r11;
     m_Context.Lr = pTransitionBlock->m_calleeSavedRegisters.r14; // r14 is link register
+
+    // Copy floating point argument registers (d0-d7 / s0-s15)
+    FloatArgumentRegisters *pFloatArgs = (FloatArgumentRegisters*)((BYTE*)pTransitionBlock + TransitionBlock::GetOffsetOfFloatArgumentRegisters());
+    for (int i = 0; i < 8; i++)
+    {
+        m_Context.D[i] = pFloatArgs->d[i];
+    }
 
     // Set up context pointers for callee-saved registers
     m_ContextPointers.R4 = &m_Context.R4;
@@ -11493,7 +11515,7 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
 {
     LIMITED_METHOD_CONTRACT;
 
-    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
 
     // Copy argument registers (X0-X7)
     for (int i = 0; i < 8; i++)
@@ -11520,6 +11542,13 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_Context.Fp = pTransitionBlock->m_calleeSavedRegisters.x29;
     m_Context.Lr = pTransitionBlock->m_calleeSavedRegisters.x30;
 
+    // Copy floating point argument registers (V0-V7)
+    FloatArgumentRegisters *pFloatArgs = (FloatArgumentRegisters*)((BYTE*)pTransitionBlock + TransitionBlock::GetOffsetOfFloatArgumentRegisters());
+    for (int i = 0; i < 8; i++)
+    {
+        m_Context.V[i] = pFloatArgs->q[i];
+    }
+
     // Set up context pointers for callee-saved registers
     m_ContextPointers.X19 = &m_Context.X19;
     m_ContextPointers.X20 = &m_Context.X20;
@@ -11545,7 +11574,7 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
 {
     LIMITED_METHOD_CONTRACT;
 
-    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
 
     // Copy argument registers (A0-A7)
     m_Context.A0 = pTransitionBlock->m_argumentRegisters.a[0];
@@ -11569,6 +11598,16 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_Context.S6 = pTransitionBlock->m_calleeSavedRegisters.s6;
     m_Context.S7 = pTransitionBlock->m_calleeSavedRegisters.s7;
     m_Context.S8 = pTransitionBlock->m_calleeSavedRegisters.s8;
+
+    // Copy floating point argument registers (fa0-fa7)
+    // F[] array in CONTEXT is 4*32 elements for LSX/LASX support.
+    // Each FP register takes 4 slots (for 256-bit LASX vectors).
+    // For 64-bit doubles, we only use the first slot of each register.
+    FloatArgumentRegisters *pFloatArgs = (FloatArgumentRegisters*)((BYTE*)pTransitionBlock + TransitionBlock::GetOffsetOfFloatArgumentRegisters());
+    for (int i = 0; i < 8; i++)
+    {
+        memcpy(&m_Context.F[i * 4], &pFloatArgs->f[i], sizeof(double));
+    }
 
     // Set up context pointers for callee-saved registers
     m_ContextPointers.S0 = &m_Context.S0;
@@ -11594,7 +11633,7 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
 {
     LIMITED_METHOD_CONTRACT;
 
-    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    m_Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT;
 
     // Copy argument registers (A0-A7)
     m_Context.A0 = pTransitionBlock->m_argumentRegisters.a[0];
@@ -11622,6 +11661,14 @@ void SoftwareExceptionFrame::UpdateContextFromTransitionBlock(TransitionBlock *p
     m_Context.S11 = pTransitionBlock->m_calleeSavedRegisters.s11;
     m_Context.Tp = pTransitionBlock->m_calleeSavedRegisters.tp;
     m_Context.Gp = pTransitionBlock->m_calleeSavedRegisters.gp;
+
+    // Copy floating point argument registers (fa0-fa7)
+    FloatArgumentRegisters *pFloatArgs = (FloatArgumentRegisters*)((BYTE*)pTransitionBlock + TransitionBlock::GetOffsetOfFloatArgumentRegisters());
+    for (int i = 0; i < 8; i++)
+    {
+        // F[10-17] are fa0-fa7 in RISC-V register naming
+        memcpy(&m_Context.F[10 + i], &pFloatArgs->f[i], sizeof(double));
+    }
 
     // Set up context pointers for callee-saved registers
     m_ContextPointers.S1 = &m_Context.S1;
@@ -11654,31 +11701,36 @@ void SoftwareExceptionFrame::Init()
 {
     WRAPPER_NO_CONTRACT;
 
-    // On x86 we initialize the context state from transition block in
-    // UpdateContextFromTransitionBlock method.
+    // On x86 and when using TransitionBlock path (indicated by m_ReturnAddress being set),
+    // we initialize the context state from transition block in UpdateContextFromTransitionBlock method.
 #ifndef TARGET_X86
+    // If m_ReturnAddress is already set, the context was populated from TransitionBlock
+    // and we should skip VirtualUnwind.
+    if (m_ReturnAddress == 0)
+    {
 #define CALLEE_SAVED_REGISTER(regname) m_ContextPointers.regname = NULL;
-    ENUM_CALLEE_SAVED_REGISTERS();
+        ENUM_CALLEE_SAVED_REGISTERS();
 #undef CALLEE_SAVED_REGISTER
 
 #ifndef TARGET_UNIX
-    Thread::VirtualUnwindCallFrame(&m_Context, &m_ContextPointers);
+        Thread::VirtualUnwindCallFrame(&m_Context, &m_ContextPointers);
 #else // !TARGET_UNIX
-    BOOL success = PAL_VirtualUnwind(&m_Context, &m_ContextPointers);
-    if (!success)
-    {
-        _ASSERTE(!"SoftwareExceptionFrame::Init failed");
-        EEPOLICY_HANDLE_FATAL_ERROR(COR_E_EXECUTIONENGINE);
-    }
+        BOOL success = PAL_VirtualUnwind(&m_Context, &m_ContextPointers);
+        if (!success)
+        {
+            _ASSERTE(!"SoftwareExceptionFrame::Init failed");
+            EEPOLICY_HANDLE_FATAL_ERROR(COR_E_EXECUTIONENGINE);
+        }
 #endif // !TARGET_UNIX
 
 #define CALLEE_SAVED_REGISTER(regname) if (m_ContextPointers.regname == NULL) m_ContextPointers.regname = &m_Context.regname;
-    ENUM_CALLEE_SAVED_REGISTERS();
+        ENUM_CALLEE_SAVED_REGISTERS();
 #undef CALLEE_SAVED_REGISTER
 
-    _ASSERTE(ExecutionManager::IsManagedCode(::GetIP(&m_Context)));
+        m_ReturnAddress = ::GetIP(&m_Context);
+    }
 
-    m_ReturnAddress = ::GetIP(&m_Context);
+    _ASSERTE(ExecutionManager::IsManagedCode(::GetIP(&m_Context)));
 #endif // !TARGET_X86
 }
 

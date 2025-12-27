@@ -2292,14 +2292,55 @@ void CodeGen::genAsyncResumeInfo(GenTreeVal* treeNode)
 }
 
 //------------------------------------------------------------------------
-// genLockedInstructions: Generate code for a GT_XADD or GT_XCHG node.
+// genLockedInstructions: Generate code for a GT_XADD, GT_XAND, GT_XORR or GT_XCHG node.
 //
 // Arguments:
-//    treeNode - the GT_XADD/XCHG node
+//    treeNode - the GT_XADD/XAND/XORR/XCHG node
 //
 void CodeGen::genLockedInstructions(GenTreeOp* treeNode)
 {
-    NYI("unimplemented on LOONGARCH64 yet");
+    assert(!varTypeIsSmall(treeNode->TypeGet()));
+
+    GenTree*  data      = treeNode->AsOp()->gtOp2;
+    GenTree*  addr      = treeNode->AsOp()->gtOp1;
+    regNumber dataReg   = !data->isContained() ? data->GetRegNum() : REG_R0;
+    regNumber addrReg   = addr->GetRegNum();
+    regNumber targetReg = treeNode->GetRegNum();
+    if (targetReg == REG_NA)
+    {
+        targetReg = REG_R0;
+    }
+
+    genConsumeAddress(addr);
+    genConsumeRegs(data);
+
+    emitAttr dataSize = emitActualTypeSize(data);
+    bool     is4      = (dataSize == EA_4BYTE);
+
+    instruction ins = INS_break;
+    switch (treeNode->gtOper)
+    {
+        case GT_XORR:
+            ins = is4 ? INS_amor_db_w : INS_amor_db_d;
+            break;
+        case GT_XAND:
+            ins = is4 ? INS_amand_db_w : INS_amand_db_d;
+            break;
+        case GT_XCHG:
+            ins = is4 ? INS_amswap_db_w : INS_amswap_db_d;
+            break;
+        case GT_XADD:
+            ins = is4 ? INS_amadd_db_w : INS_amadd_db_d;
+            break;
+        default:
+            noway_assert(!"Unexpected treeNode->gtOper");
+    }
+    GetEmitter()->emitIns_R_R_R(ins, dataSize, targetReg, dataReg, addrReg);
+
+    if (targetReg != REG_R0)
+    {
+        genProduceReg(treeNode);
+    }
 }
 
 //------------------------------------------------------------------------
@@ -2310,7 +2351,70 @@ void CodeGen::genLockedInstructions(GenTreeOp* treeNode)
 //
 void CodeGen::genCodeForCmpXchg(GenTreeCmpXchg* treeNode)
 {
-    NYI("unimplemented on LOONGARCH64 yet");
+    assert(treeNode->OperIs(GT_CMPXCHG));
+    assert(!varTypeIsSmall(treeNode->TypeGet()));
+
+    GenTree* locOp       = treeNode->Addr();
+    GenTree* valOp       = treeNode->Data();
+    GenTree* comparandOp = treeNode->Comparand();
+
+    regNumber target    = treeNode->GetRegNum();
+    regNumber loc       = locOp->GetRegNum();
+    regNumber val       = !valOp->isContained() ? valOp->GetRegNum() : REG_R0;
+    regNumber comparand = REG_R0;
+    if (!comparandOp->isContained())
+    {
+        comparand = comparandOp->GetRegNum();
+        if (comparandOp->TypeIs(TYP_INT, TYP_UINT))
+        {
+            regNumber signExtendedComparand = internalRegisters.Extract(treeNode);
+            GetEmitter()->emitIns_R_R_I(INS_addi_w, EA_4BYTE, signExtendedComparand, comparand, 0);
+            comparand = signExtendedComparand;
+        }
+    }
+    regNumber storeErr = internalRegisters.GetSingle(treeNode);
+
+    // Register allocator should have extended the lifetimes of all input and internal registers
+    // They should all be different
+    noway_assert(target != loc);
+    noway_assert(target != val);
+    noway_assert(target != comparand);
+    noway_assert(target != storeErr);
+    noway_assert(loc != val);
+    noway_assert(loc != comparand);
+    noway_assert(loc != storeErr);
+    noway_assert((val != comparand) || (val == REG_R0));
+    noway_assert(val != storeErr);
+    noway_assert(comparand != storeErr);
+    noway_assert(target != REG_NA);
+    noway_assert(storeErr != REG_NA);
+
+    genConsumeAddress(locOp);
+    genConsumeRegs(valOp);
+    genConsumeRegs(comparandOp);
+
+    // NOTE: `genConsumeAddress` marks consumed register as not a GC pointer, assuming the input
+    // registers die at the first generated instruction. However, here the input registers are reused,
+    // so mark the location register as a GC pointer until code generation for this node is finished.
+    gcInfo.gcMarkRegPtrVal(loc, locOp->TypeGet());
+
+    BasicBlock* retry = genCreateTempLabel();
+    BasicBlock* fail  = genCreateTempLabel();
+
+    emitter* e    = GetEmitter();
+    emitAttr size = emitActualTypeSize(valOp);
+    bool     is4  = (size == EA_4BYTE);
+
+    genDefineTempLabel(retry);
+    e->emitIns_R_R_I(is4 ? INS_ll_w : INS_ll_d, size, target, loc, 0);  // load original value
+    e->emitIns_J_cond_la(INS_bne, fail, target, comparand);             // fail if doesn't match
+    e->emitIns_R_R_I(INS_ori, size, storeErr, val, 0);                  // move val to storeErr (sc overwrites storeErr)
+    e->emitIns_R_R_I(is4 ? INS_sc_w : INS_sc_d, size, storeErr, loc, 0); // try to update (returns 0 on failure)
+    e->emitIns_J_cond_la(INS_beq, retry, storeErr, REG_R0);             // retry if update failed (storeErr == 0)
+    genDefineTempLabel(fail);
+
+    gcInfo.gcMarkRegSetNpt(locOp->gtGetRegMask());
+    genProduceReg(treeNode);
 }
 
 static inline bool isImmed(GenTree* treeNode)
@@ -4310,6 +4414,8 @@ void CodeGen::genCodeForTreeNode(GenTree* treeNode)
 
         case GT_XCHG:
         case GT_XADD:
+        case GT_XORR:
+        case GT_XAND:
             genLockedInstructions(treeNode->AsOp());
             break;
 

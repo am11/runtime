@@ -352,17 +352,82 @@ int LinearScan::BuildNode(GenTree* tree)
 
         case GT_CMPXCHG:
         {
-            NYI_LOONGARCH64("-----unimplemented on LOONGARCH64 yet----");
+            GenTreeCmpXchg* cas = tree->AsCmpXchg();
+            assert(dstCount == 1);
+
+            srcCount = 1;
+            // Extend lifetimes of argument regs because they may be reused during retries
+            assert(!cas->Addr()->isContained());
+            setDelayFree(BuildUse(cas->Addr()));
+
+            GenTree* data = cas->Data();
+            if (!data->isContained())
+            {
+                srcCount++;
+                setDelayFree(BuildUse(data));
+            }
+            else
+            {
+                assert(data->IsIntegralConst(0));
+            }
+
+            GenTree* comparand = cas->Comparand();
+            if (!comparand->isContained())
+            {
+                srcCount++;
+                RefPosition* use = BuildUse(comparand);
+                if (comparand->TypeIs(TYP_INT, TYP_UINT))
+                {
+                    buildInternalIntRegisterDefForNode(tree); // temp reg for sign-extended comparand
+                }
+                else
+                {
+                    setDelayFree(use);
+                }
+            }
+            else
+            {
+                assert(comparand->IsIntegralConst(0));
+            }
+
+            buildInternalIntRegisterDefForNode(tree); // temp reg for store conditional error
+            // Internals may not collide with target
+            setInternalRegsDelayFree = true;
+            buildInternalRegisterUses();
+            BuildDef(tree);
         }
         break;
 
         case GT_LOCKADD:
+            assert(!"-----unimplemented on LOONGARCH64----");
+            break;
+
         case GT_XORR:
         case GT_XAND:
         case GT_XADD:
         case GT_XCHG:
         {
-            NYI_LOONGARCH64("-----unimplemented on LOONGARCH64 yet----");
+            assert(dstCount == (tree->TypeIs(TYP_VOID) ? 0 : 1));
+            GenTree* addr = tree->gtGetOp1();
+            GenTree* data = tree->gtGetOp2();
+            assert(!addr->isContained());
+
+            srcCount = 1;
+            BuildUse(addr);
+            if (!data->isContained())
+            {
+                srcCount++;
+                BuildUse(data);
+            }
+            else
+            {
+                assert(data->IsIntegralConst(0));
+            }
+
+            if (dstCount == 1)
+            {
+                BuildDef(tree);
+            }
         }
         break;
 

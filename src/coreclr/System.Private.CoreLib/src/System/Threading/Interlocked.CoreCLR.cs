@@ -52,7 +52,7 @@ namespace System.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Exchange(ref int location1, int value)
         {
-#if TARGET_X86 || TARGET_AMD64 || TARGET_ARM64 || TARGET_RISCV64
+#if TARGET_X86 || TARGET_64BIT
             return Exchange(ref location1, value); // Must expand intrinsic
 #else
             if (Unsafe.IsNullRef(ref location1))

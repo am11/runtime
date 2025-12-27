@@ -4213,7 +4213,7 @@ GenTree* Compiler::impIntrinsic(CORINFO_CLASS_HANDLE    clsHnd,
             }
 #endif // defined(TARGET_ARM64) || defined(TARGET_RISCV64)
 
-#if defined(TARGET_XARCH) || defined(TARGET_ARM64) || defined(TARGET_RISCV64)
+#if defined(TARGET_XARCH) || defined(TARGET_64BIT)
             // TODO-ARM-CQ: reenable treating InterlockedCmpXchg32 operation as intrinsic
             case NI_System_Threading_Interlocked_CompareExchange:
             {
@@ -4300,7 +4300,7 @@ GenTree* Compiler::impIntrinsic(CORINFO_CLASS_HANDLE    clsHnd,
                                           callType, op1, op2);
                 break;
             }
-#endif // defined(TARGET_XARCH) || defined(TARGET_ARM64) || defined(TARGET_RISCV64)
+#endif // defined(TARGET_XARCH) || defined(TARGET_64BIT)
 
             case NI_System_Threading_Interlocked_MemoryBarrier:
             {

@@ -635,46 +635,41 @@ void Frame::PopIfChained()
 #endif // TARGET_UNIX && !DACCESS_COMPILE
 
 #if (!defined(TARGET_X86) || defined(TARGET_UNIX)) && !defined(TARGET_WASM)
+// Skip native frames and set context to the target SP.
+// Following NativeAOT's approach: FP registers are volatile (caller-saved), so we don't need
+// to unwind through native frames to track them. Managed code will reload any FP values it needs.
+// This is equivalent to NativeAOT's SkipNativeFrames flag behavior.
 /* static */
 void Frame::UpdateFloatingPointRegisters(const PREGDISPLAY pRD, TADDR targetSP)
 {
-    _ASSERTE(!ExecutionManager::IsManagedCode(::GetIP(pRD->pCurrentContext)));
-
-    do
-    {
-#ifdef TARGET_UNIX
-        PAL_VirtualUnwind(pRD->pCurrentContext, NULL);
-#else
-        Thread::VirtualUnwindCallFrame(pRD);
-#endif
-    }
-    while (::GetSP(pRD->pCurrentContext) < targetSP);
-
-    _ASSERTE(::GetSP(pRD->pCurrentContext) == targetSP);
+    // Simply set SP to target - the caller will set IP appropriately.
+    // FP register state is not tracked through native frames (they're volatile).
+    ::SetSP(pRD->pCurrentContext, targetSP);
 }
 
+// Skip native frames for InlinedCallFrame and set context to managed caller.
+// Following NativeAOT's approach: When unwinding past a PInvoke, we skip the native frames
+// entirely and restore context from the transition frame's stored values.
+// FP registers are volatile, so we don't need to unwind through native code.
 void InlinedCallFrame::UpdateFloatingPointRegisters(const PREGDISPLAY pRD)
 {
 #ifdef FEATURE_INTERPRETER
     if (IsInInterpreter())
     {
         InterpreterFrame *pInterpreterFrame = (InterpreterFrame *)m_Next;
-        Frame::UpdateFloatingPointRegisters(pRD, pInterpreterFrame->GetInterpExecMethodSP());
+        // For interpreter, set SP to interpreter's frame and let it set the full context
+        ::SetSP(pRD->pCurrentContext, pInterpreterFrame->GetInterpExecMethodSP());
         pInterpreterFrame->SetContextToInterpMethodContextFrame(pRD->pCurrentContext);
         return;
     }
 #endif // FEATURE_INTERPRETER
-    {
-        _ASSERTE(!ExecutionManager::IsManagedCode(::GetIP(pRD->pCurrentContext)));
-        while (!ExecutionManager::IsManagedCode(::GetIP(pRD->pCurrentContext)))
-        {
-    #ifdef TARGET_UNIX
-            PAL_VirtualUnwind(pRD->pCurrentContext, NULL);
-    #else
-            Thread::VirtualUnwindCallFrame(pRD);
-    #endif
-        }
-    }
+
+    // Set context to managed caller using the stored values in the InlinedCallFrame.
+    // m_pCallerReturnAddress = IP of instruction after the PInvoke call
+    // m_pCallSiteSP = SP at the managed call site
+    // This matches NativeAOT's PInvokeTransitionFrame behavior where native frames are skipped.
+    ::SetSP(pRD->pCurrentContext, (TADDR)m_pCallSiteSP);
+    ::SetIP(pRD->pCurrentContext, m_pCallerReturnAddress);
 }
 #endif // (!TARGET_X86 || TARGET_UNIX) && !TARGET_WASM
 

@@ -927,7 +927,6 @@ static void inject_activation_handler(int code, siginfo_t *siginfo, void *contex
 
         if (g_safeActivationCheckFunction(CONTEXTGetPC(&winContext)))
         {
-            g_inject_activation_context_locvar_offset = (int)((char*)&winContext - (char*)__builtin_frame_address(0));
             int savedErrNo = errno; // Make sure that errno is not modified
             InvokeActivationHandler(&winContext);
             errno = savedErrNo;
@@ -1074,7 +1073,6 @@ static bool common_signal_handler(int code, siginfo_t *siginfo, void *sigcontext
     native_context_t *ucontext;
 
     ucontext = (native_context_t *)sigcontext;
-    g_hardware_exception_context_locvar_offset = (int)((char*)&signalContextRecordPtr - (char*)__builtin_frame_address(0));
 
     if (code == (SIGSEGV | StackOverflowFlag))
     {

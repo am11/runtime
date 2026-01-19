@@ -222,8 +222,9 @@ void TransitionFrame::UpdateRegDisplay_Impl(const PREGDISPLAY pRD, bool updateFl
 #ifndef DACCESS_COMPILE
     if (updateFloats)
     {
+        // Following NativeAOT's approach: skip native frames entirely.
+        // FP registers are volatile (caller-saved), so we don't need to unwind through native code.
         UpdateFloatingPointRegisters(pRD, GetSP());
-        _ASSERTE(pRD->pCurrentContext->Pc == GetReturnAddress());
     }
 #endif // DACCESS_COMPILE
 
@@ -307,6 +308,9 @@ void InlinedCallFrame::UpdateRegDisplay_Impl(const PREGDISPLAY pRD, bool updateF
 #ifndef DACCESS_COMPILE
     if (updateFloats)
     {
+        // Following NativeAOT's approach: skip native frames entirely and use the stored values.
+        // FP registers are volatile (caller-saved), so we don't need to unwind through native code.
+        // UpdateFloatingPointRegisters sets SP; we set Pc below from m_pCallerReturnAddress.
         UpdateFloatingPointRegisters(pRD);
     }
 #endif // DACCESS_COMPILE

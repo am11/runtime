@@ -375,7 +375,6 @@ static void PAL_DispatchExceptionInner(PCONTEXT pContext, PEXCEPTION_RECORD pExR
     // doesn't interface that well with the fake caller frames we define for PAL_DispatchException,
     // but they work fine for any callees of PAL_DispatchException.
     CONTEXT *contextRecord = pContext;
-    g_hardware_exception_context_locvar_offset = (int)((char*)&contextRecord - (char*)__builtin_frame_address(0));
 
     pContext->ContextFlags |= CONTEXT_EXCEPTION_ACTIVE;
     bool continueExecution;

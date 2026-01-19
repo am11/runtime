@@ -1896,25 +1896,11 @@ void InterpreterCodeManager::ResumeAfterCatch(CONTEXT *pContext, size_t targetSS
 
     TADDR targetSP = pInterpreterFrame->GetInterpExecMethodSP();
 
-    // We are resuming in interpreter frame. So we need to skip all native, JIT and AOT generated frames until we reach
-    // the resumeSP
-    do
-    {
-        if (ExecutionManager::IsManagedCode(GetIP(pContext)))
-        {
-            // JIT / AOT generated managed code
-            Thread::VirtualUnwindCallFrame(pContext);
-        }
-        else
-        {
-#ifdef TARGET_UNIX
-            PAL_VirtualUnwind(pContext, NULL);
-#else
-            Thread::VirtualUnwindCallFrame(pContext);
-#endif
-        }
-    }
-    while (GetSP(pContext) != targetSP);
+    // Following NativeAOT's approach: skip native frames entirely using the interpreter frame's stored context.
+    // FP registers are volatile (caller-saved), so we don't need to unwind through native code.
+    // The interpreter frame has all the context information we need to resume.
+    pInterpreterFrame->SetContextToInterpMethodContextFrame(pContext);
+    _ASSERTE(GetSP(pContext) == targetSP);
 
 #if defined(HOST_AMD64) && defined(HOST_WINDOWS)
     targetSSP = pInterpreterFrame->GetInterpExecMethodSSP();

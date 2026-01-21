@@ -31,7 +31,7 @@ class RuntimeAsync
 // Test basic Task-returning async method
 class TaskReturningAsyncTest
 {
-    [RuntimeAsyncMethodGeneration(false)]
+    [RuntimeAsyncMethodGeneration(true)]
     static async Task SimpleAsyncMethod()
     {
         await Task.CompletedTask;
@@ -57,7 +57,7 @@ class TaskReturningAsyncTest
 // Test ValueTask-returning async method
 class ValueTaskReturningAsyncTest
 {
-    [RuntimeAsyncMethodGeneration(false)]
+    [RuntimeAsyncMethodGeneration(true)]
     static async ValueTask SimpleValueTaskAsync()
     {
         await Task.CompletedTask;
@@ -83,7 +83,7 @@ class ValueTaskReturningAsyncTest
 // Test Task<T> returning async method with result
 class TaskWithResultTest
 {
-    [RuntimeAsyncMethodGeneration(false)]
+    [RuntimeAsyncMethodGeneration(true)]
     static async Task<int> ComputeAsync()
     {
         await Task.CompletedTask;
@@ -118,14 +118,14 @@ class TaskWithResultTest
 // Test awaiting a completed task (optimized fast path)
 class AwaitCompletedTaskTest
 {
-    [RuntimeAsyncMethodGeneration(false)]
+    [RuntimeAsyncMethodGeneration(true)]
     static async Task<string> GetMessageAsync()
     {
         await Task.CompletedTask;
         return "Hello";
     }
 
-    [RuntimeAsyncMethodGeneration(false)]
+    [RuntimeAsyncMethodGeneration(true)]
     static async Task<string> CombineAsync()
     {
         string msg1 = await GetMessageAsync();

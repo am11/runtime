@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCoreAppToolCurrent)</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <CLSCompliant>false</CLSCompliant>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsShipping>false</IsShipping>
+    <RunAnalyzers>false</RunAnalyzers>
+  </PropertyGroup>
+
+  <!-- Import TypeSystem infrastructure from ILVerification (includes ILDisassembler, ILImporter,
+  etc.) -->
+  <Import Project="$(CoreClrProjectRoot)tools\ILVerification\ILVerification.projitems" />
+
+  <!-- Our ildasm-specific code -->
+  <ItemGroup>
+    <Compile Include="*.cs" />
+  </ItemGroup>
+
+</Project>

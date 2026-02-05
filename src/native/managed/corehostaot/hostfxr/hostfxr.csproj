@@ -1,0 +1,28 @@
+<Project>
+  <PropertyGroup>
+    <NeedsAotPublish>true</NeedsAotPublish>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <AssemblyName>$(LibPrefix)hostfxr</AssemblyName>
+    <TargetFramework>$(NetCoreAppToolCurrent)</TargetFramework>
+    <RootNamespace>Microsoft.DotNet.HostFxr</RootNamespace>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsShippingPackage>false</IsShippingPackage>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\common\*.cs" Link="Common\%(FileName)%(Extension)" />
+    <Compile Include="..\common\Bundle\*.cs" Link="Common\Bundle\%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InstallRuntimeComponentDestination Include="." />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

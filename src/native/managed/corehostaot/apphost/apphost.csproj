@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <NeedsAotPublish>true</NeedsAotPublish>
+    <!-- apphost is an executable, not a runtime component library -->
+    <IsRuntimeComponent>false</IsRuntimeComponent>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>apphost</AssemblyName>
+    <TargetFramework>$(NetCoreAppToolCurrent)</TargetFramework>
+    <RootNamespace>Microsoft.DotNet.AppHost</RootNamespace>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsShippingPackage>false</IsShippingPackage>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\common\*.cs" Link="Common\%(FileName)%(Extension)" />
+    <Compile Include="..\common\Bundle\*.cs" Link="Common\Bundle\%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

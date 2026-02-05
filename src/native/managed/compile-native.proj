@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.Build.Traversal">
     <PropertyGroup>
-    	<!-- we always want to make shared libs -->
-        <NativeLibKind Condition="'$(NativeLibKind)' == ''">shared</NativeLibKind>
-
-	<!-- When we publish, we want to ensure the SDK does the same thing as though we ran 'dotnet publish' -->
-	<TraversalPublishGlobalProperties>$(TraversalPublishGlobalProperties);_IsPublishing=true</TraversalPublishGlobalProperties>
+    	<!-- When we publish, we want to ensure the SDK does the same thing as though we ran 'dotnet publish' -->
+    	<TraversalPublishGlobalProperties>$(TraversalPublishGlobalProperties);_IsPublishing=true</TraversalPublishGlobalProperties>
     </PropertyGroup>
 
     <ItemGroup>
         <!-- add new projects here -->
         <!-- NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)libhellomanaged/src/libhellomanaged.csproj" -->
-        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)cdac/mscordaccore_universal/mscordaccore_universal.csproj" />
+        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)cdac/mscordaccore_universal/mscordaccore_universal.csproj" NativeLibKind="shared" />
+        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)corehostaot/nethost/nethost.csproj" NativeLibKind="shared" />
+        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)corehostaot/hostfxr/hostfxr.csproj" NativeLibKind="shared" />
+        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)corehostaot/hostpolicy/hostpolicy.csproj" NativeLibKind="shared" />
+        <NativeLibsProjectsToBuild Include="$(MSBuildThisFileDirectory)corehostaot/apphost/apphost.csproj" NativeLibKind="" />
     </ItemGroup>
 
     <!-- Decide if we're going to do the NativeAOT builds -->
@@ -23,18 +24,13 @@
         <SupportsNativeAotComponents Condition="'$(SupportsNativeAotComponents)' == ''">$(NativeAotSupported)</SupportsNativeAotComponents>
     </PropertyGroup>
 
-    <ItemGroup>
-        <!-- additional native compilation-specific properties to pass down to the ProjectReference -->
-        <SubprojectProps Include="NativeLib" Value="$(NativeLibKind)"/>
-    </ItemGroup>
-
     <Import Project=".\subproject.props" />
 
     <ItemGroup>
         <ProjectReference Include="@(NativeLibsProjectsToBuild)"
+                          Condition="$(SupportsNativeAotComponents)"
                           ReferenceOutputAssembly="false"
-                          AdditionalProperties="%(AdditionalProperties);$(SplitSubprojectProps)"
-                          Targets="Publish"
-                          Condition="$(SupportsNativeAotComponents)"/>
+                          AdditionalProperties="%(AdditionalProperties);$(SplitSubprojectProps);NativeLib=%(NativeLibKind)"
+                          Targets="Publish" />
     </ItemGroup>
 </Project>

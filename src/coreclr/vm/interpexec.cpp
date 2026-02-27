@@ -198,8 +198,13 @@ static size_t CreateDispatchTokenForMethod(MethodDesc* pMD)
 // Unused on WASM
 #define SAVE_THE_LOWEST_SP do {} while (0)
 #else
-// Save the lowest SP in the current method so that we can identify it by that during stackwalk
-#define SAVE_THE_LOWEST_SP pInterpreterFrame->SetInterpExecMethodSP((TADDR)GetCurrentSP())
+// Save the native execution context of InterpExecMethod for deterministic
+// resume-after-catch without unwinding.
+#define SAVE_THE_LOWEST_SP do { \
+    pInterpreterFrame->SetInterpExecMethodSP((TADDR)GetCurrentSP()); \
+    pInterpreterFrame->SetInterpExecMethodIP((TADDR)GetCurrentIP()); \
+    pInterpreterFrame->SetInterpExecMethodFP((TADDR)__builtin_frame_address(0)); \
+} while (0)
 #endif // !TARGET_WASM
 
 // Call invoker helpers provided by platform.
@@ -1191,6 +1196,10 @@ void InterpExecMethod(InterpreterFrame *pInterpreterFrame, InterpMethodContextFr
 MAIN_LOOP:
     try
     {
+        // Ensure we have an IP from within the try block for ResumeAfterCatch.
+        // The C++ exception mechanism needs the return address to fall within a
+        // call-site covered by the catch handler's LSDA entry.
+        pInterpreterFrame->SetInterpExecMethodIP((TADDR)GetCurrentIP());
         INSTALL_MANAGED_EXCEPTION_DISPATCHER;
         INSTALL_UNWIND_AND_CONTINUE_HANDLER;
         while (true)

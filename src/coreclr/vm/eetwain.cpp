@@ -1916,27 +1916,16 @@ void InterpreterCodeManager::ResumeAfterCatch(CONTEXT *pContext, size_t targetSS
 
     ClrCaptureContext(pContext);
 
-    TADDR targetSP = pInterpreterFrame->GetInterpExecMethodSP();
 
-    // We are resuming in interpreter frame. So we need to skip all native, JIT and AOT generated frames until we reach
-    // the resumeSP
-    do
-    {
-        if (ExecutionManager::IsManagedCode(GetIP(pContext)))
-        {
-            // JIT / AOT generated managed code
-            Thread::VirtualUnwindCallFrame(pContext);
-        }
-        else
-        {
-#ifdef TARGET_UNIX
-            PAL_VirtualUnwind(pContext, NULL);
-#else
-            Thread::VirtualUnwindCallFrame(pContext);
-#endif
-        }
-    }
-    while (GetSP(pContext) != targetSP);
+    // Use the saved native context of InterpExecMethod instead of unwinding
+    // through intermediate frames. The InterpreterFrame saves SP, IP, and FP
+    // at each interpreter call boundary, providing enough context for
+    // ExecuteFunctionBelowContext to set up the C++ exception throw that gets
+    // caught by InterpExecMethod's catch handler.
+    TADDR targetSP = pInterpreterFrame->GetInterpExecMethodSP();
+    SetSP(pContext, targetSP);
+    SetIP(pContext, pInterpreterFrame->GetInterpExecMethodIP());
+    SetFP(pContext, pInterpreterFrame->GetInterpExecMethodFP());
 
 #if defined(HOST_AMD64) && defined(HOST_WINDOWS)
     targetSSP = pInterpreterFrame->GetInterpExecMethodSSP();

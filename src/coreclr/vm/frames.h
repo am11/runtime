@@ -2554,6 +2554,31 @@ public:
     }
 #endif // TARGET_WASM
 
+
+    void SetInterpExecMethodIP(TADDR ip)
+    {
+        LIMITED_METHOD_CONTRACT;
+        m_nativeIP = ip;
+    }
+
+    TADDR GetInterpExecMethodIP()
+    {
+        LIMITED_METHOD_CONTRACT;
+        return m_nativeIP;
+    }
+
+    void SetInterpExecMethodFP(TADDR fp)
+    {
+        LIMITED_METHOD_CONTRACT;
+        m_FP = fp;
+    }
+
+    TADDR GetInterpExecMethodFP()
+    {
+        LIMITED_METHOD_CONTRACT;
+        return m_FP;
+    }
+
     void SetIsFaulting(bool isFaulting)
     {
         LIMITED_METHOD_CONTRACT;
@@ -2595,6 +2620,10 @@ private:
 #ifndef TARGET_WASM
     TADDR m_SP;
 #endif // TARGET_WASM
+    // Saved IP inside InterpExecMethod's try block and FP of InterpExecMethod
+    // for deterministic resume-after-catch without unwinding.
+    TADDR m_nativeIP;
+    TADDR m_FP;
     PTR_Object m_continuation;
 };
 

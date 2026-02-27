@@ -1,16 +1,38 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace System.Runtime.InteropServices
 {
     public sealed partial class PosixSignalRegistration
     {
-        private static readonly Dictionary<int, List<Token>> s_registrations = new();
+        // State machine for native handler installation:
+        // 0 = Uninitialized, 1 = Registering (in-flight), 2 = Registered
+        private static int s_ctrlHandlerState;
 
-        private static unsafe PosixSignalRegistration Register(PosixSignal signal, Action<PosixSignalContext> handler)
+        // Per-signal token store using immutable linked lists (copy-on-write for heads)
+        // Key: Windows console control event (dwCtrlType)
+        // Value: linked list head (or null if no handlers)
+        private static readonly ConcurrentDictionary<int, TokenNode?> s_handlers =
+            new ConcurrentDictionary<int, TokenNode?>();
+
+        // NOTE: _token field, constructor, Dispose(), and finalizer are defined
+        // in another partial of this class. Do not redeclare them here.
+
+        /// <summary>
+        /// Windows-specific registration:
+        ///  - Installs the native handler once (lock-free).
+        ///  - Never unregisters at the OS level to avoid shutdown deadlocks.
+        ///  - Adds the token to a per-signal immutable list.
+        /// </summary>
+        private static unsafe PosixSignalRegistration Register(
+            PosixSignal signal,
+            Action<PosixSignalContext> handler)
         {
             int signo = signal switch
             {
@@ -21,91 +43,147 @@ namespace System.Runtime.InteropServices
                 _ => throw new PlatformNotSupportedException()
             };
 
-            var token = new Token(signal, signo, handler);
-            var registration = new PosixSignalRegistration(token);
+            EnsureNativeHandlerInstalled();
 
-            lock (s_registrations)
-            {
-                if (s_registrations.Count == 0 &&
-                    !Interop.Kernel32.SetConsoleCtrlHandler(&HandlerRoutine, Add: true))
-                {
-                    throw Win32Marshal.GetExceptionForLastWin32Error();
-                }
+            Token token = new Token(signal, signo, handler);
+            PosixSignalRegistration registration = new PosixSignalRegistration(token);
 
-                if (!s_registrations.TryGetValue(signo, out List<Token>? tokens))
-                {
-                    s_registrations[signo] = tokens = new List<Token>();
-                }
-
-                tokens.Add(token);
-            }
-
+            AddToken(signo, token);
             return registration;
         }
 
-        private unsafe void Unregister()
+        /// <summary>
+        /// Unregister the handler (called by Dispose and finalizer in the shared partial).
+        /// Does not call SetConsoleCtrlHandler; only detaches our delegate snapshot.
+        /// </summary>
+        private void Unregister()
         {
-            lock (s_registrations)
+            // _token is declared in the shared partial
+            Token? token = Interlocked.Exchange(ref _token, null);
+            if (token is null)
+                return;
+
+            RemoveToken(token.SigNo, token);
+        }
+
+        // Lock-free one-shot native handler installation using CAS state machine
+        private static unsafe void EnsureNativeHandlerInstalled()
+        {
+            if (Volatile.Read(ref s_ctrlHandlerState) == 2)
+                return;
+
+            if (Interlocked.CompareExchange(ref s_ctrlHandlerState, 1, 0) == 0)
             {
-                if (_token is Token token)
+                try
                 {
-                    _token = null;
-
-                    if (s_registrations.TryGetValue(token.SigNo, out List<Token>? tokens))
+                    // Register once, never unregister (avoids deadlock during shutdown)
+                    bool ok = Interop.Kernel32.SetConsoleCtrlHandler(&HandlerRoutine, Add: true);
+                    if (!ok)
                     {
-                        tokens.Remove(token);
-                        if (tokens.Count == 0)
-                        {
-                            s_registrations.Remove(token.SigNo);
-                        }
-
-                        if (s_registrations.Count == 0 &&
-                            !Interop.Kernel32.SetConsoleCtrlHandler(&HandlerRoutine, Add: false))
-                        {
-                            // Ignore errors due to the handler no longer being registered; this can happen, for example, with
-                            // direct use of Alloc/Attach/FreeConsole which result in the table of control handlers being reset.
-                            // Throw for everything else.
-                            int error = Marshal.GetLastPInvokeError();
-                            if (error != Interop.Errors.ERROR_INVALID_PARAMETER)
-                            {
-                                throw Win32Marshal.GetExceptionForWin32Error(error);
-                            }
-                        }
+                        Volatile.Write(ref s_ctrlHandlerState, 0);
+                        throw Win32Marshal.GetExceptionForLastWin32Error();
                     }
+
+                    Volatile.Write(ref s_ctrlHandlerState, 2);
+                }
+                catch
+                {
+                    Volatile.Write(ref s_ctrlHandlerState, 0);
+                    throw;
                 }
             }
         }
 
+        // Lock-free insertion using linked list prepend and ConcurrentDictionary CAS
+        private static void AddToken(int signo, Token token)
+        {
+            while (true)
+            {
+                if (s_handlers.TryGetValue(signo, out TokenNode? current))
+                {
+                    TokenNode updated = new TokenNode(token, current);
+                    if (s_handlers.TryUpdate(signo, updated, current))
+                        return;
+                }
+                else
+                {
+                    TokenNode initial = new TokenNode(token, next: null);
+                    if (s_handlers.TryAdd(signo, initial))
+                        return;
+                }
+            }
+        }
+
+        // Lock-free removal using linked list reconstruction
+        private static void RemoveToken(int signo, Token token)
+        {
+            while (true)
+            {
+                if (!s_handlers.TryGetValue(signo, out TokenNode? current))
+                    return;
+
+                TokenNode? updated = RemoveFromList(current, token);
+                if (updated is null)
+                {
+                    if (s_handlers.TryRemove(new KeyValuePair<int, TokenNode?>(signo, current)))
+                        return;
+                }
+                else
+                {
+                    if (s_handlers.TryUpdate(signo, updated, current))
+                        return;
+                }
+            }
+        }
+
+        // Reconstruct linked list without the target token (recursive)
+        private static TokenNode? RemoveFromList(TokenNode? node, Token token)
+        {
+            if (node is null)
+                return null;
+
+            if (ReferenceEquals(node.Token, token))
+                return node.Next;
+
+            TokenNode? newNext = RemoveFromList(node.Next, token);
+            if (ReferenceEquals(newNext, node.Next))
+                return node; // no change needed below
+
+            return new TokenNode(node.Token, newNext);
+        }
+
+        // Fully lock-free native callback reading immutable linked list snapshot
         [UnmanagedCallersOnly]
         private static Interop.BOOL HandlerRoutine(int dwCtrlType)
         {
-            Token[]? tokens = null;
-
-            lock (s_registrations)
-            {
-                if (s_registrations.TryGetValue(dwCtrlType, out List<Token>? registrations))
-                {
-                    tokens = new Token[registrations.Count];
-                    registrations.CopyTo(tokens);
-                }
-            }
-
-            if (tokens is null)
-            {
+            if (!s_handlers.TryGetValue(dwCtrlType, out TokenNode? node) || node is null)
                 return Interop.BOOL.FALSE;
-            }
 
-            var context = new PosixSignalContext(0);
+            PosixSignalContext context = new PosixSignalContext(0);
 
-            // Iterate through the tokens in reverse order to match the order of registration.
-            for (int i = tokens.Length - 1; i >= 0; i--)
+            // Iterate through linked list (newest-first, since we prepend)
+            while (node is not null)
             {
-                Token token = tokens[i];
+                Token token = node.Token;
                 context.Signal = token.Signal;
                 token.Handler(context);
+                node = node.Next;
             }
 
             return context.Cancel ? Interop.BOOL.TRUE : Interop.BOOL.FALSE;
+        }
+
+        // Immutable node in the linked list of tokens
+        private sealed class TokenNode
+        {
+            public readonly Token Token;
+            public readonly TokenNode? Next;
+
+            public TokenNode(Token token, TokenNode? next)
+            {
+                Token = token;
+                Next = next;
+            }
         }
     }
 }

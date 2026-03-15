@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #if HAVE_MALLOC_SIZE
     #include <malloc/malloc.h>
@@ -17,16 +18,31 @@
 #elif HAVE_MALLOC_USABLE_SIZE_NP
     #include <malloc_np.h>
     #define MALLOC_SIZE(s) malloc_usable_size(s)
-#elif defined(TARGET_SUNOS)
-    #define MALLOC_SIZE(s) (*((size_t*)(s)-1))
+#elif defined(TARGET_OPENBSD) || defined(TARGET_SUNOS)
+    /* OpenBSD/SunOS: Manual header at (s)[-2] to store the size.
+       Check for NULL to ensure MALLOC_SIZE(NULL) returns 0 for the assert. */
+    #define MALLOC_SIZE(s) ((s) == NULL ? 0 : (((size_t*)(s))[-2]))
 #else
     #error "Platform doesn't support malloc_usable_size or malloc_size"
 #endif
 
 void* SystemNative_AlignedAlloc(uintptr_t alignment, uintptr_t size)
 {
-#if HAVE_ALIGNED_ALLOC
-    // We want to prefer the standardized aligned_alloc function.
+#if defined(TARGET_OPENBSD) || defined(TARGET_SUNOS)
+    /* We need at least 16 bytes for metadata (size_t + void*). */
+    size_t reserved = (alignment < 16) ? 16 : alignment;
+    void* real_ptr = malloc(size + reserved);
+    if (real_ptr == NULL) return NULL;
+
+    /* Round down from the end of the reserved block to find the aligned user_ptr. */
+    uintptr_t user_addr = ((uintptr_t)real_ptr + reserved) & ~(alignment - 1);
+    void* user_ptr = (void*)user_addr;
+
+    /* Store metadata immediately before user_ptr */
+    ((void**)user_ptr)[-1] = real_ptr; /* Store for AlignedFree */
+    ((size_t*)user_ptr)[-2] = size;     /* Store for MALLOC_SIZE */
+    return user_ptr;
+#elif HAVE_ALIGNED_ALLOC
     return aligned_alloc(alignment, size);
 #elif HAVE_POSIX_MEMALIGN
     void* result = NULL;
@@ -39,7 +55,14 @@ void* SystemNative_AlignedAlloc(uintptr_t alignment, uintptr_t size)
 
 void SystemNative_AlignedFree(void* ptr)
 {
+#if defined(TARGET_OPENBSD) || defined(TARGET_SUNOS)
+    if (ptr != NULL)
+    {
+        free(((void**)ptr)[-1]);
+    }
+#else
     free(ptr);
+#endif
 }
 
 void* SystemNative_AlignedRealloc(void* ptr, uintptr_t alignment, uintptr_t new_size)

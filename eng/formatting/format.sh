@@ -9,7 +9,7 @@ exec 1>&2
 
 if [ -n "$NATIVE_FILES" ]; then
     # Format all selected files
-    echo "$NATIVE_FILES" | cat | xargs | sed -e 's/ /,/g' | xargs "./artifacts/tools/clang-format" -style=file -i
+    echo "$NATIVE_FILES" | xargs "./artifacts/tools/clang-format" -style=file -i
 
     # Add back the modified files to staging
     echo "$NATIVE_FILES" | xargs git add

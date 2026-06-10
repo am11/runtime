@@ -122,6 +122,9 @@ if [[ "$host_arch" == "wasm" ]]; then
     fi
 fi
 
+echo ">>>>> "
+cat $reporoot/artifacts/obj/_version.c
+
 $cmake_command \
   --no-warn-unused-cli \
   -G "$generator" \

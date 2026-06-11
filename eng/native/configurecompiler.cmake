@@ -336,13 +336,10 @@ elseif(CLR_CMAKE_HOST_OPENBSD)
   # The PAL's hand-written asm lacks endbr64 landing pads, so disable branch-target CFI.
   add_linker_flag("-Wl,-z,nobtcfi")
 elseif(CLR_CMAKE_HOST_SUNOS)
-  add_compile_options($<$<COMPILE_LANGUAGE:ASM>:-Wa,--noexecstack>)
-  add_linker_flag("-Wl,--build-id=sha1")
-  # OpenBSD's ld.so can't resolve native TLS relocs in a .so; rely on clang's default
-  # emulated TLS (don't pass -fno-emulated-tls).
-  # The PAL's hand-written asm lacks endbr64 landing pads, so disable branch-target CFI.
-  add_linker_flag("-Wl,-z,nobtcfi")
-elseif(CLR_CMAKE_HOST_SUNOS)
+  if (CMAKE_C_COMPILER_ID MATCHES "Clang")
+    add_compile_options($<$<COMPILE_LANGUAGE:ASM>:-Wa,--noexecstack>)
+  endif()
+
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
   add_definitions(-D__EXTENSIONS__ -D_XPG4_2 -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT)

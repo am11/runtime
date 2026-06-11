@@ -259,13 +259,6 @@ void SystemNative_LowLevelFutex_WakeByAddressSingle(int32_t* address)
 }
 #else // defined(TARGET_LINUX)
 
-#ifdef DEBUG 
-#define DEBUGNOTRETURN __attribute__((noreturn)) 
-#else 
-#define DEBUGNOTRETURN 
-#endif
-
-DEBUGNOTRETURN
 void SystemNative_LowLevelFutex_WaitOnAddress(int32_t* address, int32_t comparand)
 {
     (void)address; // unused
@@ -274,7 +267,6 @@ void SystemNative_LowLevelFutex_WaitOnAddress(int32_t* address, int32_t comparan
     // trivial implementation of Wait always wakes spuriously.
 }
 
-DEBUGNOTRETURN
 int32_t SystemNative_LowLevelFutex_WaitOnAddressTimeout(int32_t* address, int32_t comparand, int32_t timeoutMilliseconds)
 {
     (void)address; // unused
@@ -285,9 +277,12 @@ int32_t SystemNative_LowLevelFutex_WaitOnAddressTimeout(int32_t* address, int32_
     // trivial implementation of Wait always wakes spuriously.
     return 1;
 #endif
+
+    // In debug builds, assert_msg above is expected to fire.
+    // Return a spurious wake value to satisfy non-void control flow.
+    return 1;
 }
 
-DEBUGNOTRETURN
 void SystemNative_LowLevelFutex_WakeByAddressSingle(int32_t* address)
 {
     (void)address; // unused

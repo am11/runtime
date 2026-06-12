@@ -122,7 +122,22 @@ if [[ "$host_arch" == "wasm" ]]; then
     fi
 fi
 
-echo ">>>>> "
+echo ">>>>> before"
+cat $reporoot/artifacts/obj/_version.c
+
+sed -i 's/,retain//g' $reporoot/artifacts/obj/_version.c
+
+# The .reloc keep-alive trick references sccsid as a global symbol, so the
+# definition must have external linkage (drop 'static') or the reloc target
+# stays undefined at link time. A preceding extern declaration satisfies
+# -Wmissing-variable-declarations, and 'weak' lets the multiple object copies
+# (the file is compiled into several targets) merge instead of colliding.
+sed -i 's/__attribute__((used))/__attribute__((used,weak))/' $reporoot/artifacts/obj/_version.c
+sed -i 's/^static char sccsid\(\[\]\)/char sccsid\1/' $reporoot/artifacts/obj/_version.c
+
+sed -i '1i__asm__(".pushsection .init_array; .reloc ., R_X86_64_NONE, sccsid; .popsection");' $reporoot/artifacts/obj/_version.c
+
+echo ">>>>> after"
 cat $reporoot/artifacts/obj/_version.c
 
 $cmake_command \

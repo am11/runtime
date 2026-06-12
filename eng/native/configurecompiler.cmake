@@ -336,7 +336,7 @@ elseif(CLR_CMAKE_HOST_OPENBSD)
   # The PAL's hand-written asm lacks endbr64 landing pads, so disable branch-target CFI.
   add_linker_flag("-Wl,-z,nobtcfi")
 elseif(CLR_CMAKE_HOST_SUNOS)
-  if (CMAKE_C_COMPILER_ID MATCHES "Clang")
+  if (CMAKE_C_COMPILER_ID MATCHES "GNU")
     add_compile_options($<$<COMPILE_LANGUAGE:ASM>:-Wa,--noexecstack>)
   endif()
 

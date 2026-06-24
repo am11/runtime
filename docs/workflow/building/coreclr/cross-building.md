@@ -218,7 +218,7 @@ arch=arm64
 ./build.sh clr+libs --cross --arch $arch --os $os --use-bootstrap
 
 # CoreCLR runtime tests.
-src/tests/build.sh -cross -$arch -$os -p:LibrariesConfiguration=Debug --use-bootstrap
+src/tests/build.sh --cross --arch $arch --os $os -p:LibrariesConfiguration=Debug --use-bootstrap
 
 # Libraries tests (produces zipped per-library test archives under artifacts/helix/tests/).
 ./build.sh libs.tests --cross --arch $arch --os $os --use-bootstrap -p:ArchiveTests=true

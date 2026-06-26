@@ -286,6 +286,8 @@ The .NET Foundation licenses this file to you under the MIT license.
       <LinkerArg Include="-L&quot;$(SysRoot)/usr/local/lib&quot; -lgssapi_krb5" Condition="'$(_targetOS)' == 'freebsd'" />
       <!-- FreeBSD's inotify is an installed package and not found in default libraries  -->
       <LinkerArg Include="-L&quot;$(SysRoot)/usr/local/lib&quot; -linotify" Condition="'$(_targetOS)' == 'freebsd'" />
+      <!-- OpenBSD's inotify is the libinotify port, installed under /usr/local/lib/inotify  -->
+      <LinkerArg Include="-L&quot;$(SysRoot)/usr/local/lib/inotify&quot; -linotify" Condition="'$(_targetOS)' == 'openbsd'" />
       <!-- OpenBSD's GSSAPI is provided by the Heimdal package. -->
       <LinkerArg Include="-L&quot;$(SysRoot)/usr/local/heimdal/lib&quot; -l:libgssapi.so.9.0" Condition="'$(_targetOS)' == 'openbsd'" />
       <LinkerArg Include="@(ExtraLinkerArg->'-Wl,%(Identity)')" />

@@ -72,8 +72,10 @@ static inline char* minipal_getexepath(void)
         return NULL;
     }
 
+    int ret = access(argv[0], X_OK);
+
     // if it's a bare command name (e.g. "dotnet" without a '/'), search the path for the executable.
-    if (strchr(argv[0], '/') == NULL)
+    if (ret != 0 && strchr(argv[0], '/') == NULL)
     {
         const char *p = getenv("PATH");
         while (*p != '\0')

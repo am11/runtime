@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <sys/types.h>
 
+#include "minipalconfig.h"
+
 #if HAVE_ELF_AUX_INFO
 #include <sys/auxv.h>
 #endif
@@ -45,8 +47,6 @@
 #endif
 
 #else // HOST_WINDOWS
-
-#include "minipalconfig.h"
 
 #if HAVE_AUXV_HWCAP_H
 
@@ -515,8 +515,17 @@ int minipal_getcpufeatures(void)
 #if defined(HOST_ARM64)
 #if defined(HOST_UNIX)
 
+#if HAVE_AUXV_HWCAP_H || HAVE_ELF_AUX_INFO
 #if HAVE_AUXV_HWCAP_H
     unsigned long hwCap = getauxval(AT_HWCAP);
+    unsigned long hwCap2 = getauxval(AT_HWCAP2);
+#elif HAVE_ELF_AUX_INFO
+    unsigned long hwCap = 0;
+    unsigned long hwCap2 = 0;
+
+    elf_aux_info(AT_HWCAP, &hwCap, sizeof(hwCap));
+    elf_aux_info(AT_HWCAP2, &hwCap2, sizeof(hwCap2));
+#endif
 
     if ((hwCap & HWCAP_ASIMD) == 0)
     {
@@ -560,8 +569,6 @@ int minipal_getcpufeatures(void)
     if (hwCap & HWCAP_SVE)
         result |= ARM64IntrinsicConstants_Sve;
 
-    unsigned long hwCap2 = getauxval(AT_HWCAP2);
-
     if (hwCap2 & HWCAP2_SVE2)
         result |= ARM64IntrinsicConstants_Sve2;
 
@@ -576,10 +583,7 @@ int minipal_getcpufeatures(void)
 
     if (hwCap2 & HWCAP2_CSSC)
         result |= ARM64IntrinsicConstants_Cssc;
-
-#else // !HAVE_AUXV_HWCAP_H
-
-#if HAVE_SYSCTLBYNAME
+#elif HAVE_SYSCTLBYNAME
     int64_t valueFromSysctl = 0;
     size_t sz = sizeof(valueFromSysctl);
 
@@ -650,73 +654,7 @@ int minipal_getcpufeatures(void)
 
     if ((sysctlbyname("hw.optional.arm.FEAT_CSSC", &valueFromSysctl, &sz, NULL, 0) == 0) && (valueFromSysctl != 0))
         result |= ARM64IntrinsicConstants_Cssc;
-
-#elif HAVE_ELF_AUX_INFO
-    unsigned long hwCap = 0;
-    unsigned long hwCap2 = 0;
-
-    elf_aux_info(AT_HWCAP, &hwCap, sizeof(hwCap));
-    elf_aux_info(AT_HWCAP2, &hwCap2, sizeof(hwCap2));
-
-    if (!(hwCap & HWCAP_ASIMD))
-    {
-        result |= IntrinsicConstants_Invalid;
-    }
-
-    if (hwCap & HWCAP_ATOMICS)
-    {
-        result |= ARM64IntrinsicConstants_Atomics;
-    }
-
-    if (hwCap & HWCAP_AES)
-        result |= ARM64IntrinsicConstants_Aes;
-
-    if (hwCap & HWCAP_CRC32)
-        result |= ARM64IntrinsicConstants_Crc32;
-
-    if (hwCap & HWCAP_ASIMDDP)
-        result |= ARM64IntrinsicConstants_Dp;
-
-    if (hwCap & HWCAP_ASIMDRDM)
-        result |= ARM64IntrinsicConstants_Rdm;
-
-    if (hwCap & HWCAP_SHA1)
-        result |= ARM64IntrinsicConstants_Sha1;
-
-    if (hwCap & HWCAP_SHA2)
-        result |= ARM64IntrinsicConstants_Sha256;
-
-    if (hwCap & HWCAP_LRCPC)
-        result |= ARM64IntrinsicConstants_Rcpc;
-
-    if (hwCap & HWCAP_ILRCPC)
-        result |= ARM64IntrinsicConstants_Rcpc2;
-
-    if (hwCap & HWCAP_SVE)
-        result |= ARM64IntrinsicConstants_Sve;
-
-    if (hwCap2 & HWCAP2_SVE2)
-        result |= ARM64IntrinsicConstants_Sve2;
-
-    if (hwCap & HWCAP_SHA3)
-        result |= ARM64IntrinsicConstants_Sha3;
-
-    if (hwCap & HWCAP_SM4)
-        result |= ARM64IntrinsicConstants_Sm4;
-
-    if (hwCap2 & HWCAP2_SVEAES)
-        result |= ARM64IntrinsicConstants_SveAes;
-
-    if (hwCap2 & HWCAP2_SVESHA3)
-        result |= ARM64IntrinsicConstants_SveSha3;
-
-    if (hwCap2 & HWCAP2_SVESM4)
-        result |= ARM64IntrinsicConstants_SveSm4;
-
-    if (hwCap2 & HWCAP2_CSSC)
-        result |= ARM64IntrinsicConstants_Cssc;
 #endif // HAVE_SYSCTLBYNAME
-#endif // HAVE_AUXV_HWCAP_H
 #endif // HOST_UNIX
 
 #if defined(HOST_WINDOWS)

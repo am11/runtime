@@ -52,13 +52,13 @@ namespace
             std::lock_guard<std::mutex> context_lock { g_context_lock };
             if (g_context == nullptr)
             {
-                trace::error(_X("Hostpolicy has not been initialized"));
+                trace::error(PAL_X("Hostpolicy has not been initialized"));
                 return StatusCode::HostInvalidState;
             }
 
             if (g_context->coreclr != nullptr)
             {
-                trace::error(_X("CoreClr has already been loaded"));
+                trace::error(PAL_X("CoreClr has already been loaded"));
                 return StatusCode::HostInvalidState;
             }
 
@@ -71,7 +71,7 @@ namespace
             const char *app_domain_friendly_name = g_context->host_mode == host_mode_t::libhost ? "clr_libhost" : "clrhost";
 
             // Create a CoreCLR instance
-            trace::verbose(_X("CoreCLR path = '%s', CoreCLR dir = '%s'"), g_context->clr_path.c_str(), g_context->clr_dir.c_str());
+            trace::verbose(PAL_X("CoreCLR path = '%s', CoreCLR dir = '%s'"), g_context->clr_path.c_str(), g_context->clr_dir.c_str());
             auto hr = coreclr_t::create(
                 g_context->clr_dir,
                 host_path.data(),
@@ -81,7 +81,7 @@ namespace
 
             if (!SUCCEEDED(hr))
             {
-                trace::error(_X("Failed to create CoreCLR, HRESULT: 0x%X"), hr);
+                trace::error(PAL_X("Failed to create CoreCLR, HRESULT: 0x%X"), hr);
                 rc = StatusCode::CoreClrInitFailure;
             }
             else
@@ -110,7 +110,7 @@ namespace
             const hostpolicy_context_t *existing_context = g_context.get();
             if (existing_context != nullptr)
             {
-                trace::info(_X("Host context has already been initialized"));
+                trace::info(PAL_X("Host context has already been initialized"));
                 assert(existing_context->coreclr != nullptr);
                 return StatusCode::Success_HostAlreadyInitialized;
             }
@@ -155,13 +155,13 @@ namespace
         const std::shared_ptr<hostpolicy_context_t> existing_context = g_context;
         if (existing_context == nullptr)
         {
-            trace::error(_X("Hostpolicy context has not been created"));
+            trace::error(PAL_X("Hostpolicy context has not been created"));
             return nullptr;
         }
 
         if (require_runtime && existing_context->coreclr == nullptr)
         {
-            trace::error(_X("Runtime has not been loaded and initialized"));
+            trace::error(PAL_X("Runtime has not been loaded and initialized"));
             return nullptr;
         }
 
@@ -184,12 +184,12 @@ int run_host_command(
         return rc;
 
     // Check for host command(s)
-    if (pal::strcasecmp(hostpolicy_init.host_command.c_str(), _X("get-native-search-directories")) == 0)
+    if (pal::strcasecmp(hostpolicy_init.host_command.c_str(), PAL_X("get-native-search-directories")) == 0)
     {
         const pal::char_t *value;
         if (!context.coreclr_properties.try_get(common_property::NativeDllSearchDirectories, &value))
         {
-            trace::error(_X("get-native-search-directories failed to find NATIVE_DLL_SEARCH_DIRECTORIES property"));
+            trace::error(PAL_X("get-native-search-directories failed to find NATIVE_DLL_SEARCH_DIRECTORIES property"));
             return StatusCode::HostApiFailed;
         }
 
@@ -225,9 +225,9 @@ int run_app_for_context(
             pal::string_t cur;
             pal::clr_palstring(argv_local[i], &cur);
             arg_str.append(cur);
-            arg_str.append(_X(","));
+            arg_str.append(PAL_X(","));
         }
-        trace::info(_X("Launch host: %s, app: %s, argc: %d, args: %s"), context.host_path.c_str(),
+        trace::info(PAL_X("Launch host: %s, app: %s, argc: %d, args: %s"), context.host_path.c_str(),
             context.application.c_str(), argc, arg_str.c_str());
     }
 
@@ -255,17 +255,17 @@ int run_app_for_context(
 
     if (!SUCCEEDED(hr))
     {
-        trace::error(_X("Failed to execute managed app, HRESULT: 0x%X"), hr);
+        trace::error(PAL_X("Failed to execute managed app, HRESULT: 0x%X"), hr);
         return StatusCode::CoreClrExeFailure;
     }
 
-    trace::info(_X("Execute managed assembly exit code: 0x%X"), exit_code);
+    trace::info(PAL_X("Execute managed assembly exit code: 0x%X"), exit_code);
 
     // Shut down the CoreCLR
     hr = context.coreclr->shutdown(reinterpret_cast<int*>(&exit_code));
     if (!SUCCEEDED(hr))
     {
-        trace::warning(_X("Failed to shut down CoreCLR, HRESULT: 0x%X"), hr);
+        trace::warning(PAL_X("Failed to shut down CoreCLR, HRESULT: 0x%X"), hr);
     }
 
     if (writer)
@@ -288,7 +288,7 @@ int HOSTPOLICY_CALLTYPE run_app(const int argc, const pal::char_t *argv[])
 void trace_hostpolicy_entrypoint_invocation(const pal::string_t& entryPointName)
 {
     if (trace::is_enabled())
-        trace::info(_X("--- Invoked hostpolicy [version: %s] %s = {"), get_host_version_description().c_str(), entryPointName.c_str());
+        trace::info(PAL_X("--- Invoked hostpolicy [version: %s] %s = {"), get_host_version_description().c_str(), entryPointName.c_str());
 }
 
 //
@@ -337,33 +337,33 @@ void trace_corehost_init(
 
         for (int i = 0; i < argc; ++i)
         {
-            trace::info(_X("%s"), argv[i]);
+            trace::info(PAL_X("%s"), argv[i]);
         }
-        trace::info(_X("}"));
+        trace::info(PAL_X("}"));
 
         const pal::char_t *host_mode_str;
         switch (hostpolicy_init.host_mode)
         {
             case host_mode_t::muxer:
-                host_mode_str = _X("muxer");
+                host_mode_str = PAL_X("muxer");
                 break;
             case host_mode_t::apphost:
-                host_mode_str = _X("apphost");
+                host_mode_str = PAL_X("apphost");
                 break;
             case host_mode_t::libhost:
-                host_mode_str = _X("libhost");
+                host_mode_str = PAL_X("libhost");
                 break;
             case host_mode_t::invalid:
             default:
-                host_mode_str = _X("invalid");
+                host_mode_str = PAL_X("invalid");
                 break;
         }
 
-        trace::info(_X("Mode: %s"), host_mode_str);
-        trace::info(_X("Deps file: %s"), hostpolicy_init.deps_file.c_str());
+        trace::info(PAL_X("Mode: %s"), host_mode_str);
+        trace::info(PAL_X("Deps file: %s"), hostpolicy_init.deps_file.c_str());
         for (const auto& probe : hostpolicy_init.probe_paths)
         {
-            trace::info(_X("Additional probe dir: %s"), probe.c_str());
+            trace::info(PAL_X("Additional probe dir: %s"), probe.c_str());
         }
     }
 }
@@ -393,7 +393,7 @@ int corehost_main_init(
         if (bundle->is_netcoreapp3_compat_mode())
         {
             auto extracted_assembly = bundle->extraction_path();
-            auto app_name = hostpolicy_init.host_info.get_app_name() + _X(".dll");
+            auto app_name = hostpolicy_init.host_info.get_app_name() + PAL_X(".dll");
             append_path(&extracted_assembly, app_name.c_str());
             assert(pal::file_exists(extracted_assembly));
             hostpolicy_init.host_info.app_path = extracted_assembly;
@@ -406,7 +406,7 @@ int corehost_main_init(
 
 SHARED_API int HOSTPOLICY_CALLTYPE corehost_main(const int argc, const pal::char_t* argv[])
 {
-    int rc = corehost_main_init(g_init, argc, argv, _X("corehost_main"));
+    int rc = corehost_main_init(g_init, argc, argv, PAL_X("corehost_main"));
     if (rc != StatusCode::Success)
         return rc;
 
@@ -425,11 +425,11 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_main(const int argc, const pal::char
 
 SHARED_API int HOSTPOLICY_CALLTYPE corehost_main_with_output_buffer(const int argc, const pal::char_t* argv[], pal::char_t buffer[], int32_t buffer_size, int32_t* required_buffer_size)
 {
-    int rc = corehost_main_init(g_init, argc, argv, _X("corehost_main_with_output_buffer"));
+    int rc = corehost_main_init(g_init, argc, argv, PAL_X("corehost_main_with_output_buffer"));
     if (rc != StatusCode::Success)
         return rc;
 
-    if (g_init.host_command == _X("get-native-search-directories"))
+    if (g_init.host_command == PAL_X("get-native-search-directories"))
     {
         arguments_t args;
         if (!parse_arguments(g_init, argc, argv, args))
@@ -447,19 +447,19 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_main_with_output_buffer(const int ar
         {
             rc = StatusCode::HostApiBufferTooSmall;
             *required_buffer_size = len + 1;
-            trace::info(_X("get-native-search-directories failed with buffer too small"), output_string.c_str());
+            trace::info(PAL_X("get-native-search-directories failed with buffer too small"), output_string.c_str());
         }
         else
         {
             output_string.copy(buffer, len);
             buffer[len] = '\0';
             *required_buffer_size = 0;
-            trace::info(_X("get-native-search-directories success: %s"), output_string.c_str());
+            trace::info(PAL_X("get-native-search-directories success: %s"), output_string.c_str());
         }
     }
     else
     {
-        trace::error(_X("Unknown command: %s"), g_init.host_command.c_str());
+        trace::error(PAL_X("Unknown command: %s"), g_init.host_command.c_str());
         rc = StatusCode::LibHostInvalidArgs;
     }
 
@@ -571,7 +571,7 @@ namespace
         std::lock_guard<std::mutex> lock{ g_context_lock };
         if (g_context == nullptr || g_context->coreclr != nullptr)
         {
-            trace::error(_X("Setting properties is only allowed before runtime has been loaded and initialized"));
+            trace::error(PAL_X("Setting properties is only allowed before runtime has been loaded and initialized"));
             return HostInvalidState;
         }
 
@@ -631,19 +631,19 @@ namespace
             {
                 if (pal::strcmp(existingValue, value) != 0)
                 {
-                    trace::warning(_X("The property [%s] has a different value [%s] from that in the previously loaded runtime [%s]"), key, value, existingValue);
+                    trace::warning(PAL_X("The property [%s] has a different value [%s] from that in the previously loaded runtime [%s]"), key, value, existingValue);
                     hasDifferentProperties = true;
                 }
             }
             else
             {
-                trace::warning(_X("The property [%s] is not present in the previously loaded runtime."), key);
+                trace::warning(PAL_X("The property [%s] is not present in the previously loaded runtime."), key);
                 hasDifferentProperties = true;
             }
         }
 
         if (len > 0 && !hasDifferentProperties)
-            trace::info(_X("All specified properties match those in the previously loaded runtime"));
+            trace::info(PAL_X("All specified properties match those in the previously loaded runtime"));
 
         return !hasDifferentProperties;
     }
@@ -690,7 +690,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
     bool get_contract = (options & initialization_options_t::get_contract) != 0;
     if (wait_for_initialized && get_contract)
     {
-        trace::error(_X("Specifying both initialization options for wait_for_initialized and get_contract is not allowed"));
+        trace::error(PAL_X("Specifying both initialization options for wait_for_initialized and get_contract is not allowed"));
         return StatusCode::InvalidArgFailure;
     }
 
@@ -698,7 +698,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
     {
         if (init_request != nullptr)
         {
-            trace::error(_X("Initialization request is expected to be null when getting the already initialized contract"));
+            trace::error(PAL_X("Initialization request is expected to be null when getting the already initialized contract"));
             return StatusCode::InvalidArgFailure;
         }
     }
@@ -710,17 +710,17 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
 
         if (wait_for_initialized)
         {
-            trace::verbose(_X("Initialization option to wait for initialize request is set"));
+            trace::verbose(PAL_X("Initialization option to wait for initialize request is set"));
             if (init_request == nullptr)
             {
-                trace::error(_X("Initialization request is expected to be non-null when waiting for initialize request option is set"));
+                trace::error(PAL_X("Initialization request is expected to be non-null when waiting for initialize request option is set"));
                 return StatusCode::InvalidArgFailure;
             }
 
             // If we are not already initializing or done initializing, wait until another context initialization has started
             if (!already_initialized && !already_initializing)
             {
-                trace::info(_X("Waiting for another request to initialize hostpolicy"));
+                trace::info(PAL_X("Waiting for another request to initialize hostpolicy"));
                 g_context_initializing_cv.wait(lock, [&] { return g_context_initializing.load(); });
             }
         }
@@ -728,13 +728,13 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
         {
             if (init_request != nullptr && !already_initialized && !already_initializing)
             {
-                trace::error(_X("Initialization request is expected to be null for the first initialization request"));
+                trace::error(PAL_X("Initialization request is expected to be null for the first initialization request"));
                 return StatusCode::InvalidArgFailure;
             }
 
             if (init_request == nullptr && (already_initializing || already_initialized))
             {
-                trace::error(_X("Initialization request is expected to be non-null for requests other than the first one"));
+                trace::error(PAL_X("Initialization request is expected to be non-null for requests other than the first one"));
                 return StatusCode::InvalidArgFailure;
             }
         }
@@ -742,7 +742,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
 
     // Trace entry point information using previously set init information.
     // This function does not modify any global state.
-    trace_corehost_libhost_init(g_init, _X("corehost_initialize"));
+    trace_corehost_libhost_init(g_init, PAL_X("corehost_initialize"));
 
     int rc;
     if (wait_for_initialized)
@@ -754,7 +754,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
         const hostpolicy_context_t *existing_context = g_context.get();
         if (existing_context == nullptr || existing_context->coreclr == nullptr)
         {
-            trace::info(_X("Option to wait for initialize request was set, but that request did not result in initialization"));
+            trace::info(PAL_X("Option to wait for initialize request was set, but that request did not result in initialization"));
             return StatusCode::HostInvalidState;
         }
 
@@ -765,7 +765,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_initialize(const corehost_initialize
         const std::shared_ptr<hostpolicy_context_t> context = get_hostpolicy_context(/*require_runtime*/ true);
         if (context == nullptr)
         {
-            trace::error(_X("Option to get the contract for the initialized hostpolicy was set, but hostpolicy has not been initialized"));
+            trace::error(PAL_X("Option to get the contract for the initialized hostpolicy was set, but hostpolicy has not been initialized"));
             return StatusCode::HostInvalidState;
         }
 
@@ -884,14 +884,14 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_resolve_component_dependencies(
 {
     if (trace::is_enabled())
     {
-        trace_hostpolicy_entrypoint_invocation(_X("corehost_resolve_component_dependencies"));
+        trace_hostpolicy_entrypoint_invocation(PAL_X("corehost_resolve_component_dependencies"));
 
-        trace::info(_X("  Component main assembly path: %s"), component_main_assembly_path);
-        trace::info(_X("}"));
+        trace::info(PAL_X("  Component main assembly path: %s"), component_main_assembly_path);
+        trace::info(PAL_X("}"));
 
         for (const auto& probe : g_init.probe_paths)
         {
-            trace::info(_X("Additional probe dir: %s"), probe.c_str());
+            trace::info(PAL_X("Additional probe dir: %s"), probe.c_str());
         }
     }
 
@@ -904,7 +904,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_resolve_component_dependencies(
     // have already called corehost_main_init.
     if (!init.host_info.is_valid(init.host_mode))
     {
-        trace::error(_X("Hostpolicy must be initialized and corehost_main must have been called before calling corehost_resolve_component_dependencies."));
+        trace::error(PAL_X("Hostpolicy must be initialized and corehost_main must have been called before calling corehost_resolve_component_dependencies."));
         return StatusCode::CoreHostLibLoadFailure;
     }
 
@@ -940,7 +940,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_resolve_component_dependencies(
         assert(false);
         delete app;
         app = nullptr;
-        trace::error(_X("Failed to initialize empty runtime config for the component."));
+        trace::error(PAL_X("Failed to initialize empty runtime config for the component."));
         return StatusCode::InvalidConfigFile;
     }
 
@@ -966,7 +966,7 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_resolve_component_dependencies(
     pal::string_t resolver_errors;
     if (!resolver.valid(&resolver_errors))
     {
-        trace::error(_X("Error initializing the dependency resolver: %s"), resolver_errors.c_str());
+        trace::error(PAL_X("Error initializing the dependency resolver: %s"), resolver_errors.c_str());
         return StatusCode::ResolverInitFailure;
     }
 
@@ -981,11 +981,11 @@ SHARED_API int HOSTPOLICY_CALLTYPE corehost_resolve_component_dependencies(
 
     if (trace::is_enabled())
     {
-        trace::info(_X("corehost_resolve_component_dependencies results: {"));
-        trace::info(_X("  assembly_paths: '%s'"), probe_paths.tpa.data());
-        trace::info(_X("  native_search_paths: '%s'"), probe_paths.native.data());
-        trace::info(_X("  resource_search_paths: '%s'"), probe_paths.resources.data());
-        trace::info(_X("}"));
+        trace::info(PAL_X("corehost_resolve_component_dependencies results: {"));
+        trace::info(PAL_X("  assembly_paths: '%s'"), probe_paths.tpa.data());
+        trace::info(PAL_X("  native_search_paths: '%s'"), probe_paths.native.data());
+        trace::info(PAL_X("  resource_search_paths: '%s'"), probe_paths.resources.data());
+        trace::info(PAL_X("}"));
     }
 
     result(

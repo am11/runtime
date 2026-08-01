@@ -13,17 +13,17 @@ namespace
     void trace_hostfxr_entry_point(const pal::char_t *entry_point)
     {
         trace::setup();
-        trace::info(_X("--- Invoked hostfxr mock - %s"), entry_point);
+        trace::info(PAL_X("--- Invoked hostfxr mock - %s"), entry_point);
     }
 }
 
 SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_main_startupinfo"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_main_startupinfo"));
 
     const pal::string_t dotnet_folder = get_filename(dotnet_root);
 
-    if (pal::strcmp(dotnet_folder.c_str(), _X("mockhostfxrFrameworkMissingFailure")) == 0)
+    if (pal::strcmp(dotnet_folder.c_str(), PAL_X("mockhostfxrFrameworkMissingFailure")) == 0)
     {
         return StatusCode::FrameworkMissingFailure;
     }
@@ -39,14 +39,14 @@ SHARED_API hostfxr_error_writer_fn HOSTFXR_CALLTYPE hostfxr_set_error_writer(hos
 
 SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_bundle_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path, int64_t bundle_header_offset)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_main_bundle_startupinfo"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_main_bundle_startupinfo"));
 
     const pal::string_t dotnet_folder = get_filename(dotnet_root);
 
-    if (pal::strcmp(dotnet_folder.c_str(), _X("mockhostfxrBundleVersionFailure")) == 0)
+    if (pal::strcmp(dotnet_folder.c_str(), PAL_X("mockhostfxrBundleVersionFailure")) == 0)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Bundle header version compatibility check failed."));
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Bundle header version compatibility check failed."));
 
         return StatusCode::BundleExtractionFailure;
     }

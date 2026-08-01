@@ -22,22 +22,22 @@ fx_ver_t::fx_ver_t(int major, int minor, int patch, const pal::string_t& pre, co
     assert(is_empty() || m_major >= 0);
     assert(is_empty() || m_minor >= 0);
     assert(is_empty() || m_patch >= 0);
-    assert(m_pre.empty() || m_pre[0] == _X('-'));
-    assert(m_build.empty() || m_build[0] == _X('+'));
+    assert(m_pre.empty() || m_pre[0] == PAL_X('-'));
+    assert(m_build.empty() || m_build[0] == PAL_X('+'));
 }
 
 fx_ver_t::fx_ver_t(int major, int minor, int patch, const pal::string_t& pre)
-    : fx_ver_t(major, minor, patch, pre, _X(""))
+    : fx_ver_t(major, minor, patch, pre, PAL_X(""))
 {
 }
 
 fx_ver_t::fx_ver_t(int major, int minor, int patch)
-    : fx_ver_t(major, minor, patch, _X(""), _X(""))
+    : fx_ver_t(major, minor, patch, PAL_X(""), PAL_X(""))
 {
 }
 
 fx_ver_t::fx_ver_t()
-    : fx_ver_t(-1, -1, -1, _X(""), _X(""))
+    : fx_ver_t(-1, -1, -1, PAL_X(""), PAL_X(""))
 {
 }
 
@@ -121,8 +121,8 @@ bool fx_ver_t::parse(const pal::string_t& ver, fx_ver_t* fx_ver)
         return false;
     }
 
-    pal::string_t pre(c_ver.pre != NULL ? c_ver.pre : _X(""));
-    pal::string_t build(c_ver.build != NULL ? c_ver.build : _X(""));
+    pal::string_t pre(c_ver.pre != NULL ? c_ver.pre : PAL_X(""));
+    pal::string_t build(c_ver.build != NULL ? c_ver.build : PAL_X(""));
 
     *fx_ver = fx_ver_t(c_ver.major, c_ver.minor, c_ver.patch, pre, build);
 

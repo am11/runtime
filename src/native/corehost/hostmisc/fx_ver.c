@@ -45,10 +45,10 @@ bool c_fx_ver_is_empty(const c_fx_ver_t* ver)
 
 pal_char_t* c_fx_ver_as_str(const c_fx_ver_t* ver, pal_char_t* out_str, size_t out_str_len)
 {
-    pal_str_printf(out_str, out_str_len, _X("%d.%d.%d%s%s"),
+    pal_str_printf(out_str, out_str_len, PAL_X("%d.%d.%d%s%s"),
         ver->major, ver->minor, ver->patch,
-        ver->pre ? ver->pre : _X(""),
-        ver->build ? ver->build : _X(""));
+        ver->pre ? ver->pre : PAL_X(""),
+        ver->build ? ver->build : PAL_X(""));
     return out_str;
 }
 
@@ -59,10 +59,10 @@ static size_t index_of_non_numeric(const pal_char_t* str, size_t start, size_t l
 {
     for (size_t i = start; i - start < len; i++)
     {
-        if (str[i] == _X('\0'))
+        if (str[i] == PAL_X('\0'))
             break;
         
-        if (str[i] < _X('0') || str[i] > _X('9'))
+        if (str[i] < PAL_X('0') || str[i] > PAL_X('9'))
             return i;
     }
     return (size_t)-1;
@@ -82,7 +82,7 @@ static bool try_stou(const pal_char_t* str, size_t len, unsigned* num)
     if (len >= ARRAY_SIZE(buf))
         return false;
     memcpy(buf, str, len * sizeof(pal_char_t));
-    buf[len] = _X('\0');
+    buf[len] = PAL_X('\0');
 
     *num = (unsigned)pal_strtoul(buf, NULL, 10);
     return true;
@@ -96,7 +96,7 @@ static bool try_parse_version_number(const pal_char_t* str, size_t len, unsigned
         return false;
 
     // Version numbers must not have leading zeros.
-    if (len > 1 && str[0] == _X('0'))
+    if (len > 1 && str[0] == PAL_X('0'))
         return false;
 
     return true;
@@ -110,14 +110,14 @@ static bool valid_identifier_char_set(const pal_char_t* id, size_t len)
     for (size_t i = 0; i < len; i++)
     {
         pal_char_t c = id[i];
-        if (c >= _X('A'))
+        if (c >= PAL_X('A'))
         {
-            if ((c > _X('Z') && c < _X('a')) || c > _X('z'))
+            if ((c > PAL_X('Z') && c < PAL_X('a')) || c > PAL_X('z'))
                 return false;
         }
         else
         {
-            if ((c < _X('0') && c != _X('-')) || c > _X('9'))
+            if ((c < PAL_X('0') && c != PAL_X('-')) || c > PAL_X('9'))
                 return false;
         }
     }
@@ -133,7 +133,7 @@ static bool valid_identifier(const pal_char_t* id, size_t id_len, bool build_met
     if (!valid_identifier_char_set(id, id_len))
         return false;
 
-    if (!build_meta && id[0] == _X('0') && id_len > 1)
+    if (!build_meta && id[0] == PAL_X('0') && id_len > 1)
     {
         // Numeric pre-release identifiers must not be padded with 0s.
         // https://semver.org/#spec-item-9
@@ -148,7 +148,7 @@ static bool validate_dot_separated_identifiers(const pal_char_t* ids, size_t len
     size_t id_start = 0;
     for (size_t i = 0; i <= len; i++)
     {
-        if (i == len || ids[i] == _X('.'))
+        if (i == len || ids[i] == PAL_X('.'))
         {
             if (!valid_identifier(ids + id_start, i - id_start, build_meta))
                 return false;
@@ -162,10 +162,10 @@ static bool validate_dot_separated_identifiers(const pal_char_t* ids, size_t len
 
 static bool parse_internal(const pal_char_t* ver_str, c_fx_ver_t* out_ver)
 {
-    if (ver_str[0] == _X('\0'))
+    if (ver_str[0] == PAL_X('\0'))
         return false;
 
-    const pal_char_t* maj_dot = pal_strchr(ver_str, _X('.'));
+    const pal_char_t* maj_dot = pal_strchr(ver_str, PAL_X('.'));
     if (maj_dot == NULL)
         return false;
 
@@ -175,7 +175,7 @@ static bool parse_internal(const pal_char_t* ver_str, c_fx_ver_t* out_ver)
         return false;
 
     const pal_char_t* min_start = maj_dot + 1;
-    const pal_char_t* min_dot = pal_strchr(min_start, _X('.'));
+    const pal_char_t* min_dot = pal_strchr(min_start, PAL_X('.'));
     if (min_dot == NULL)
         return false;
 
@@ -202,7 +202,7 @@ static bool parse_internal(const pal_char_t* ver_str, c_fx_ver_t* out_ver)
         return false;
 
     const pal_char_t* pre_start = pat_start + pat_non_numeric;
-    const pal_char_t* build_start = pal_strchr(pre_start, _X('+'));
+    const pal_char_t* build_start = pal_strchr(pre_start, PAL_X('+'));
 
     size_t pre_len = (build_start != NULL)
         ? (size_t)(build_start - pre_start)
@@ -210,7 +210,7 @@ static bool parse_internal(const pal_char_t* ver_str, c_fx_ver_t* out_ver)
 
     if (pre_len > 0)
     {
-        if (pre_start[0] != _X('-'))
+        if (pre_start[0] != PAL_X('-'))
             return false;
 
         if (!validate_dot_separated_identifiers(pre_start + 1, pre_len - 1, /*build_meta*/ false))
@@ -252,7 +252,7 @@ bool c_fx_ver_parse(const pal_char_t* ver_str, c_fx_ver_t* out_ver)
 static size_t get_id_len(const pal_char_t* ids, size_t id_start)
 {
     size_t i = id_start;
-    while (ids[i] != _X('\0') && ids[i] != _X('.'))
+    while (ids[i] != PAL_X('\0') && ids[i] != PAL_X('.'))
         i++;
     return i - id_start;
 }
@@ -269,8 +269,8 @@ int c_fx_ver_compare(const c_fx_ver_t* a, const c_fx_ver_t* b)
     if (a->patch != b->patch)
         return (a->patch > b->patch) ? 1 : -1;
 
-    bool a_empty = (a->pre == NULL || a->pre[0] == _X('\0'));
-    bool b_empty = (b->pre == NULL || b->pre[0] == _X('\0'));
+    bool a_empty = (a->pre == NULL || a->pre[0] == PAL_X('\0'));
+    bool b_empty = (b->pre == NULL || b->pre[0] == PAL_X('\0'));
 
     if (a_empty || b_empty)
     {
@@ -279,18 +279,18 @@ int c_fx_ver_compare(const c_fx_ver_t* a, const c_fx_ver_t* b)
     }
 
     // Both are non-empty prerelease.
-    assert(a->pre[0] == _X('-'));
-    assert(b->pre[0] == _X('-'));
+    assert(a->pre[0] == PAL_X('-'));
+    assert(b->pre[0] == PAL_X('-'));
 
     size_t id_start = 1;
     for (size_t i = id_start; ; ++i)
     {
         if (a->pre[i] != b->pre[i])
         {
-            if (a->pre[i] == _X('\0') && b->pre[i] == _X('.'))
+            if (a->pre[i] == PAL_X('\0') && b->pre[i] == PAL_X('.'))
                 return -1;
 
-            if (b->pre[i] == _X('\0') && a->pre[i] == _X('.'))
+            if (b->pre[i] == PAL_X('\0') && a->pre[i] == PAL_X('.'))
                 return 1;
 
             size_t ida_len = get_id_len(a->pre, id_start);
@@ -316,9 +316,9 @@ int c_fx_ver_compare(const c_fx_ver_t* a, const c_fx_ver_t* b)
             return 0;
         }
 
-        if (a->pre[i] == _X('\0'))
+        if (a->pre[i] == PAL_X('\0'))
             break;
-        if (a->pre[i] == _X('.'))
+        if (a->pre[i] == PAL_X('.'))
             id_start = i + 1;
     }
 

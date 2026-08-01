@@ -35,19 +35,19 @@ int main(const int argc, const pal::char_t *argv[])
     }
 
     const pal::char_t *command = argv[1];
-    if (pal::strcmp(command, _X("get_hostfxr_path")) == 0)
+    if (pal::strcmp(command, PAL_X("get_hostfxr_path")) == 0)
     {
         // args: ... [<explicit_load>] [<assembly_path>] [<dotnet_root>] [<hostfxr_to_load>]
         bool explicit_load = false;
         if (argc >= 3)
-            explicit_load = pal::strcmp(to_lower(argv[2]).c_str(), _X("true")) == 0;
+            explicit_load = pal::strcmp(to_lower(argv[2]).c_str(), PAL_X("true")) == 0;
 
         const pal::char_t *assembly_path = nullptr;
-        if (argc >= 4 && pal::strcmp(argv[3], _X("nullptr")) != 0)
+        if (argc >= 4 && pal::strcmp(argv[3], PAL_X("nullptr")) != 0)
             assembly_path = argv[3];
 
         const pal::char_t *dotnet_root = nullptr;
-        if (argc >= 5 && pal::strcmp(argv[4], _X("nullptr")) != 0)
+        if (argc >= 5 && pal::strcmp(argv[4], PAL_X("nullptr")) != 0)
             dotnet_root = argv[4];
 
         if (argc >= 6)
@@ -72,7 +72,7 @@ int main(const int argc, const pal::char_t *argv[])
             }
 
             nethost_path = get_directory(nethost_path);
-            nethost_path.append(LIB_FILE_NAME_X("nethost"));
+            nethost_path.append(LIB_FILE_NAMEPAL_X("nethost"));
 
             pal::dll_t nethost;
             if (!pal::load_library(&nethost_path, &nethost))
@@ -100,7 +100,7 @@ int main(const int argc, const pal::char_t *argv[])
         };
 
         // Make version invalid for error case
-        if (assembly_path != nullptr && pal::strcmp(assembly_path, _X("[error]")) == 0)
+        if (assembly_path != nullptr && pal::strcmp(assembly_path, PAL_X("[error]")) == 0)
             parameters.size = parameters.size - 1;
 
         const get_hostfxr_parameters *parameters_ptr = assembly_path != nullptr || dotnet_root != nullptr ? &parameters : nullptr;
@@ -126,7 +126,7 @@ int main(const int argc, const pal::char_t *argv[])
             return EXIT_FAILURE;
         }
     }
-    else if (pal::strcmp(command, _X("host_context")) == 0)
+    else if (pal::strcmp(command, PAL_X("host_context")) == 0)
     {
         // args: ... <scenario> <check_properties> <hostfxr_path> <app_or_config_path> [<remaining_args>]
         const int min_argc = 6;
@@ -151,16 +151,16 @@ int main(const int argc, const pal::char_t *argv[])
 
         pal::stringstream_t test_output;
         bool success = false;
-        if (pal::strcmp(scenario, _X("app")) == 0)
+        if (pal::strcmp(scenario, PAL_X("app")) == 0)
         {
             // Everything after hostfxr path is the command line to use
             success = host_context_test::app(check_properties, hostfxr_path, remaining_argc + 1, &argv[5], test_output);
         }
-        else if (pal::strcmp(scenario, _X("config")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("config")) == 0)
         {
             success = host_context_test::config(check_properties, hostfxr_path, app_or_config_path, remaining_argc, remaining_argv, test_output);
         }
-        else if (pal::strcmp(scenario, _X("config_multiple")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("config_multiple")) == 0)
         {
             // args: ... <scenario> <check_properties> <hostfxr_path> <config_path> <secondary_config_path>
             if (argc < min_argc + 1)
@@ -175,7 +175,7 @@ int main(const int argc, const pal::char_t *argv[])
 
             success = host_context_test::config_multiple(check_properties, hostfxr_path, app_or_config_path, secondary_config_path, remaining_argc, remaining_argv, test_output);
         }
-        else if (pal::strcmp(scenario, _X("mixed")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("mixed")) == 0)
         {
             // args: ... <scenario> <check_properties> <hostfxr_path> <app_path> <config_path>
             if (argc < min_argc + 1)
@@ -190,8 +190,8 @@ int main(const int argc, const pal::char_t *argv[])
 
             success = host_context_test::mixed(check_properties, hostfxr_path, app_or_config_path, config_path, remaining_argc, remaining_argv, test_output);
         }
-        else if (pal::strcmp(scenario, _X("non_context_mixed_apphost")) == 0
-            || pal::strcmp(scenario, _X("non_context_mixed_dotnet")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("non_context_mixed_apphost")) == 0
+            || pal::strcmp(scenario, PAL_X("non_context_mixed_dotnet")) == 0)
         {
             // args: ... <scenario> <check_properties> <hostfxr_path> <app_path> <config_path>
             if (argc < min_argc + 1)
@@ -204,10 +204,10 @@ int main(const int argc, const pal::char_t *argv[])
             --remaining_argc;
             remaining_argv = remaining_argc > 0 ? &argv[min_argc + 1] : nullptr;
 
-            bool launch_as_if_dotnet = pal::strcmp(scenario, _X("non_context_mixed_dotnet")) == 0;
+            bool launch_as_if_dotnet = pal::strcmp(scenario, PAL_X("non_context_mixed_dotnet")) == 0;
             success = host_context_test::non_context_mixed(check_properties, hostfxr_path, app_or_config_path, config_path, remaining_argc, remaining_argv, launch_as_if_dotnet, test_output);
         }
-        else if (pal::strcmp(scenario, _X("get_runtime_delegate_for_active_context")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("get_runtime_delegate_for_active_context")) == 0)
         {
             success = host_context_test::get_runtime_delegate_for_active_context(hostfxr_path, app_or_config_path, test_output);
         }
@@ -220,7 +220,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("component_load_assembly")) == 0)
+    else if (pal::strcmp(command, PAL_X("component_load_assembly")) == 0)
     {
         // args: ... <hostfxr_path> <config_path> <assembly_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 4;
@@ -246,7 +246,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("app_load_assembly")) == 0)
+    else if (pal::strcmp(command, PAL_X("app_load_assembly")) == 0)
     {
         // args: ... <hostfxr_path> <app_path> <assembly_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 3;
@@ -271,7 +271,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-        else if (pal::strcmp(command, _X("component_load_assembly_bytes")) == 0)
+        else if (pal::strcmp(command, PAL_X("component_load_assembly_bytes")) == 0)
     {
         // args: ... <hostfxr_path> <config_path> <assembly_path> <symbols_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 4;
@@ -297,7 +297,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("app_load_assembly_bytes")) == 0)
+    else if (pal::strcmp(command, PAL_X("app_load_assembly_bytes")) == 0)
     {
         // args: ... <hostfxr_path> <app_path> <assembly_path> <symbols_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 3;
@@ -322,7 +322,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("component_load_assembly_and_get_function_pointer")) == 0)
+    else if (pal::strcmp(command, PAL_X("component_load_assembly_and_get_function_pointer")) == 0)
     {
         // args: ... <hostfxr_path> <app_or_config_path> <assembly_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 4;
@@ -348,7 +348,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("app_load_assembly_and_get_function_pointer")) == 0)
+    else if (pal::strcmp(command, PAL_X("app_load_assembly_and_get_function_pointer")) == 0)
     {
         // args: ... <hostfxr_path> <app_path> <assembly_path> <type_name> <method_name> [<assembly_path> <type_name> <method_name>...]
         const int min_argc = 3;
@@ -373,7 +373,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("component_get_function_pointer")) == 0)
+    else if (pal::strcmp(command, PAL_X("component_get_function_pointer")) == 0)
     {
         // args: ... <hostfxr_path> <app_or_config_path> <type_name> <method_name> [<type_name> <method_name>...]
         const int min_argc = 4;
@@ -399,7 +399,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("app_get_function_pointer")) == 0)
+    else if (pal::strcmp(command, PAL_X("app_get_function_pointer")) == 0)
     {
         // args: ... <hostfxr_path> <app_path> <type_name> <method_name> [<type_name> <method_name>...]
         const int min_argc = 3;
@@ -424,7 +424,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("run_app")) == 0)
+    else if (pal::strcmp(command, PAL_X("run_app")) == 0)
     {
         // args: ... <hostfxr_path> <dotnet_command_line>
         const int min_argc = 4;
@@ -445,7 +445,7 @@ int main(const int argc, const pal::char_t *argv[])
         std::cout << tostr(test_output.str()).data() << std::endl;
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("resolve_component_dependencies")) == 0)
+    else if (pal::strcmp(command, PAL_X("resolve_component_dependencies")) == 0)
     {
         // args: ... <scenario> <hostfxr_path> <app_path> <component_path>
         if (argc < 6)
@@ -461,11 +461,11 @@ int main(const int argc, const pal::char_t *argv[])
 
         pal::stringstream_t test_output;
         bool success = false;
-        if (pal::strcmp(scenario, _X("run_app_and_resolve")) == 0)
+        if (pal::strcmp(scenario, PAL_X("run_app_and_resolve")) == 0)
         {
             success = resolve_component_dependencies_test::run_app_and_resolve(hostfxr_path, app_path, component_path, test_output);
         }
-        else if (pal::strcmp(scenario, _X("run_app_and_resolve_multithreaded")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("run_app_and_resolve_multithreaded")) == 0)
         {
             if (argc < 7)
             {
@@ -482,7 +482,7 @@ int main(const int argc, const pal::char_t *argv[])
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 #if defined(_WIN32)
-    else if (pal::strcmp(command, _X("comhost")) == 0)
+    else if (pal::strcmp(command, PAL_X("comhost")) == 0)
     {
         // args: ... <scenario> <activation_count> <comhost_path> <clsid>
         if (argc < 6)
@@ -497,26 +497,26 @@ int main(const int argc, const pal::char_t *argv[])
         const pal::string_t clsid_str = argv[5];
 
         bool success = false;
-        if (pal::strcmp(scenario, _X("synchronous")) == 0)
+        if (pal::strcmp(scenario, PAL_X("synchronous")) == 0)
         {
             success = comhost_test::synchronous(comhost_path, clsid_str, count);
         }
-        else if (pal::strcmp(scenario, _X("concurrent")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("concurrent")) == 0)
         {
             success = comhost_test::concurrent(comhost_path, clsid_str, count);
         }
-        else if (pal::strcmp(scenario, _X("errorinfo")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("errorinfo")) == 0)
         {
             success = comhost_test::errorinfo(comhost_path, clsid_str, count);
         }
-        else if (pal::strcmp(scenario, _X("typelib")) == 0)
+        else if (pal::strcmp(scenario, PAL_X("typelib")) == 0)
         {
             success = comhost_test::typelib(comhost_path, count);
         }
 
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
-    else if (pal::strcmp(command, _X("ijwhost")) == 0)
+    else if (pal::strcmp(command, PAL_X("ijwhost")) == 0)
     {
         // args: ... <ijw_library_path> <entry_point>
         if (argc < 4)
@@ -569,7 +569,7 @@ int main(const int argc, const pal::char_t *argv[])
         return EXIT_SUCCESS;
     }
 #endif
-    else if (pal::strcmp(command, _X("get_native_search_directories")) == 0)
+    else if (pal::strcmp(command, PAL_X("get_native_search_directories")) == 0)
     {
         // args: ... <scenario> <hostfxrpath>
         int min_argc = 4;
@@ -589,7 +589,7 @@ int main(const int argc, const pal::char_t *argv[])
 
         pal::stringstream_t test_output;
         bool success = false;
-        if (pal::strcmp(scenario, _X("get_for_command_line")) == 0)
+        if (pal::strcmp(scenario, PAL_X("get_for_command_line")) == 0)
         {
             success = get_native_search_directories_test::get_for_command_line(hostfxr_path, remaining_argc, remaining_argv, test_output);
         }

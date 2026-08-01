@@ -23,24 +23,24 @@ namespace
     {
         trace::setup();
         if (trace::is_enabled())
-            trace::info(_X("--- Invoked %s [version: %s]"), entry_point, get_host_version_description().c_str());
+            trace::info(PAL_X("--- Invoked %s [version: %s]"), entry_point, get_host_version_description().c_str());
     }
 }
 
 SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_bundle_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path, int64_t bundle_header_offset)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_main_bundle_startupinfo"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_main_bundle_startupinfo"));
 
     StatusCode bundleStatus = bundle::info_t::process_bundle(host_path, app_path, bundle_header_offset);
     if (bundleStatus != StatusCode::Success)
     {
-        trace::error(_X("A fatal error occurred while processing application bundle"));
+        trace::error(PAL_X("A fatal error occurred while processing application bundle"));
         return bundleStatus;
     }
 
     if (host_path == nullptr || dotnet_root == nullptr || app_path == nullptr)
     {
-        trace::error(_X("Invalid startup info: host_path, dotnet_root, and app_path should not be null."));
+        trace::error(PAL_X("Invalid startup info: host_path, dotnet_root, and app_path should not be null."));
         return StatusCode::InvalidArgFailure;
     }
 
@@ -51,11 +51,11 @@ SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_bundle_startupinfo(const int argc, 
 
 SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_startupinfo(const int argc, const pal::char_t* argv[], const pal::char_t* host_path, const pal::char_t* dotnet_root, const pal::char_t* app_path)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_main_startupinfo"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_main_startupinfo"));
 
     if (host_path == nullptr || dotnet_root == nullptr || app_path == nullptr)
     {
-        trace::error(_X("Invalid startup info: host_path, dotnet_root, and app_path should not be null."));
+        trace::error(PAL_X("Invalid startup info: host_path, dotnet_root, and app_path should not be null."));
         return StatusCode::InvalidArgFailure;
     }
 
@@ -65,7 +65,7 @@ SHARED_API int HOSTFXR_CALLTYPE hostfxr_main_startupinfo(const int argc, const p
 
 SHARED_API int HOSTFXR_CALLTYPE hostfxr_main(const int argc, const pal::char_t* argv[])
 {
-    trace_hostfxr_entry_point(_X("hostfxr_main"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_main"));
 
     host_startup_info_t startup_info;
     startup_info.parse(argc, argv);
@@ -122,22 +122,22 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_resolve_sdk(
     pal::char_t buffer[],
     int32_t buffer_size)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_resolve_sdk"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_resolve_sdk"));
 
     if (buffer_size < 0 || (buffer_size > 0 && buffer == nullptr))
     {
-        trace::error(_X("hostfxr_resolve_sdk received an invalid argument."));
+        trace::error(PAL_X("hostfxr_resolve_sdk received an invalid argument."));
         return -1;
     }
 
     if (exe_dir == nullptr)
     {
-        exe_dir = _X("");
+        exe_dir = PAL_X("");
     }
 
     if (working_dir == nullptr)
     {
-        working_dir = _X("");
+        working_dir = PAL_X("");
     }
 
     auto sdk_path = sdk_resolver::from_nearest_global_file(working_dir).resolve(exe_dir);
@@ -157,7 +157,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_resolve_sdk(
     }
     else
     {
-        trace::info(_X("hostfxr_resolve_sdk received a buffer that is too small to hold the located SDK path."));
+        trace::info(PAL_X("hostfxr_resolve_sdk received a buffer that is too small to hold the located SDK path."));
     }
 
     return static_cast<int32_t>(sdk_path.size() + 1);
@@ -184,11 +184,11 @@ namespace
 {
     const pal::char_t *GlobalJsonStates[] =
     {
-        _X("not_found"),
-        _X("valid"),
-        _X("invalid_json"),
-        _X("invalid_data"),
-        _X("__invalid_data_no_fallback"),
+        PAL_X("not_found"),
+        PAL_X("valid"),
+        PAL_X("invalid_json"),
+        PAL_X("invalid_data"),
+        PAL_X("__invalid_data_no_fallback"),
     };
     static_assert((sizeof(GlobalJsonStates) / sizeof(*GlobalJsonStates)) == static_cast<size_t>(sdk_resolver::global_file_info::state::__last), "Invalid state count");
 }
@@ -259,23 +259,23 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_resolve_sdk2(
     int32_t flags,
     hostfxr_resolve_sdk2_result_fn result)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_resolve_sdk2"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_resolve_sdk2"));
     trace::info(
-        _X("  exe_dir=%s\n")
-        _X("  working_dir=%s\n")
-        _X("  flags=%d"),
-        exe_dir == nullptr ? _X("<nullptr>") : exe_dir,
-        working_dir == nullptr ? _X("<nullptr>") : working_dir,
+        PAL_X("  exe_dir=%s\n")
+        PAL_X("  working_dir=%s\n")
+        PAL_X("  flags=%d"),
+        exe_dir == nullptr ? PAL_X("<nullptr>") : exe_dir,
+        working_dir == nullptr ? PAL_X("<nullptr>") : working_dir,
         flags);
 
     if (exe_dir == nullptr)
     {
-        exe_dir = _X("");
+        exe_dir = PAL_X("");
     }
 
     if (working_dir == nullptr)
     {
-        working_dir = _X("");
+        working_dir = PAL_X("");
     }
 
     auto resolver = sdk_resolver::from_nearest_global_file(
@@ -344,12 +344,12 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_available_sdks(
     const pal::char_t* exe_dir,
     hostfxr_get_available_sdks_result_fn result)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_available_sdks"));
-    trace::info(_X("  exe_dir=%s"), exe_dir == nullptr ? _X("<nullptr>") : exe_dir);
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_available_sdks"));
+    trace::info(PAL_X("  exe_dir=%s"), exe_dir == nullptr ? PAL_X("<nullptr>") : exe_dir);
 
     if (exe_dir == nullptr)
     {
-        exe_dir = _X("");
+        exe_dir = PAL_X("");
     }
 
     std::vector<sdk_info> sdk_infos;
@@ -381,18 +381,18 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_dotnet_environment_info(
     hostfxr_get_dotnet_environment_info_result_fn result,
     void* result_context)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_dotnet_environment_info"));
-    trace::info(_X("  dotnet_root=%s"), dotnet_root == nullptr ? _X("<nullptr>") : dotnet_root);
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_dotnet_environment_info"));
+    trace::info(PAL_X("  dotnet_root=%s"), dotnet_root == nullptr ? PAL_X("<nullptr>") : dotnet_root);
 
     if (result == nullptr)
     {
-        trace::error(_X("hostfxr_get_dotnet_environment_info received an invalid argument: result should not be null."));
+        trace::error(PAL_X("hostfxr_get_dotnet_environment_info received an invalid argument: result should not be null."));
         return StatusCode::InvalidArgFailure;
     }
 
     if (reserved != nullptr)
     {
-        trace::error(_X("hostfxr_get_dotnet_environment_info received an invalid argument: reserved should be null."));
+        trace::error(PAL_X("hostfxr_get_dotnet_environment_info received an invalid argument: reserved should be null."));
         return StatusCode::InvalidArgFailure;
     }
 
@@ -401,11 +401,11 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_dotnet_environment_info(
     {
         if (pal::get_dotnet_self_registered_dir(&dotnet_dir) || pal::get_default_installation_dir(&dotnet_dir))
         {
-            trace::info(_X("Using global install location [%s]."), dotnet_dir.c_str());
+            trace::info(PAL_X("Using global install location [%s]."), dotnet_dir.c_str());
         }
         else
         {
-            trace::info(_X("No default dotnet installation could be obtained."));
+            trace::info(PAL_X("No default dotnet installation could be obtained."));
         }
     }
     else
@@ -517,20 +517,20 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_dotnet_environment_info(
 //
 SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_native_search_directories(const int argc, const pal::char_t* argv[], pal::char_t buffer[], int32_t buffer_size, int32_t* required_buffer_size)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_native_search_directories"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_native_search_directories"));
     if (trace::is_enabled())
     {
-        trace::info(_X("  args=["));
+        trace::info(PAL_X("  args=["));
         for (int i = 0; i < argc; ++i)
         {
-            trace::info(_X("    %s"), argv[i]);
+            trace::info(PAL_X("    %s"), argv[i]);
         }
-        trace::info(_X("  ]"));
+        trace::info(PAL_X("  ]"));
     }
 
     if (buffer_size < 0 || (buffer_size > 0 && buffer == nullptr) || required_buffer_size == nullptr)
     {
-        trace::error(_X("hostfxr_get_native_search_directories received an invalid argument."));
+        trace::error(PAL_X("hostfxr_get_native_search_directories received an invalid argument."));
         return InvalidArgFailure;
     }
 
@@ -544,7 +544,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_native_search_directories(const 
     host_startup_info_t startup_info;
     startup_info.parse(argc, argv);
 
-    int rc = fx_muxer_t::execute(_X("get-native-search-directories"), argc, argv, startup_info, buffer, buffer_size, required_buffer_size);
+    int rc = fx_muxer_t::execute(PAL_X("get-native-search-directories"), argc, argv, startup_info, buffer, buffer_size, required_buffer_size);
     return rc;
 }
 
@@ -570,7 +570,7 @@ namespace
         {
             if (!pal::get_own_executable_path(&startup_info.host_path) || !pal::fullpath(&startup_info.host_path))
             {
-                trace::error(_X("Failed to resolve full path of the current host [%s]"), startup_info.host_path.c_str());
+                trace::error(PAL_X("Failed to resolve full path of the current host [%s]"), startup_info.host_path.c_str());
                 return StatusCode::CurrentHostFindFailure;
             }
         }
@@ -584,7 +584,7 @@ namespace
             startup_info.dotnet_root = get_dotnet_root_from_fxr_path(mod_path);
             if (!pal::fullpath(&startup_info.dotnet_root))
             {
-                trace::error(_X("Failed to resolve full path of dotnet root [%s]"), startup_info.dotnet_root.c_str());
+                trace::error(PAL_X("Failed to resolve full path of dotnet root [%s]"), startup_info.dotnet_root.c_str());
                 return StatusCode::CurrentHostFindFailure;
             }
         }
@@ -599,36 +599,36 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_resolve_frameworks_for_runtime_confi
     /*opt*/ hostfxr_resolve_frameworks_result_fn callback,
     /*opt*/ void* result_context)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_resolve_frameworks_for_runtime_config"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_resolve_frameworks_for_runtime_config"));
     if (trace::is_enabled())
     {
-        trace::info(_X("  runtime_config_path=%s"), runtime_config_path == nullptr ? _X("<nullptr>") : runtime_config_path);
+        trace::info(PAL_X("  runtime_config_path=%s"), runtime_config_path == nullptr ? PAL_X("<nullptr>") : runtime_config_path);
         if (parameters == nullptr)
         {
-            trace::info(_X("  parameters=<nullptr>"));
+            trace::info(PAL_X("  parameters=<nullptr>"));
         }
         else
         {
             trace::info(
-                _X("  parameters={")
-                _X("    host_path=%s\n")
-                _X("    dotnet_root=%s\n")
-                _X("  }"),
-                parameters->host_path == nullptr ? _X("<nullptr>") : parameters->host_path,
-                parameters->dotnet_root == nullptr ? _X("<nullptr>") : parameters->dotnet_root);
+                PAL_X("  parameters={")
+                PAL_X("    host_path=%s\n")
+                PAL_X("    dotnet_root=%s\n")
+                PAL_X("  }"),
+                parameters->host_path == nullptr ? PAL_X("<nullptr>") : parameters->host_path,
+                parameters->dotnet_root == nullptr ? PAL_X("<nullptr>") : parameters->dotnet_root);
         }
     }
 
     if (runtime_config_path == nullptr)
     {
-        trace::error(_X("hostfxr_resolve_frameworks_for_runtime_config received an invalid argument: runtime_config_path should not be null."));
+        trace::error(PAL_X("hostfxr_resolve_frameworks_for_runtime_config received an invalid argument: runtime_config_path should not be null."));
         return StatusCode::InvalidArgFailure;
     }
 
     pal::string_t runtime_config = runtime_config_path;
     if (runtime_config.empty() || !pal::realpath(&runtime_config))
     {
-        trace::error(_X("The specified runtimeconfig.json [%s] does not exist"), runtime_config.c_str());
+        trace::error(PAL_X("The specified runtimeconfig.json [%s] does not exist"), runtime_config.c_str());
         return StatusCode::InvalidConfigFile;
     }
 
@@ -642,12 +642,12 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_resolve_frameworks_for_runtime_confi
     fx_definitions.push_back(std::unique_ptr<fx_definition_t>(app));
 
     const runtime_config_t::settings_t override_settings;
-    app->parse_runtime_config(runtime_config, _X(""), override_settings);
+    app->parse_runtime_config(runtime_config, PAL_X(""), override_settings);
 
     const runtime_config_t& app_config = app->get_runtime_config();
     if (!app_config.is_valid())
     {
-        trace::error(_X("Invalid runtimeconfig.json [%s]"), app_config.get_path().c_str());
+        trace::error(PAL_X("Invalid runtimeconfig.json [%s]"), app_config.get_path().c_str());
         return StatusCode::InvalidConfigFile;
     }
 
@@ -724,7 +724,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_initialize_for_dotnet_command_line(
     const hostfxr_initialize_parameters * parameters,
     /*out*/ hostfxr_handle * host_context_handle)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_initialize_for_dotnet_command_line"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_initialize_for_dotnet_command_line"));
 
     if (host_context_handle == nullptr || argv == nullptr || argc == 0)
         return StatusCode::InvalidArgFailure;
@@ -766,7 +766,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_initialize_for_runtime_config(
     const hostfxr_initialize_parameters *parameters,
     /*out*/ hostfxr_handle *host_context_handle)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_initialize_for_runtime_config"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_initialize_for_runtime_config"));
 
     if (runtime_config_path == nullptr || host_context_handle == nullptr)
         return StatusCode::InvalidArgFailure;
@@ -786,7 +786,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_initialize_for_runtime_config(
 
 SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_run_app(const hostfxr_handle host_context_handle)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_run_app"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_run_app"));
 
     host_context_t *context = host_context_t::from_handle(host_context_handle);
     if (context == nullptr)
@@ -829,7 +829,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_delegate(
     hostfxr_delegate_type type,
     /*out*/ void **delegate)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_runtime_delegate"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_runtime_delegate"));
 
     if (delegate == nullptr)
         return StatusCode::InvalidArgFailure;
@@ -846,7 +846,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_delegate(
         context = fx_muxer_t::get_active_host_context();
         if (context == nullptr)
         {
-            trace::error(_X("Hosting components context has not been initialized. Cannot get runtime delegate."));
+            trace::error(PAL_X("Hosting components context has not been initialized. Cannot get runtime delegate."));
             return StatusCode::HostInvalidState;
         }
     }
@@ -874,7 +874,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_property_value(
     const pal::char_t *name,
     /*out*/ const pal::char_t **value)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_runtime_property_value"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_runtime_property_value"));
 
     if (name == nullptr || value == nullptr)
         return StatusCode::InvalidArgFailure;
@@ -887,7 +887,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_property_value(
         const host_context_t *context_maybe = fx_muxer_t::get_active_host_context();
         if (context_maybe == nullptr)
         {
-            trace::error(_X("Hosting components context has not been initialized. Cannot get runtime properties."));
+            trace::error(PAL_X("Hosting components context has not been initialized. Cannot get runtime properties."));
             return StatusCode::HostInvalidState;
         }
 
@@ -922,7 +922,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_set_runtime_property_value(
     const pal::char_t *name,
     const pal::char_t *value)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_set_runtime_property_value"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_set_runtime_property_value"));
 
     if (name == nullptr)
         return StatusCode::InvalidArgFailure;
@@ -933,7 +933,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_set_runtime_property_value(
 
     if (context->type != host_context_type::initialized)
     {
-        trace::error(_X("Setting properties is not allowed once runtime has been loaded."));
+        trace::error(PAL_X("Setting properties is not allowed once runtime has been loaded."));
         return StatusCode::InvalidArgFailure;
     }
 
@@ -947,7 +947,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_properties(
     /*out*/ const pal::char_t **keys,
     /*out*/ const pal::char_t **values)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_get_runtime_properties"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_get_runtime_properties"));
 
     if (count == nullptr)
         return StatusCode::InvalidArgFailure;
@@ -958,7 +958,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_properties(
         const host_context_t *context_maybe = fx_muxer_t::get_active_host_context();
         if (context_maybe == nullptr)
         {
-            trace::error(_X("Hosting components context has not been initialized. Cannot get runtime properties."));
+            trace::error(PAL_X("Hosting components context has not been initialized. Cannot get runtime properties."));
             *count = 0;
             return StatusCode::HostInvalidState;
         }
@@ -1002,7 +1002,7 @@ SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_get_runtime_properties(
 
 SHARED_API int32_t HOSTFXR_CALLTYPE hostfxr_close(const hostfxr_handle host_context_handle)
 {
-    trace_hostfxr_entry_point(_X("hostfxr_close"));
+    trace_hostfxr_entry_point(PAL_X("hostfxr_close"));
 
     // Allow contexts with a type of invalid as we still need to clean them up
     host_context_t *context = host_context_t::from_handle(host_context_handle, /*allow_invalid_type*/ true);

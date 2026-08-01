@@ -27,7 +27,7 @@ static int get_hostfxr_path_internal(
     size_t min_parameters_size = offsetof(struct get_hostfxr_parameters, dotnet_root) + sizeof(const char_t*);
     if (parameters != NULL && parameters->size < min_parameters_size)
     {
-        trace_error(_X("Invalid size for get_hostfxr_parameters. Expected at least %zu"), min_parameters_size);
+        trace_error(PAL_X("Invalid size for get_hostfxr_parameters. Expected at least %zu"), min_parameters_size);
         return InvalidArgFailure;
     }
 
@@ -37,7 +37,7 @@ static int get_hostfxr_path_internal(
     {
         if (parameters != NULL && parameters->dotnet_root != NULL)
         {
-            trace_info(_X("Using dotnet root parameter [%s] as runtime location."), parameters->dotnet_root);
+            trace_info(PAL_X("Using dotnet root parameter [%s] as runtime location."), parameters->dotnet_root);
             if (!fxr_resolver_try_get_path_from_dotnet_root(parameters->dotnet_root, &fxr_path))
                 return CoreHostLibMissingFailure;
         }
@@ -68,7 +68,7 @@ static int get_hostfxr_path_internal(
     }
 
     memcpy(buffer, fxr_path, len * sizeof(char_t));
-    buffer[len] = _X('\0');
+    buffer[len] = PAL_X('\0');
     free(fxr_path);
     return Success;
 }

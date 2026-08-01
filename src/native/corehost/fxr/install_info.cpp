@@ -23,11 +23,11 @@ bool install_info::print_environment(const pal::char_t* leading_whitespace)
 #else
         auto comp_func = pal::strncmp;
 #endif
-        if (comp_func(name, _X("DOTNET_"), STRING_LENGTH("DOTNET_")) == 0)
+        if (comp_func(name, PAL_X("DOTNET_"), STRING_LENGTH("DOTNET_")) == 0)
         {
             env_vars.push_back(std::make_pair(name, value));
         }
-        else if (!found_complus_var && comp_func(name, _X("COMPlus_"), STRING_LENGTH("COMPlus_")) == 0)
+        else if (!found_complus_var && comp_func(name, PAL_X("COMPlus_"), STRING_LENGTH("COMPlus_")) == 0)
         {
             found_complus_var = true;
         }
@@ -37,14 +37,14 @@ bool install_info::print_environment(const pal::char_t* leading_whitespace)
     std::sort(env_vars.begin(), env_vars.end());
 
     // Print all relevant environment variables
-    const pal::char_t* fmt = _X("%s%-40s [%s]");
+    const pal::char_t* fmt = PAL_X("%s%-40s [%s]");
     for (const auto& env_var : env_vars)
     {
         trace::println(fmt, leading_whitespace, env_var.first.c_str(), env_var.second.c_str());
     }
 
     if (found_complus_var)
-        trace::println(_X("%sDetected COMPlus_* environment variable(s). Consider transitioning to DOTNET_* equivalent."), leading_whitespace);
+        trace::println(PAL_X("%sDetected COMPlus_* environment variable(s). Consider transitioning to DOTNET_* equivalent."), leading_whitespace);
 
     return env_vars.size() > 0 || found_complus_var;
 }
@@ -92,10 +92,10 @@ bool install_info::print_other_architectures(const pal::char_t* leading_whitespa
     return enumerate_other_architectures(
         [&](pal::architecture arch, const pal::string_t& install_location, bool is_registered)
         {
-            trace::println(_X("%s%-5s [%s]"), leading_whitespace, get_arch_name(arch), install_location.c_str());
+            trace::println(PAL_X("%s%-5s [%s]"), leading_whitespace, get_arch_name(arch), install_location.c_str());
             if (is_registered)
             {
-                trace::println(_X("%s  registered at [%s]"), leading_whitespace, pal::get_dotnet_self_registered_config_location(arch).c_str());
+                trace::println(PAL_X("%s  registered at [%s]"), leading_whitespace, pal::get_dotnet_self_registered_config_location(arch).c_str());
             }
         });
 }

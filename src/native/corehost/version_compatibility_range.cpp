@@ -8,10 +8,10 @@ namespace
 {
     const pal::char_t* OptionNameMapping[] =
     {
-        _X("exact"),
-        _X("patch"),
-        _X("minor"),
-        _X("major")
+        PAL_X("exact"),
+        PAL_X("patch"),
+        PAL_X("minor"),
+        PAL_X("major")
     };
 
     static_assert((sizeof(OptionNameMapping) / sizeof(*OptionNameMapping)) == static_cast<size_t>(version_compatibility_range_t::__last), "Invalid option count");

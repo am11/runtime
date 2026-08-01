@@ -54,7 +54,7 @@ void sdk_info::enumerate_sdk_paths(
         fx_ver_t version;
         if (!fx_ver_t::parse(version_str, &version))
         {
-            trace::verbose(_X("Ignoring invalid version [%s]"), version_str.c_str());
+            trace::verbose(PAL_X("Ignoring invalid version [%s]"), version_str.c_str());
             continue;
         }
 
@@ -66,7 +66,7 @@ void sdk_info::enumerate_sdk_paths(
         append_path(&sdk_version_dir, version_str.c_str());
         if (!file_exists_in_dir(sdk_version_dir, SDK_DOTNET_DLL, nullptr))
         {
-            trace::verbose(_X("Ignoring version [%s] without ") SDK_DOTNET_DLL, version_str.c_str());
+            trace::verbose(PAL_X("Ignoring version [%s] without ") SDK_DOTNET_DLL, version_str.c_str());
             continue;
         }
 
@@ -84,14 +84,14 @@ void sdk_info::get_all_sdk_infos(
     int32_t hive_depth = 0;
     for (pal::string_t dir : hive_dir)
     {
-        trace::verbose(_X("Gathering SDK locations in [%s]"), dir.c_str());
-        append_path(&dir, _X("sdk"));
+        trace::verbose(PAL_X("Gathering SDK locations in [%s]"), dir.c_str());
+        append_path(&dir, PAL_X("sdk"));
         enumerate_sdk_paths(
             dir,
             [](const fx_ver_t&, const pal::string_t&) { return false; },
             [&](const fx_ver_t& version, const pal::string_t& version_str, const pal::string_t& full_path)
             {
-                trace::verbose(_X("Found SDK version [%s]"), version_str.c_str());
+                trace::verbose(PAL_X("Found SDK version [%s]"), version_str.c_str());
                 sdk_info info(dir, full_path, version, hive_depth);
                 sdk_infos->push_back(info);
             }
@@ -111,7 +111,7 @@ void sdk_info::get_all_sdk_infos(
     get_all_sdk_infos(dotnet_dir, &sdk_infos);
     for (sdk_info info : sdk_infos)
     {
-        trace::println(_X("%s%s [%s]"), leading_whitespace, info.version.as_str().c_str(), info.base_path.c_str());
+        trace::println(PAL_X("%s%s [%s]"), leading_whitespace, info.version.as_str().c_str(), info.base_path.c_str());
     }
 
     return sdk_infos.size() > 0;

@@ -48,10 +48,10 @@ StatusCode info_t::process_bundle(const pal::char_t* bundle_path, const pal::cha
         return status;
     }
 
-    trace::info(_X("Single-File bundle details:"));
-    trace::info(_X("DepsJson Offset:[%" PRIx64 "] Size[%" PRIx64 "]"), info.m_header.deps_json_location().offset, info.m_header.deps_json_location().size);
-    trace::info(_X("RuntimeConfigJson Offset:[%" PRIx64 "] Size[%" PRIx64 "]"), info.m_header.runtimeconfig_json_location().offset, info.m_header.runtimeconfig_json_location().size);
-    trace::info(_X(".net core 3 compatibility mode: [%s]"), info.m_header.is_netcoreapp3_compat_mode() ? _X("Yes") : _X("No"));
+    trace::info(PAL_X("Single-File bundle details:"));
+    trace::info(PAL_X("DepsJson Offset:[%" PRIx64 "] Size[%" PRIx64 "]"), info.m_header.deps_json_location().offset, info.m_header.deps_json_location().size);
+    trace::info(PAL_X("RuntimeConfigJson Offset:[%" PRIx64 "] Size[%" PRIx64 "]"), info.m_header.runtimeconfig_json_location().offset, info.m_header.runtimeconfig_json_location().size);
+    trace::info(PAL_X(".net core 3 compatibility mode: [%s]"), info.m_header.is_netcoreapp3_compat_mode() ? PAL_X("Yes") : PAL_X("No"));
 
     the_app = &info;
 
@@ -119,11 +119,11 @@ char* info_t::config_t::map(const pal::string_t& path, const location_t* &locati
 #endif // _WIN32
     if (addr == nullptr)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Failed to map bundle file [%s]"), path.c_str());
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Failed to map bundle file [%s]"), path.c_str());
     }
 
-    trace::info(_X("Mapped bundle for [%s]"), path.c_str());
+    trace::info(PAL_X("Mapped bundle for [%s]"), path.c_str());
 
     // Adjust to the beginning of the bundle
     return addr + (location->offset + app->m_offset_in_file);
@@ -144,12 +144,12 @@ const char* info_t::map_bundle()
 
     if (addr == nullptr)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Couldn't memory map the bundle file for reading."));
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Couldn't memory map the bundle file for reading."));
         throw StatusCode::BundleExtractionIOError;
     }
 
-    trace::info(_X("Mapped application bundle"));
+    trace::info(PAL_X("Mapped application bundle"));
 
     return (const char *)addr;
 }
@@ -158,11 +158,11 @@ void info_t::unmap_bundle(const char* addr) const
 {
     if (!pal::munmap((void*)addr, m_bundle_size))
     {
-        trace::warning(_X("Failed to unmap bundle after extraction."));
+        trace::warning(PAL_X("Failed to unmap bundle after extraction."));
     }
     else
     {
-        trace::info(_X("Unmapped application bundle"));
+        trace::info(PAL_X("Unmapped application bundle"));
     }
 }
 

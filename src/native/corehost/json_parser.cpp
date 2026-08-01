@@ -7,7 +7,7 @@
 #undef RAPIDJSON_ERROR_CHARTYPE
 #undef RAPIDJSON_ERROR_STRING
 #define RAPIDJSON_ERROR_CHARTYPE pal::char_t
-#define RAPIDJSON_ERROR_STRING(x) _X(x)
+#define RAPIDJSON_ERROR_STRING(x) PAL_X(x)
 
 #include <json_parser.h>
 #include <rapidjson/error/en.h>
@@ -66,7 +66,7 @@ bool json_parser_t::parse_fully_trusted_raw_data(char* data, size_t size, const 
 
         get_line_column_from_offset(data, size, offset, &line, &column);
 
-        m_parse_error = utils::format_string(_X("JSON parsing exception: %s [offset %zu: line %d, column %d]"),
+        m_parse_error = utils::format_string(PAL_X("JSON parsing exception: %s [offset %zu: line %d, column %d]"),
             rapidjson::GetParseError_En(m_document.GetParseError()),
             offset, line, column
         );
@@ -75,7 +75,7 @@ bool json_parser_t::parse_fully_trusted_raw_data(char* data, size_t size, const 
 
     if (!m_document.IsObject())
     {
-        m_parse_error = _X("Expected a JSON object");
+        m_parse_error = PAL_X("Expected a JSON object");
         return false;
     }
 
@@ -109,7 +109,7 @@ bool json_parser_t::parse_fully_trusted_file(const pal::string_t& path)
 
         if (m_data == nullptr)
         {
-            trace::error(_X("Cannot use file stream for [%s]: %s"), path.c_str(), pal::strerror(errno).c_str());
+            trace::error(PAL_X("Cannot use file stream for [%s]: %s"), path.c_str(), pal::strerror(errno).c_str());
             return false;
         }
     }

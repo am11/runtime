@@ -12,18 +12,18 @@
 
 struct deps_asset_t
 {
-    deps_asset_t() : deps_asset_t(_X(""), _X(""), version_t::empty(), version_t::empty(), _X("")) { }
+    deps_asset_t() : deps_asset_t(PAL_X(""), PAL_X(""), version_t::empty(), version_t::empty(), PAL_X("")) { }
 
     deps_asset_t(const pal::string_t& name, const pal::string_t& relative_path, const version_t& assembly_version, const version_t& file_version)
-        : deps_asset_t(name, relative_path, assembly_version, file_version, _X("")) { }
+        : deps_asset_t(name, relative_path, assembly_version, file_version, PAL_X("")) { }
 
     deps_asset_t(const pal::string_t& name, const pal::string_t& relative_path, const version_t& assembly_version, const version_t& file_version, const pal::string_t& local_path)
         : name(name)
         // Deps file uses '/' as separator (or '\\' for non-compliant files). Normalize to platform separator.
-        , relative_path(get_replaced_char(relative_path, _X('/') == DIR_SEPARATOR ? _X('\\') : _X('/'), DIR_SEPARATOR))
+        , relative_path(get_replaced_char(relative_path, PAL_X('/') == DIR_SEPARATOR ? PAL_X('\\') : PAL_X('/'), DIR_SEPARATOR))
         , assembly_version(assembly_version)
         , file_version(file_version)
-        , local_path(local_path.empty() ? pal::string_t() : get_replaced_char(local_path, _X('/') == DIR_SEPARATOR ? _X('\\') : _X('/'), DIR_SEPARATOR)) { }
+        , local_path(local_path.empty() ? pal::string_t() : get_replaced_char(local_path, PAL_X('/') == DIR_SEPARATOR ? PAL_X('\\') : PAL_X('/'), DIR_SEPARATOR)) { }
 
     pal::string_t name;
     pal::string_t relative_path;

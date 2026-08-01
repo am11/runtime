@@ -23,7 +23,7 @@ int hostpolicy_resolver::load(
     pal::dll_t* dll,
     hostpolicy_contract_t &hostpolicy_contract)
 {
-    trace::info(_X("Using internal hostpolicy"));
+    trace::info(PAL_X("Using internal hostpolicy"));
 
     hostpolicy_contract.load = corehost_load;
     hostpolicy_contract.unload = corehost_unload;

@@ -15,9 +15,9 @@
 #include <minipal/utils.h>
 
 // Long-path extended-syntax prefixes for Windows paths.
-#define EXTENDED_PATH_PREFIX     _X("\\\\?\\")       // "\\?\" (also covers "\\?\UNC\")
-#define UNC_EXTENDED_PATH_PREFIX _X("\\\\?\\UNC\\")  // "\\?\UNC\"
-#define DEVICE_PATH_PREFIX       _X("\\\\.\\")       // "\\.\"
+#define EXTENDED_PATH_PREFIX     PAL_X("\\\\?\\")       // "\\?\" (also covers "\\?\UNC\")
+#define UNC_EXTENDED_PATH_PREFIX PAL_X("\\\\?\\UNC\\")  // "\\?\UNC\"
+#define DEVICE_PATH_PREFIX       PAL_X("\\\\.\\")       // "\\.\"
 
 // Windows path separators.
 #define ALT_DIR_SEPARATOR L'/'
@@ -81,7 +81,7 @@ pal_char_t* pal_getenv(const pal_char_t* name)
         DWORD err = GetLastError();
         if (err != ERROR_ENVVAR_NOT_FOUND && err != ERROR_SUCCESS)
         {
-            trace_warning(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
+            trace_warning(PAL_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
         }
         return NULL;
     }
@@ -96,7 +96,7 @@ pal_char_t* pal_getenv(const pal_char_t* name)
         DWORD err = GetLastError();
         if (err != ERROR_ENVVAR_NOT_FOUND && err != ERROR_SUCCESS)
         {
-            trace_warning(_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
+            trace_warning(PAL_X("Failed to read environment variable [%s], HRESULT: 0x%X"), name, HRESULT_FROM_WIN32(err));
         }
         free(result);
         return NULL;
@@ -141,7 +141,7 @@ pal_char_t* pal_fullpath(const pal_char_t* path, bool skip_error_logging)
     if (size == 0)
     {
         if (!skip_error_logging)
-            trace_error(_X("Error resolving full path [%s]"), path);
+            trace_error(PAL_X("Error resolving full path [%s]"), path);
         free(buf);
         return NULL;
     }
@@ -163,7 +163,7 @@ pal_char_t* pal_fullpath(const pal_char_t* path, bool skip_error_logging)
         if (new_size == 0 || new_size >= size)
         {
             if (!skip_error_logging)
-                trace_error(_X("Error resolving full path [%s]"), path);
+                trace_error(PAL_X("Error resolving full path [%s]"), path);
             free(buf);
             return NULL;
         }
@@ -174,7 +174,7 @@ pal_char_t* pal_fullpath(const pal_char_t* path, bool skip_error_logging)
         bool is_unc = (buf[0] == L'\\' && buf[1] == L'\\');
         const pal_char_t* prefix = is_unc ? UNC_EXTENDED_PATH_PREFIX : EXTENDED_PATH_PREFIX;
         DWORD prefix_len = is_unc ? STRING_LENGTH(UNC_EXTENDED_PATH_PREFIX) : STRING_LENGTH(EXTENDED_PATH_PREFIX);
-        DWORD skip = is_unc ? STRING_LENGTH(_X("\\\\")) : 0; // drop the UNC's leading "\\"
+        DWORD skip = is_unc ? STRING_LENGTH(PAL_X("\\\\")) : 0; // drop the UNC's leading "\\"
 
         // Make room for the prefix by shifting the path right (including the NUL).
         memmove(buf + prefix_len, buf + skip, (new_size - skip + 1) * sizeof(pal_char_t));
@@ -290,7 +290,7 @@ pal_process_emulation_t pal_get_process_emulation(void)
     HMODULE kernel32 = LoadLibraryExW(L"kernel32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
     if (kernel32 == NULL)
     {
-        trace_info(_X("Could not load 'kernel32.dll': %u"), GetLastError());
+        trace_info(PAL_X("Could not load 'kernel32.dll': %u"), GetLastError());
     }
     else
     {
@@ -306,7 +306,7 @@ pal_process_emulation_t pal_get_process_emulation(void)
             }
             else
             {
-                trace_info(_X("Call to IsWow64Process2 failed: %u"), GetLastError());
+                trace_info(PAL_X("Call to IsWow64Process2 failed: %u"), GetLastError());
             }
         }
     }
@@ -328,11 +328,11 @@ static bool get_dotnet_install_location_registry_path(HKEY* out_hive, pal_char_t
 {
     *out_hive = HKEY_LOCAL_MACHINE;
 
-    const pal_char_t* base = _X("SOFTWARE\\dotnet");
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_REGISTRY_PATH"));
+    const pal_char_t* base = PAL_X("SOFTWARE\\dotnet");
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_REGISTRY_PATH"));
     if (override != NULL)
     {
-        const pal_char_t hkcu_prefix[] = _X("HKEY_CURRENT_USER\\");
+        const pal_char_t hkcu_prefix[] = PAL_X("HKEY_CURRENT_USER\\");
         if (wcsncmp(override, hkcu_prefix, ARRAY_SIZE(hkcu_prefix) - 1) == 0)
         {
             *out_hive = HKEY_CURRENT_USER;
@@ -348,7 +348,7 @@ static bool get_dotnet_install_location_registry_path(HKEY* out_hive, pal_char_t
 
     pal_char_t* combined = (pal_char_t*)malloc(total * sizeof(pal_char_t));
     if (combined != NULL)
-        pal_str_printf(combined, total, _X("%s\\Setup\\InstalledVersions\\") _STRINGIFY(CURRENT_ARCH_NAME), base);
+        pal_str_printf(combined, total, PAL_X("%s\\Setup\\InstalledVersions\\") _STRINGIFY(CURRENT_ARCH_NAME), base);
 
     free(override);
     *out_sub_key = combined;
@@ -358,14 +358,14 @@ static bool get_dotnet_install_location_registry_path(HKEY* out_hive, pal_char_t
 // Allocates "HKLM\<sub_key>\InstallLocation" or "HKCU\..." for display/tracing.
 static pal_char_t* format_registry_path(HKEY hive, const pal_char_t* sub_key)
 {
-    const pal_char_t* prefix = (hive == HKEY_CURRENT_USER) ? _X("HKCU\\") : _X("HKLM\\");
+    const pal_char_t* prefix = (hive == HKEY_CURRENT_USER) ? PAL_X("HKCU\\") : PAL_X("HKLM\\");
     size_t total = pal_strlen(prefix) + pal_strlen(sub_key) + STRING_LENGTH("\\InstallLocation") + 1;
 
     pal_char_t* result = (pal_char_t*)malloc(total * sizeof(pal_char_t));
     if (result == NULL)
         return NULL;
 
-    pal_str_printf(result, total, _X("%s%s\\InstallLocation"), prefix, sub_key);
+    pal_str_printf(result, total, PAL_X("%s%s\\InstallLocation"), prefix, sub_key);
     return result;
 }
 
@@ -383,7 +383,7 @@ pal_char_t* pal_get_dotnet_self_registered_config_location(void)
 
 pal_char_t* pal_get_dotnet_self_registered_dir(void)
 {
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_GLOBALLY_REGISTERED_PATH"));
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_GLOBALLY_REGISTERED_PATH"));
     if (override != NULL)
         return override;
 
@@ -397,7 +397,7 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
         pal_char_t* display = format_registry_path(hive, sub_key);
         if (display != NULL)
         {
-            trace_verbose(_X("Looking for architecture-specific registry value in '%s'."), display);
+            trace_verbose(PAL_X("Looking for architecture-specific registry value in '%s'."), display);
             free(display);
         }
     }
@@ -408,9 +408,9 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
     if (status != ERROR_SUCCESS)
     {
         if (status == ERROR_FILE_NOT_FOUND)
-            trace_verbose(_X("The registry key ['%s'] does not exist."), sub_key);
+            trace_verbose(PAL_X("The registry key ['%s'] does not exist."), sub_key);
         else
-            trace_verbose(_X("Failed to open the registry key. Error code: 0x%X"), (unsigned int)status);
+            trace_verbose(PAL_X("Failed to open the registry key. Error code: 0x%X"), (unsigned int)status);
 
         free(sub_key);
         return NULL;
@@ -418,14 +418,14 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
 
     free(sub_key);
 
-    const pal_char_t* value = _X("InstallLocation");
+    const pal_char_t* value = PAL_X("InstallLocation");
 
     // RegGetValueW reports size in BYTES (including null terminator on REG_SZ).
     DWORD size_bytes = 0;
     status = RegGetValueW(hkey, NULL, value, RRF_RT_REG_SZ, NULL, NULL, &size_bytes);
     if (status != ERROR_SUCCESS || size_bytes == 0)
     {
-        trace_verbose(_X("Failed to get the size of the install location registry value or it's empty. Error code: 0x%X"), (unsigned int)status);
+        trace_verbose(PAL_X("Failed to get the size of the install location registry value or it's empty. Error code: 0x%X"), (unsigned int)status);
         RegCloseKey(hkey);
         return NULL;
     }
@@ -441,29 +441,29 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
     RegCloseKey(hkey);
     if (status != ERROR_SUCCESS)
     {
-        trace_verbose(_X("Failed to get the value of the install location registry value. Error code: 0x%X"), (unsigned int)status);
+        trace_verbose(PAL_X("Failed to get the value of the install location registry value. Error code: 0x%X"), (unsigned int)status);
         free(buffer);
         return NULL;
     }
 
-    trace_verbose(_X("Found registered install location '%s'."), buffer);
+    trace_verbose(PAL_X("Found registered install location '%s'."), buffer);
     return buffer;
 }
 
 pal_char_t* pal_get_default_installation_dir(void)
 {
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"));
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"));
     if (override != NULL)
         return override;
 
-    pal_char_t* program_files = pal_getenv(_X("ProgramFiles"));
+    pal_char_t* program_files = pal_getenv(PAL_X("ProgramFiles"));
     if (program_files == NULL)
         return NULL;
 
     pal_char_t* canonical = pal_fullpath(program_files, /*skip_error_logging*/ false);
     if (canonical == NULL)
     {
-        trace_verbose(_X("Did not find [%s] directory [%s]"), _X("ProgramFiles"), program_files);
+        trace_verbose(PAL_X("Did not find [%s] directory [%s]"), PAL_X("ProgramFiles"), program_files);
         free(program_files);
         return NULL;
     }
@@ -471,8 +471,8 @@ pal_char_t* pal_get_default_installation_dir(void)
     free(program_files);
 
     // Append "\dotnet" (and "\x64" if emulating x64).
-    const pal_char_t dotnet_seg[] = _X("\\dotnet");
-    const pal_char_t arch_seg[] = _X("\\") _STRINGIFY(CURRENT_ARCH_NAME);
+    const pal_char_t dotnet_seg[] = PAL_X("\\dotnet");
+    const pal_char_t arch_seg[] = PAL_X("\\") _STRINGIFY(CURRENT_ARCH_NAME);
 
     size_t canonical_len = pal_strlen(canonical);
     size_t dotnet_len = ARRAY_SIZE(dotnet_seg) - 1;
@@ -506,7 +506,7 @@ bool pal_is_path_fully_qualified(const pal_char_t* path)
 
     // UNC and DOS device paths (e.g. \\server\share or \\?\C:\).
     if (is_dir_separator(path[0]))
-        return path[1] == _X('?') || is_dir_separator(path[1]);
+        return path[1] == PAL_X('?') || is_dir_separator(path[1]);
 
     // Drive absolute path (e.g. C:\).
     return len >= 3 && path[1] == VOLUME_SEPARATOR && is_dir_separator(path[2]);
@@ -525,7 +525,7 @@ bool pal_load_library(const pal_char_t* path, pal_dll_t* dll)
         full = pal_fullpath(path, false);
         if (full == NULL)
         {
-            trace_error(_X("Failed to load [%s], HRESULT: 0x%X"), path, HRESULT_FROM_WIN32(GetLastError()));
+            trace_error(PAL_X("Failed to load [%s], HRESULT: 0x%X"), path, HRESULT_FROM_WIN32(GetLastError()));
             return false;
         }
         load_path = full;
@@ -535,10 +535,10 @@ bool pal_load_library(const pal_char_t* path, pal_dll_t* dll)
     if (library == NULL)
     {
         DWORD error_code = GetLastError();
-        trace_error(_X("Failed to load [%s], HRESULT: 0x%X"), load_path, HRESULT_FROM_WIN32(error_code));
+        trace_error(PAL_X("Failed to load [%s], HRESULT: 0x%X"), load_path, HRESULT_FROM_WIN32(error_code));
         if (error_code == ERROR_BAD_EXE_FORMAT)
         {
-            trace_error(_X("  - Ensure the library matches the current process architecture: ") _STRINGIFY(CURRENT_ARCH_NAME));
+            trace_error(PAL_X("  - Ensure the library matches the current process architecture: ") _STRINGIFY(CURRENT_ARCH_NAME));
         }
         free(full);
         return false;
@@ -548,7 +548,7 @@ bool pal_load_library(const pal_char_t* path, pal_dll_t* dll)
     HMODULE pinned;
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, load_path, &pinned))
     {
-        trace_error(_X("Failed to pin library [%s] in [pal_load_library]"), load_path);
+        trace_error(PAL_X("Failed to pin library [%s] in [pal_load_library]"), load_path);
         FreeLibrary(library);
         free(full);
         return false;
@@ -574,7 +574,7 @@ bool pal_load_library(const pal_char_t* path, pal_dll_t* dll)
         } while (name_written == name_size);
 
         if (name != NULL && name_written != 0)
-            trace_info(_X("Loaded library from %s"), name);
+            trace_info(PAL_X("Loaded library from %s"), name);
 
         free(name);
     }
@@ -595,7 +595,7 @@ pal_proc_t pal_get_symbol(pal_dll_t library, const char* name)
     FARPROC proc = GetProcAddress(library, name);
     if (proc == NULL)
     {
-        trace_info(_X("Probed for and did not resolve library symbol %S"), name);
+        trace_info(PAL_X("Probed for and did not resolve library symbol %S"), name);
         return NULL;
     }
     return proc;
@@ -643,13 +643,13 @@ static void print_line_to_handle(const pal_char_t* message, HANDLE handle, FILE*
     if (GetConsoleMode(handle, &mode) == FALSE)
     {
         _locale_t loc = _create_locale(LC_ALL, ".utf8");
-        _fwprintf_l(fallback_file, _X("%s\n"), loc, message);
+        _fwprintf_l(fallback_file, PAL_X("%s\n"), loc, message);
         _free_locale(loc);
     }
     else
     {
         WriteConsoleW(handle, message, (DWORD)wcslen(message), NULL, NULL);
-        WriteConsoleW(handle, _X("\n"), 1, NULL, NULL);
+        WriteConsoleW(handle, PAL_X("\n"), 1, NULL, NULL);
     }
 }
 
@@ -664,7 +664,7 @@ void pal_file_vprintf(FILE* f, const pal_char_t* format, va_list vl)
     // In order to properly print UTF-8 and GB18030 characters, we need to use the version of vfwprintf that takes a locale.
     _locale_t loc = _create_locale(LC_ALL, ".utf8");
     _vfwprintf_l(f, format, loc, vl);
-    fputwc(_X('\n'), f);
+    fputwc(PAL_X('\n'), f);
     _free_locale(loc);
 }
 

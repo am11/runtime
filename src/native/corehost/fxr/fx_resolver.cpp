@@ -32,10 +32,10 @@ namespace
                 && fx_ref.get_roll_to_highest_version();
 
             trace::verbose(
-                _X("'Roll forward' enabled with version_compatibility_range [%s]. Looking for the %s %s greater than or equal version to [%s]"),
+                PAL_X("'Roll forward' enabled with version_compatibility_range [%s]. Looking for the %s %s greater than or equal version to [%s]"),
                 version_compatibility_range_to_string(fx_ref.get_version_compatibility_range()).c_str(),
-                roll_to_highest_version ? _X("highest") : _X("lowest"),
-                release_only ? _X("release") : _X("release/pre-release"),
+                roll_to_highest_version ? PAL_X("highest") : PAL_X("lowest"),
+                release_only ? PAL_X("release") : PAL_X("release/pre-release"),
                 fx_ref.get_fx_version().c_str());
 
             for (const auto& ver : version_list)
@@ -58,11 +58,11 @@ namespace
             {
                 if (best_match_version == fx_ver_t())
                 {
-                    trace::verbose(_X("No match greater than or equal to [%s] found."), fx_ref.get_fx_version().c_str());
+                    trace::verbose(PAL_X("No match greater than or equal to [%s] found."), fx_ref.get_fx_version().c_str());
                 }
                 else
                 {
-                    trace::verbose(_X("Found version [%s]"), best_match_version.as_str().c_str());
+                    trace::verbose(PAL_X("Found version [%s]"), best_match_version.as_str().c_str());
                 }
             }
         }
@@ -95,16 +95,16 @@ namespace
             if (trace::is_enabled())
             {
                 trace::verbose(
-                    _X("Applying patch roll forward from [%s] on %s"),
+                    PAL_X("Applying patch roll forward from [%s] on %s"),
                     apply_patch_from_version.as_str().c_str(),
-                    release_only ? _X("release only") : _X("release/pre-release"));
+                    release_only ? PAL_X("release only") : PAL_X("release/pre-release"));
             }
 
             for (const auto& ver : version_list)
             {
                 if (trace::is_enabled())
                 {
-                    trace::verbose(_X("Inspecting version... [%s]"), ver.as_str().c_str());
+                    trace::verbose(PAL_X("Inspecting version... [%s]"), ver.as_str().c_str());
                 }
 
                 if ((!release_only || !ver.is_prerelease()) &&
@@ -144,7 +144,7 @@ namespace
         const fx_reference_t& fx_ref)
     {
         trace::verbose(
-            _X("Attempting FX roll forward starting from version='[%s]', apply_patches=%d, version_compatibility_range=%s, roll_to_highest_version=%d, prefer_release=%d"),
+            PAL_X("Attempting FX roll forward starting from version='[%s]', apply_patches=%d, version_compatibility_range=%s, roll_to_highest_version=%d, prefer_release=%d"),
             fx_ref.get_fx_version().c_str(),
             fx_ref.get_apply_patches(),
             version_compatibility_range_to_string(fx_ref.get_version_compatibility_range()).c_str(),
@@ -174,11 +174,11 @@ namespace
 
         if (best_match == fx_ver_t())
         {
-            trace::verbose(_X("Framework reference didn't resolve to any available version."));
+            trace::verbose(PAL_X("Framework reference didn't resolve to any available version."));
         }
         else if (trace::is_enabled())
         {
-            trace::verbose(_X("Framework reference resolved to version '%s'."), best_match.as_str().c_str());
+            trace::verbose(PAL_X("Framework reference resolved to version '%s'."), best_match.as_str().c_str());
         }
 
         return best_match;
@@ -200,7 +200,7 @@ namespace
         assert(_debug_ver == fx_ref.get_fx_version_number());
 #endif // defined(DEBUG)
 
-        trace::verbose(_X("--- Resolving FX directory, name '%s' version '%s'"),
+        trace::verbose(PAL_X("--- Resolving FX directory, name '%s' version '%s'"),
             fx_ref.get_fx_name().c_str(), fx_ref.get_fx_version().c_str());
 
         std::vector<pal::string_t> hive_dir;
@@ -210,13 +210,13 @@ namespace
         pal::string_t selected_fx_version;
         fx_ver_t selected_ver;
 
-        pal::string_t deps_file_name = fx_ref.get_fx_name() + _X(".deps.json");
+        pal::string_t deps_file_name = fx_ref.get_fx_name() + PAL_X(".deps.json");
         for (pal::string_t& dir : hive_dir)
         {
             auto fx_dir = dir;
-            trace::verbose(_X("Searching FX directory in [%s]"), fx_dir.c_str());
+            trace::verbose(PAL_X("Searching FX directory in [%s]"), fx_dir.c_str());
 
-            append_path(&fx_dir, _X("shared"));
+            append_path(&fx_dir, PAL_X("shared"));
             append_path(&fx_dir, fx_ref.get_fx_name().c_str());
 
             // Roll forward is disabled when:
@@ -229,7 +229,7 @@ namespace
                 ((fx_ref.get_version_compatibility_range() == version_compatibility_range_t::patch) && (!fx_ref.get_apply_patches() && !fx_ref.get_fx_version_number().is_prerelease())))
             {
                 trace::verbose(
-                    _X("Did not roll forward because apply_patches=%d, version_compatibility_range=%s chose [%s]"),
+                    PAL_X("Did not roll forward because apply_patches=%d, version_compatibility_range=%s chose [%s]"),
                     fx_ref.get_apply_patches(),
                     version_compatibility_range_to_string(fx_ref.get_version_compatibility_range()).c_str(),
                     fx_ref.get_fx_version().c_str());
@@ -239,7 +239,7 @@ namespace
                 {
                     if (std::find(disabled_versions.begin(), disabled_versions.end(), fx_ref.get_fx_version()) != disabled_versions.end())
                     {
-                        trace::verbose(_X("Ignoring disabled version [%s]"), fx_ref.get_fx_version().c_str());
+                        trace::verbose(PAL_X("Ignoring disabled version [%s]"), fx_ref.get_fx_version().c_str());
                         continue;
                     }
 
@@ -261,7 +261,7 @@ namespace
                     {
                         if (std::find(disabled_versions.begin(), disabled_versions.end(), version) != disabled_versions.end())
                         {
-                            trace::verbose(_X("Ignoring disabled version [%s]"), version.c_str());
+                            trace::verbose(PAL_X("Ignoring disabled version [%s]"), version.c_str());
                             continue;
                         }
 
@@ -282,7 +282,7 @@ namespace
                     if (!file_exists_in_dir(resolved_fx_dir, deps_file_name.c_str(), nullptr))
                     {
                         // Remove the version and try resolving again
-                        trace::verbose(_X("Ignoring FX version [%s] without .deps.json"), resolved_ver_str.c_str());
+                        trace::verbose(PAL_X("Ignoring FX version [%s] without .deps.json"), resolved_ver_str.c_str());
                         version_list.erase(std::find(version_list.cbegin(), version_list.cend(), resolved_ver));
                         resolved_ver = resolve_framework_reference_from_version_list(version_list, fx_ref);
                     }
@@ -296,7 +296,7 @@ namespace
 
                         if (resolved_ver != selected_ver)
                         {
-                            trace::verbose(_X("Changing Selected FX version from [%s] to [%s]"), selected_fx_dir.c_str(), resolved_fx_dir.c_str());
+                            trace::verbose(PAL_X("Changing Selected FX version from [%s] to [%s]"), selected_fx_dir.c_str(), resolved_fx_dir.c_str());
                             selected_ver = resolved_ver;
                             selected_fx_dir = resolved_fx_dir;
                             selected_fx_version = resolved_ver_str;
@@ -310,11 +310,11 @@ namespace
 
         if (selected_fx_dir.empty())
         {
-            trace::verbose(_X("It was not possible to find any compatible framework version"));
+            trace::verbose(PAL_X("It was not possible to find any compatible framework version"));
             return nullptr;
         }
 
-        trace::verbose(_X("Chose FX version [%s]"), selected_fx_dir.c_str());
+        trace::verbose(PAL_X("Chose FX version [%s]"), selected_fx_dir.c_str());
 
         return std::unique_ptr<fx_definition_t>(new fx_definition_t(fx_ref.get_fx_name(), selected_fx_dir, oldest_requested_version, selected_fx_version));
     }
@@ -324,13 +324,13 @@ namespace
 std::vector<pal::string_t> fx_resolver_t::get_disabled_versions()
 {
     pal::string_t env_var;
-    if (!pal::getenv(_X("DOTNET_DISABLE_RUNTIME_VERSIONS"), &env_var) || env_var.empty())
+    if (!pal::getenv(PAL_X("DOTNET_DISABLE_RUNTIME_VERSIONS"), &env_var) || env_var.empty())
         return {};
 
     std::vector<pal::string_t> disabled_versions;
     size_t start = 0;
     size_t pos = 0;
-    while ((pos = env_var.find(_X(';'), start)) != pal::string_t::npos)
+    while ((pos = env_var.find(PAL_X(';'), start)) != pal::string_t::npos)
     {
         if (pos > start)
         {
@@ -582,9 +582,9 @@ StatusCode fx_resolver_t::resolve_frameworks_for_app(
         case StatusCode::FrameworkMissingFailure:
             trace::error(
                 INSTALL_OR_UPDATE_NET_ERROR_MESSAGE
-                _X("\n\n")
-                _X("App: %s\n")
-                _X("Architecture: %s"),
+                PAL_X("\n\n")
+                PAL_X("App: %s\n")
+                PAL_X("Architecture: %s"),
                 app_display_name,
                 get_current_arch_name());
             display_missing_framework_error(resolution_failure.missing.get_fx_name(), resolution_failure.missing.get_fx_version(), dotnet_root, app_config.get_is_multilevel_lookup_disabled());
@@ -593,7 +593,7 @@ StatusCode fx_resolver_t::resolve_frameworks_for_app(
             display_incompatible_framework_error(resolution_failure.incompatible_higher.get_fx_version(), resolution_failure.incompatible_lower);
             break;
         case StatusCode::InvalidConfigFile:
-            trace::error(_X("Invalid framework config.json [%s]"), resolution_failure.invalid_config->get_runtime_config().get_path().c_str());
+            trace::error(PAL_X("Invalid framework config.json [%s]"), resolution_failure.invalid_config->get_runtime_config().get_path().c_str());
             break;
         default:
             break;

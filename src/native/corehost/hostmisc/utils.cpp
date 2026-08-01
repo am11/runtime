@@ -28,7 +28,7 @@ bool coreclr_exists_in_dir(const pal::string_t& candidate)
 {
     pal::string_t test(candidate);
     append_path(&test, LIBCORECLR_NAME);
-    trace::verbose(_X("Checking if CoreCLR path exists=[%s]"), test.c_str());
+    trace::verbose(PAL_X("Checking if CoreCLR path exists=[%s]"), test.c_str());
     return pal::file_exists(test);
 }
 
@@ -88,8 +88,8 @@ pal::string_t strip_file_ext(const pal::string_t& path)
     {
         return path;
     }
-    size_t sep_pos = path.rfind(_X("/\\"));
-    size_t dot_pos = path.rfind(_X('.'));
+    size_t sep_pos = path.rfind(PAL_X("/\\"));
+    size_t dot_pos = path.rfind(PAL_X('.'));
     if (sep_pos != pal::string_t::npos && sep_pos > dot_pos)
     {
         return path;
@@ -104,8 +104,8 @@ pal::string_t get_filename_without_ext(const pal::string_t& path)
         return path;
     }
 
-    size_t name_pos = path.find_last_of(_X("/\\"));
-    size_t dot_pos = path.rfind(_X('.'));
+    size_t name_pos = path.find_last_of(PAL_X("/\\"));
+    size_t dot_pos = path.rfind(PAL_X('.'));
     size_t start_pos = (name_pos == pal::string_t::npos) ? 0 : (name_pos + 1);
     size_t count = (dot_pos == pal::string_t::npos || dot_pos < start_pos) ? pal::string_t::npos : (dot_pos - start_pos);
     return path.substr(start_pos, count);
@@ -176,16 +176,16 @@ namespace
 {
     const pal::char_t* s_all_architectures[] =
     {
-        _X("arm"),
-        _X("arm64"),
-        _X("armv6"),
-        _X("loongarch64"),
-        _X("ppc64le"),
-        _X("riscv64"),
-        _X("s390x"),
-        _X("x64"),
-        _X("x86"),
-        _X("wasm")
+        PAL_X("arm"),
+        PAL_X("arm64"),
+        PAL_X("armv6"),
+        PAL_X("loongarch64"),
+        PAL_X("ppc64le"),
+        PAL_X("riscv64"),
+        PAL_X("s390x"),
+        PAL_X("x64"),
+        PAL_X("x86"),
+        PAL_X("wasm")
     };
     static_assert((sizeof(s_all_architectures) / sizeof(*s_all_architectures)) == static_cast<size_t>(pal::architecture::__last), "Invalid known architectures count");
 }
@@ -234,7 +234,7 @@ pal::string_t get_runtime_id()
 {
     pal_char_t* rid = utils_get_runtime_id();
     if (rid == nullptr)
-        return pal::string_t(_STRINGIFY(HOST_RID_PLATFORM) _X("-") _STRINGIFY(CURRENT_ARCH_NAME));
+        return pal::string_t(_STRINGIFY(HOST_RID_PLATFORM) PAL_X("-") _STRINGIFY(CURRENT_ARCH_NAME));
 
     pal::string_t result = rid;
     free(rid);
@@ -243,7 +243,7 @@ pal::string_t get_runtime_id()
 
 bool try_get_runtime_id_from_env(pal::string_t& out_rid)
 {
-    return pal::getenv(_X("DOTNET_RUNTIME_ID"), &out_rid);
+    return pal::getenv(PAL_X("DOTNET_RUNTIME_ID"), &out_rid);
 }
 
 /**
@@ -255,13 +255,13 @@ bool multilevel_lookup_enabled()
     pal::string_t env_lookup;
     bool multilevel_lookup = true;
 
-    if (pal::getenv(_X("DOTNET_MULTILEVEL_LOOKUP"), &env_lookup))
+    if (pal::getenv(PAL_X("DOTNET_MULTILEVEL_LOOKUP"), &env_lookup))
     {
         auto env_val = pal::xtoi(env_lookup.c_str());
         multilevel_lookup = (env_val == 1);
-        trace::verbose(_X("DOTNET_MULTILEVEL_LOOKUP is set to %s"), env_lookup.c_str());
+        trace::verbose(PAL_X("DOTNET_MULTILEVEL_LOOKUP is set to %s"), env_lookup.c_str());
     }
-    trace::info(_X("Multilevel lookup is %s"), multilevel_lookup ? _X("true") : _X("false"));
+    trace::info(PAL_X("Multilevel lookup is %s"), multilevel_lookup ? PAL_X("true") : PAL_X("false"));
     return multilevel_lookup;
 }
 
@@ -316,7 +316,7 @@ bool get_file_path_from_env(const pal::char_t* env_key, pal::string_t* recv)
 
 size_t index_of_non_numeric(const pal::string_t& str, size_t i)
 {
-    return str.find_first_not_of(_X("0123456789"), i);
+    return str.find_first_not_of(PAL_X("0123456789"), i);
 }
 
 bool try_stou(const pal::string_t& str, unsigned* num)
@@ -348,15 +348,15 @@ pal::string_t get_deps_from_app_binary(const pal::string_t& app_base, const pal:
     {
         deps_file.push_back(DIR_SEPARATOR);
     }
-    deps_file.append(app_name, 0, app_name.find_last_of(_X(".")));
-    deps_file.append(_X(".deps.json"));
+    deps_file.append(app_name, 0, app_name.find_last_of(PAL_X(".")));
+    deps_file.append(PAL_X(".deps.json"));
     return deps_file;
 }
 
 pal::string_t get_runtime_config_path(const pal::string_t& path, const pal::string_t& name)
 {
     auto json_path = path;
-    auto json_name = name + _X(".runtimeconfig.json");
+    auto json_name = name + PAL_X(".runtimeconfig.json");
     append_path(&json_path, json_name.c_str());
     return json_path;
 }
@@ -364,7 +364,7 @@ pal::string_t get_runtime_config_path(const pal::string_t& path, const pal::stri
 pal::string_t get_runtime_config_dev_path(const pal::string_t& path, const pal::string_t& name)
 {
     auto dev_json_path = path;
-    auto dev_json_name = name + _X(".runtimeconfig.dev.json");
+    auto dev_json_name = name + PAL_X(".runtimeconfig.dev.json");
     append_path(&dev_json_path, dev_json_name.c_str());
     return dev_json_path;
 }
@@ -374,7 +374,7 @@ void get_runtime_config_paths(const pal::string_t& path, const pal::string_t& na
     cfg->assign(get_runtime_config_path(path, name));
     dev_cfg->assign(get_runtime_config_dev_path(path, name));
 
-    trace::verbose(_X("Runtime config is cfg=%s dev=%s"), cfg->c_str(), dev_cfg->c_str());
+    trace::verbose(PAL_X("Runtime config is cfg=%s dev=%s"), cfg->c_str(), dev_cfg->c_str());
 }
 
 pal::string_t get_dotnet_root_from_fxr_path(const pal::string_t& fxr_path)

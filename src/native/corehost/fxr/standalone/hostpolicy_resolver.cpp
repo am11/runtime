@@ -42,7 +42,7 @@ int hostpolicy_resolver::load(
         // We expect to leak hostpolicy - just as we do not unload coreclr, we do not unload hostpolicy
         if (!pal::load_library(&host_path, &g_hostpolicy))
         {
-            trace::info(_X("Load library of %s failed"), host_path.c_str());
+            trace::info(PAL_X("Load library of %s failed"), host_path.c_str());
             return StatusCode::CoreHostLibLoadFailure;
         }
 
@@ -72,7 +72,7 @@ int hostpolicy_resolver::load(
     else
     {
         if (!pal::are_paths_equal_with_normalized_casing(g_hostpolicy_dir, lib_dir))
-            trace::warning(_X("The library %s was already loaded from [%s]. Reusing the existing library for the request to load from [%s]"), LIBHOSTPOLICY_NAME, g_hostpolicy_dir.c_str(), lib_dir.c_str());
+            trace::warning(PAL_X("The library %s was already loaded from [%s]. Reusing the existing library for the request to load from [%s]"), LIBHOSTPOLICY_NAME, g_hostpolicy_dir.c_str(), lib_dir.c_str());
     }
 
     // Return global values
@@ -124,7 +124,7 @@ bool hostpolicy_resolver::try_get_dir(
     }
 
     // Check if hostpolicy exists in "expected" directory.
-    trace::verbose(_X("The expected %s directory is [%s]"), LIBHOSTPOLICY_NAME, expected.c_str());
+    trace::verbose(PAL_X("The expected %s directory is [%s]"), LIBHOSTPOLICY_NAME, expected.c_str());
     if (file_exists_in_dir(expected, LIBHOSTPOLICY_NAME, nullptr))
     {
         impl_dir->assign(expected);
@@ -132,24 +132,24 @@ bool hostpolicy_resolver::try_get_dir(
     }
 
     // If it still couldn't be found, somebody upstack messed up. Flag an error for the "expected" location.
-    trace::error(_X("A fatal error was encountered. The library '%s' required to execute the application was not found in '%s'."),
+    trace::error(PAL_X("A fatal error was encountered. The library '%s' required to execute the application was not found in '%s'."),
         LIBHOSTPOLICY_NAME, expected.c_str());
     if ((mode == host_mode_t::muxer || mode == host_mode_t::apphost) && !is_framework_dependent)
     {
-        trace::error(_X("Failed to run as a self-contained app."));
+        trace::error(PAL_X("Failed to run as a self-contained app."));
         const pal::string_t config_file_name = get_app(fx_definitions).get_runtime_config().get_path();
         if (!pal::file_exists(config_file_name))
         {
-            trace::error(_X("  - The application was run as a self-contained app because '%s' was not found."),
+            trace::error(PAL_X("  - The application was run as a self-contained app because '%s' was not found."),
                 config_file_name.c_str());
-            trace::error(_X("  - If this should be a framework-dependent app, add the '%s' file and specify the appropriate framework."),
+            trace::error(PAL_X("  - If this should be a framework-dependent app, add the '%s' file and specify the appropriate framework."),
                 config_file_name.c_str());
         }
         else if (get_app(fx_definitions).get_name().empty())
         {
-            trace::error(_X("  - The application was run as a self-contained app because '%s' did not specify a framework."),
+            trace::error(PAL_X("  - The application was run as a self-contained app because '%s' did not specify a framework."),
                 config_file_name.c_str());
-            trace::error(_X("  - If this should be a framework-dependent app, specify the appropriate framework in '%s'."),
+            trace::error(PAL_X("  - If this should be a framework-dependent app, specify the appropriate framework in '%s'."),
                 config_file_name.c_str());
         }
     }

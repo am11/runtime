@@ -22,18 +22,18 @@ typedef wchar_t pal_char_t;
 // C++ mode: MSVC's default (non-conforming) preprocessor leaves L##__FUNCTION__
 // unexpanded so that it evaluates to MSVC's wide function-name literal. Using a
 // two-step helper here would force argument expansion and break that.
-#define _X(s) L ## s
+#define PAL_X(s) L ## s
 #else
 // C mode: MSVC's /std:c11 conforming preprocessor (and other conforming
 // compilers) suppress argument expansion before ##. A two-step helper forces
-// the argument to be expanded first so e.g. _X(HOST_VERSION) yields a wide
+// the argument to be expanded first so e.g. PAL_X(HOST_VERSION) yields a wide
 // string literal rather than the identifier LHOST_VERSION.
 #define _X_HELPER(s) L ## s
-#define _X(s) _X_HELPER(s)
+#define PAL_X(s) _X_HELPER(s)
 #endif
 #else // !_WIN32
 typedef char pal_char_t;
-#define _X(s) s
+#define PAL_X(s) s
 #endif // _WIN32
 
 // Max path buffer for apphost string operations
@@ -122,8 +122,8 @@ typedef void* pal_proc_t;
 
 #include "configure.h"
 
-// Wide-stringify the value of a macro: _STRINGIFY(FOO) -> _X("<expanded value of FOO>").
-#define _STRINGIFY(s) _X(s)
+// Wide-stringify the value of a macro: _STRINGIFY(FOO) -> PAL_X("<expanded value of FOO>").
+#define _STRINGIFY(s) PAL_X(s)
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,7 +157,7 @@ static inline pal_char_t* pal_strndup(const pal_char_t* src, size_t len)
     if (buf != NULL)
     {
         memcpy(buf, src, len * sizeof(pal_char_t));
-        buf[len] = _X('\0');
+        buf[len] = PAL_X('\0');
     }
     return buf;
 }
@@ -261,12 +261,12 @@ bool pal_get_loaded_library(const pal_char_t* library_name, const char* symbol_n
 
 #define LIB_NAME(NAME) LIB_PREFIX NAME
 #define LIB_FILE_NAME(NAME) LIB_PREFIX NAME LIB_FILE_EXT
-#define LIB_FILE_NAME_X(NAME) _STRINGIFY(LIB_FILE_NAME(NAME))
+#define LIB_FILE_NAMEPAL_X(NAME) _STRINGIFY(LIB_FILE_NAME(NAME))
 
-#define CORELIB_NAME _X("System.Private.CoreLib.dll")
-#define LIBCORECLR_NAME LIB_FILE_NAME_X("coreclr")
-#define LIBFXR_NAME LIB_FILE_NAME_X("hostfxr")
-#define LIBHOSTPOLICY_NAME LIB_FILE_NAME_X("hostpolicy")
+#define CORELIB_NAME PAL_X("System.Private.CoreLib.dll")
+#define LIBCORECLR_NAME LIB_FILE_NAMEPAL_X("coreclr")
+#define LIBFXR_NAME LIB_FILE_NAMEPAL_X("hostfxr")
+#define LIBHOSTPOLICY_NAME LIB_FILE_NAMEPAL_X("hostpolicy")
 
 // When running on a platform that is not supported in RID fallback graph (because it was unknown
 // at the time the SharedFX in question was built), we need to use a reasonable fallback RID to allow
@@ -362,7 +362,7 @@ namespace pal
         CRITICAL_SECTION _impl;
     };
 
-    inline const pal::char_t* exe_suffix() { return _X(".exe"); }
+    inline const pal::char_t* exe_suffix() { return PAL_X(".exe"); }
 
     inline int cstrcasecmp(const char* str1, const char* str2) { return ::_stricmp(str1, str2); }
     inline int strcmp(const char_t* str1, const char_t* str2) { return ::wcscmp(str1, str2); }

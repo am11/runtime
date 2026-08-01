@@ -7,9 +7,9 @@
 
 arguments_t::arguments_t()
     : host_mode(host_mode_t::invalid)
-    , app_root(_X(""))
-    , deps_path(_X(""))
-    , managed_application(_X(""))
+    , app_root(PAL_X(""))
+    , deps_path(PAL_X(""))
+    , managed_application(PAL_X(""))
     , app_argc(0)
     , app_argv(nullptr)
 {
@@ -88,7 +88,7 @@ bool set_root_from_app(const pal::string_t& managed_application_path,
             return true;
         }
 
-        trace::info(_X("Managed application [%s] not found in single-file bundle"), managed_application_name.c_str());
+        trace::info(PAL_X("Managed application [%s] not found in single-file bundle"), managed_application_name.c_str());
 
         // The locate call above will clear the string when it returns false so reinitialize to the specified
         // path before continuing.
@@ -122,7 +122,7 @@ bool init_arguments(
     // Components are never loaded from the bundle, the managed_application_path always means a file system path for a component case.
     if (!set_root_from_app(managed_application_path, /* file_system_lookup_only */ init_from_file_system, args))
     {
-        trace::error(_X("Failed to locate managed application [%s]"), args.managed_application.c_str());
+        trace::error(PAL_X("Failed to locate managed application [%s]"), args.managed_application.c_str());
         return false;
     }
 

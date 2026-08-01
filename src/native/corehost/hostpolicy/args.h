@@ -32,31 +32,31 @@ struct probe_config_t
 
     pal::string_t as_str() const
     {
-        pal::string_t details = _X("type=");
+        pal::string_t details = PAL_X("type=");
         switch (probe_type)
         {
         case type::servicing:
-            details += _X("servicing");
+            details += PAL_X("servicing");
             break;
         case type::app:
-            details += _X("app");
+            details += PAL_X("app");
             break;
         case type::framework:
-            details += _X("framework");
+            details += PAL_X("framework");
             break;
         case type::lookup:
-            details += _X("lookup");
+            details += PAL_X("lookup");
             break;
         default:
             assert(false && "Unknown probe config type");
-            return _X("");
+            return PAL_X("");
         }
 
         if (!probe_dir.empty())
-            details += _X(" dir=[") + probe_dir + _X("]");
+            details += PAL_X(" dir=[") + probe_dir + PAL_X("]");
 
         if (fx_level != -1)
-            details += _X(" fx_level=") + pal::to_string(fx_level);
+            details += PAL_X(" fx_level=") + pal::to_string(fx_level);
 
         return details;
     }
@@ -117,7 +117,7 @@ struct probe_config_t
 
     static probe_config_t published_deps_dir()
     {
-        return probe_config_t(type::app, _X(""));
+        return probe_config_t(type::app, PAL_X(""));
     }
 };
 
@@ -137,7 +137,7 @@ struct arguments_t
     {
         if (trace::is_enabled())
         {
-            trace::verbose(_X("-- arguments_t: app_root='%s' deps='%s' mgd_app='%s'"),
+            trace::verbose(PAL_X("-- arguments_t: app_root='%s' deps='%s' mgd_app='%s'"),
                 app_root.c_str(), deps_path.c_str(), managed_application.c_str());
         }
     }

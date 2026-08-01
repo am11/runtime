@@ -45,11 +45,11 @@ int __cdecl wmain(const int argc, const pal::char_t *argv[])
     const pal::string_t scenario = argv[1];
     const pal::char_t* guidStr = argv[2];
 
-    if (scenario == _X("typelib_lookup"))
+    if (scenario == PAL_X("typelib_lookup"))
     {
         hr = typelib_lookup(guidStr);
     }
-    else if (scenario == _X("activation"))
+    else if (scenario == PAL_X("activation"))
     {
         hr = activation(guidStr);
     }

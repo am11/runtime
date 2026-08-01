@@ -17,7 +17,7 @@ int exe_start(const int argc, const pal::char_t* argv[])
     pal::string_t host_path;
     if (!pal::get_own_executable_path(&host_path) || !pal::fullpath(&host_path))
     {
-        trace::error(_X("Failed to resolve full path of the current executable [%s]"), host_path.c_str());
+        trace::error(PAL_X("Failed to resolve full path of the current executable [%s]"), host_path.c_str());
         return StatusCode::CurrentHostFindFailure;
     }
 
@@ -25,37 +25,37 @@ int exe_start(const int argc, const pal::char_t* argv[])
     pal::string_t app_root;
     pal::string_t own_name = strip_executable_ext(get_filename(host_path));
 
-    if (pal::strcasecmp(own_name.c_str(), _X("dotnet")) != 0)
+    if (pal::strcasecmp(own_name.c_str(), PAL_X("dotnet")) != 0)
     {
         // The reason for this check is security.
         // dotnet.exe is signed by Microsoft. It is technically possible to rename the file MyApp.exe and include it in the application.
         // Then one can create a shortcut for "MyApp.exe MyApp.dll" which works. The end result is that MyApp looks like it's signed by Microsoft.
         // To prevent this dotnet.exe must not be renamed, otherwise it won't run.
-        trace::error(_X("Error: cannot execute %s when renamed to %s."), _X("dotnet"), own_name.c_str());
+        trace::error(PAL_X("Error: cannot execute %s when renamed to %s."), PAL_X("dotnet"), own_name.c_str());
         return StatusCode::CoreHostEntryPointFailure;
     }
 
     if (argc <= 1)
     {
         trace::println();
-        trace::println(_X("Usage: dotnet [path-to-application]"));
-        trace::println(_X("Usage: dotnet [commands]"));
+        trace::println(PAL_X("Usage: dotnet [path-to-application]"));
+        trace::println(PAL_X("Usage: dotnet [commands]"));
         trace::println();
-        trace::println(_X("path-to-application:"));
-        trace::println(_X("  The path to an application .dll file to execute."));
+        trace::println(PAL_X("path-to-application:"));
+        trace::println(PAL_X("  The path to an application .dll file to execute."));
         trace::println();
-        trace::println(_X("commands:"));
-        trace::println(_X("  -h|--help                         Display help."));
-        trace::println(_X("  --info                            Display .NET information."));
-        trace::println(_X("  --list-runtimes [--arch <arch>]   Display the installed runtimes matching the host or specified architecture. Example architectures: arm64, x64, x86."));
-        trace::println(_X("  --list-sdks [--arch <arch>]       Display the installed SDKs matching the host or specified architecture. Example architectures: arm64, x64, x86."));
+        trace::println(PAL_X("commands:"));
+        trace::println(PAL_X("  -h|--help                         Display help."));
+        trace::println(PAL_X("  --info                            Display .NET information."));
+        trace::println(PAL_X("  --list-runtimes [--arch <arch>]   Display the installed runtimes matching the host or specified architecture. Example architectures: arm64, x64, x86."));
+        trace::println(PAL_X("  --list-sdks [--arch <arch>]       Display the installed SDKs matching the host or specified architecture. Example architectures: arm64, x64, x86."));
         return StatusCode::InvalidArgFailure;
     }
 
     app_root.assign(host_path);
     app_path.assign(get_directory(app_root));
     append_path(&app_path, own_name.c_str());
-    app_path.append(_X(".dll"));
+    app_path.append(PAL_X(".dll"));
 
     hostfxr_resolver_t fxr{app_root};
 
@@ -71,10 +71,10 @@ int exe_start(const int argc, const pal::char_t* argv[])
         const pal::char_t* dotnet_root_cstr = fxr.dotnet_root().empty() ? nullptr : fxr.dotnet_root().c_str();
         const pal::char_t* app_path_cstr = app_path.empty() ? nullptr : app_path.c_str();
 
-        trace::info(_X("Invoking fx resolver [%s] hostfxr_main_startupinfo"), fxr.fxr_path().c_str());
-        trace::info(_X("Host path: [%s]"), host_path.c_str());
-        trace::info(_X("Dotnet path: [%s]"), fxr.dotnet_root().c_str());
-        trace::info(_X("App path: [%s]"), app_path.c_str());
+        trace::info(PAL_X("Invoking fx resolver [%s] hostfxr_main_startupinfo"), fxr.fxr_path().c_str());
+        trace::info(PAL_X("Host path: [%s]"), host_path.c_str());
+        trace::info(PAL_X("Dotnet path: [%s]"), fxr.dotnet_root().c_str());
+        trace::info(PAL_X("App path: [%s]"), app_path.c_str());
 
         auto set_error_writer = fxr.resolve_set_error_writer();
         propagate_error_writer_t propagate_error_writer_to_hostfxr(set_error_writer);
@@ -99,7 +99,7 @@ int exe_start(const int argc, const pal::char_t* argv[])
     }
     else
     {
-        trace::info(_X("Invoking fx resolver [%s] v1"), fxr.fxr_path().c_str());
+        trace::info(PAL_X("Invoking fx resolver [%s] v1"), fxr.fxr_path().c_str());
 
         // Previous corehost trace messages must be printed before calling trace::setup in hostfxr
         trace::flush();
@@ -113,7 +113,7 @@ int exe_start(const int argc, const pal::char_t* argv[])
         }
         else
         {
-            trace::error(_X("The required library %s does not contain the expected entry point."), fxr.fxr_path().c_str());
+            trace::error(PAL_X("The required library %s does not contain the expected entry point."), fxr.fxr_path().c_str());
             rc = StatusCode::CoreHostEntryPointFailure;
         }
     }
@@ -131,12 +131,12 @@ int main(const int argc, const pal::char_t* argv[])
 
     if (trace::is_enabled())
     {
-        trace::info(_X("--- Invoked %s [version: %s] main = {"), _X("dotnet"), get_host_version_description().c_str());
+        trace::info(PAL_X("--- Invoked %s [version: %s] main = {"), PAL_X("dotnet"), get_host_version_description().c_str());
         for (int i = 0; i < argc; ++i)
         {
-            trace::info(_X("%s"), argv[i]);
+            trace::info(PAL_X("%s"), argv[i]);
         }
-        trace::info(_X("}"));
+        trace::info(PAL_X("}"));
     }
 
     int exit_code = exe_start(argc, argv);

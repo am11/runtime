@@ -100,9 +100,9 @@ const host_interface_t& corehost_init_t::get_host_init_data()
     }
     else
     {
-        hi.fx_name = _X("");
-        hi.fx_dir = _X("");
-        hi.fx_ver = _X("");
+        hi.fx_name = PAL_X("");
+        hi.fx_dir = PAL_X("");
+        hi.fx_ver = PAL_X("");
     }
 
     hi.deps_file = m_deps_file.c_str();

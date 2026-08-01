@@ -22,14 +22,14 @@ namespace
 {
     HRESULT string_to_clsid(_In_ const pal::string_t &str, _Out_ CLSID &clsid)
     {
-        pal::char_t guid_buf[] = _X("{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}");
+        pal::char_t guid_buf[] = PAL_X("{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}");
         const pal::char_t *guid_maybe = str.data();
 
         // If the first character of the GUID is not '{' COM will
         // interpret the string as a ProgID. The COM host doesn't
         // support ProgIDs so coerce strings into GUID format.
         // The buffer size is minus 2 to account for null and first '{'.
-        if (str[0] != _X('{')
+        if (str[0] != PAL_X('{')
             && str.size() < ((sizeof(guid_buf) / sizeof(pal::char_t)) - 2))
         {
             // Increment the output buffer 1 to skip over the '{'.
@@ -55,7 +55,7 @@ namespace
             if (FAILED(hr))
             {
                 assert(false && "Invalid CLSID");
-                trace::error(_X("Invalid CLSID format in .clsidmap"));
+                trace::error(PAL_X("Invalid CLSID format in .clsidmap"));
                 continue;
             }
 
@@ -64,11 +64,11 @@ namespace
             e.clsid = clsidMaybe;
 
             const auto &val = prop.value.GetObject();
-            e.assembly = val[_X("assembly")].GetString();
-            e.type = val[_X("type")].GetString();
+            e.assembly = val[PAL_X("assembly")].GetString();
+            e.type = val[PAL_X("type")].GetString();
 
             // Check if a ProgID was defined.
-            const auto &prodIdMaybe = val.FindMember(_X("progid"));
+            const auto &prodIdMaybe = val.FindMember(PAL_X("progid"));
             if (prodIdMaybe != val.MemberEnd())
                 e.progid = prodIdMaybe->value.GetString();
 
@@ -100,9 +100,9 @@ namespace
             throw HResultException{ E_UNEXPECTED }; // This should never happen in Windows 7+
 
         json_parser_t json;
-        if (!json.parse_fully_trusted_raw_data(reinterpret_cast<char*>(data), size, _X("<embedded .clsidmap>")))
+        if (!json.parse_fully_trusted_raw_data(reinterpret_cast<char*>(data), size, PAL_X("<embedded .clsidmap>")))
         {
-            trace::error(_X("Embedded .clsidmap is invalid.\n  %s"), json.get_error_message().c_str());
+            trace::error(PAL_X("Embedded .clsidmap is invalid.\n  %s"), json.get_error_message().c_str());
             throw HResultException{ StatusCode::InvalidConfigFile };
         }
 
@@ -168,19 +168,19 @@ namespace
 
         if (!is_binary_unsigned(this_module))
         {
-            trace::verbose(_X("Binary is signed, disabling loose .clsidmap file discovery"));
+            trace::verbose(PAL_X("Binary is signed, disabling loose .clsidmap file discovery"));
             return {};
         }
 
         pal::string_t map_file_name = std::move(this_module);
-        map_file_name += _X(".clsidmap");
+        map_file_name += PAL_X(".clsidmap");
         if (!pal::file_exists(map_file_name))
             return {};
 
         json_parser_t json;
         if (!json.parse_fully_trusted_file(map_file_name))
         {
-            trace::error(_X("File .clsidmap [%s] is invalid.\n  %s"), map_file_name.c_str(), json.get_error_message().c_str());
+            trace::error(PAL_X("File .clsidmap [%s] is invalid.\n  %s"), map_file_name.c_str(), json.get_error_message().c_str());
             throw HResultException{ StatusCode::InvalidConfigFile };
         }
 
@@ -216,11 +216,11 @@ clsid_map comhost::get_clsid_map()
     clsid_map mapping = get_json_map_from_resource(found_resource);
     if (!found_resource && mapping.empty())
     {
-        trace::verbose(_X("JSON map resource stream not found"));
+        trace::verbose(PAL_X("JSON map resource stream not found"));
 
         mapping = get_json_map_from_file();
         if (mapping.empty())
-            trace::verbose(_X("JSON map .clsidmap file not found"));
+            trace::verbose(PAL_X("JSON map .clsidmap file not found"));
     }
 
     // Make a copy to retain

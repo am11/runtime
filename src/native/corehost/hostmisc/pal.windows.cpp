@@ -76,7 +76,7 @@ bool pal::touch_file(const pal::string_t& path)
     HANDLE hnd = ::CreateFileW(path.c_str(), 0, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hnd == INVALID_HANDLE_VALUE)
     {
-        trace::verbose(_X("Failed to leave breadcrumb, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+        trace::verbose(PAL_X("Failed to leave breadcrumb, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
         return false;
     }
     ::CloseHandle(hnd);
@@ -89,7 +89,7 @@ static void* map_file(const pal::string_t& path, size_t *length, DWORD mapping_p
 
     if (file == INVALID_HANDLE_VALUE)
     {
-        trace::error(_X("Failed to map file. CreateFileW(%s) failed with error %d"), path.c_str(), GetLastError());
+        trace::error(PAL_X("Failed to map file. CreateFileW(%s) failed with error %d"), path.c_str(), GetLastError());
         return nullptr;
     }
 
@@ -98,7 +98,7 @@ static void* map_file(const pal::string_t& path, size_t *length, DWORD mapping_p
         LARGE_INTEGER fileSize;
         if (GetFileSizeEx(file, &fileSize) == 0)
         {
-            trace::error(_X("Failed to map file. GetFileSizeEx(%s) failed with error %d"), path.c_str(), GetLastError());
+            trace::error(PAL_X("Failed to map file. GetFileSizeEx(%s) failed with error %d"), path.c_str(), GetLastError());
             CloseHandle(file);
             return nullptr;
         }
@@ -109,7 +109,7 @@ static void* map_file(const pal::string_t& path, size_t *length, DWORD mapping_p
 
     if (map == NULL)
     {
-        trace::error(_X("Failed to map file. CreateFileMappingW(%s) failed with error %d"), path.c_str(), GetLastError());
+        trace::error(PAL_X("Failed to map file. CreateFileMappingW(%s) failed with error %d"), path.c_str(), GetLastError());
         CloseHandle(file);
         return nullptr;
     }
@@ -118,7 +118,7 @@ static void* map_file(const pal::string_t& path, size_t *length, DWORD mapping_p
 
     if (address == NULL)
     {
-        trace::error(_X("Failed to map file. MapViewOfFile(%s) failed with error %d"), path.c_str(), GetLastError());
+        trace::error(PAL_X("Failed to map file. MapViewOfFile(%s) failed with error %d"), path.c_str(), GetLastError());
     }
 
     // The file-handle (file) and mapping object handle (map) can be safely closed
@@ -164,7 +164,7 @@ bool pal::getcwd(pal::string_t* recv)
         }
     }
     assert(result == 0);
-    trace::error(_X("Failed to obtain working directory, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
+    trace::error(PAL_X("Failed to obtain working directory, HRESULT: 0x%X"), HRESULT_FROM_WIN32(GetLastError()));
     return false;
 }
 
@@ -204,9 +204,9 @@ static
 bool get_wow_mode_program_files(pal::string_t* recv)
 {
 #if defined(TARGET_AMD64)
-    const pal::char_t* env_key = _X("ProgramFiles(x86)");
+    const pal::char_t* env_key = PAL_X("ProgramFiles(x86)");
 #else
-    const pal::char_t* env_key = _X("ProgramFiles");
+    const pal::char_t* env_key = PAL_X("ProgramFiles");
 #endif
 
     return get_file_path_from_env(env_key,recv);
@@ -217,16 +217,16 @@ bool pal::get_default_breadcrumb_store(string_t* recv)
     recv->clear();
 
     pal::string_t prog_dat;
-    if (!get_file_path_from_env(_X("ProgramData"), &prog_dat))
+    if (!get_file_path_from_env(PAL_X("ProgramData"), &prog_dat))
     {
         // We should have the path in prog_dat.
-        trace::verbose(_X("Failed to read default breadcrumb store [%s]"), prog_dat.c_str());
+        trace::verbose(PAL_X("Failed to read default breadcrumb store [%s]"), prog_dat.c_str());
         return false;
     }
     recv->assign(prog_dat);
-    append_path(recv, _X("Microsoft"));
-    append_path(recv, _X("NetFramework"));
-    append_path(recv, _X("BreadcrumbStore"));
+    append_path(recv, PAL_X("Microsoft"));
+    append_path(recv, PAL_X("NetFramework"));
+    append_path(recv, PAL_X("BreadcrumbStore"));
     return true;
 }
 
@@ -236,7 +236,7 @@ bool pal::get_default_servicing_directory(string_t* recv)
     {
         return false;
     }
-    append_path(recv, _X("coreservicing"));
+    append_path(recv, PAL_X("coreservicing"));
     return true;
 }
 
@@ -276,7 +276,7 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
 {
     //  ***Used only for testing***
     pal::string_t environmentOverride;
-    if (test_only_getenv(_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"), &environmentOverride))
+    if (test_only_getenv(PAL_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"), &environmentOverride))
     {
         recv->assign(environmentOverride);
         return true;
@@ -292,27 +292,27 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
     const pal::char_t* program_files_dir;
     if (is_current_arch)
     {
-        program_files_dir = _X("ProgramFiles");
+        program_files_dir = PAL_X("ProgramFiles");
     }
 #if defined(TARGET_AMD64)
     else if (arch == pal::architecture::x86)
     {
         // Running x64, looking for x86 install
-        program_files_dir = _X("ProgramFiles(x86)");
+        program_files_dir = PAL_X("ProgramFiles(x86)");
     }
 #endif
 #if defined(TARGET_X86)
     else if (pal::is_running_in_wow64() && arch == pal::architecture::x64)
     {
         // Running x86 on x64, looking for x64 install
-        program_files_dir = _X("ProgramW6432");
+        program_files_dir = PAL_X("ProgramW6432");
     }
 #endif
     else
     {
         // Running arm64/x64, looking for x64/arm64.
         // Other cases should have bailed out based on is_supported_multi_arch_install
-        program_files_dir = _X("ProgramFiles");
+        program_files_dir = PAL_X("ProgramFiles");
     }
 
     if (!get_file_path_from_env(program_files_dir, recv))
@@ -320,7 +320,7 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
         return false;
     }
 
-    append_path(recv, _X("dotnet"));
+    append_path(recv, PAL_X("dotnet"));
     if (is_current_arch && pal::is_emulating_x64())
     {
         // Install location for emulated x64 should be %ProgramFiles%\dotnet\x64.
@@ -344,12 +344,12 @@ namespace
     {
         *key_hive = HKEY_LOCAL_MACHINE;
         // The registry search occurs in the 32-bit registry in all cases.
-        pal::string_t dotnet_key_path = pal::string_t(_X("SOFTWARE\\dotnet"));
+        pal::string_t dotnet_key_path = pal::string_t(PAL_X("SOFTWARE\\dotnet"));
 
         pal::string_t environmentRegistryPathOverride;
-        if (test_only_getenv(_X("_DOTNET_TEST_REGISTRY_PATH"), &environmentRegistryPathOverride))
+        if (test_only_getenv(PAL_X("_DOTNET_TEST_REGISTRY_PATH"), &environmentRegistryPathOverride))
         {
-            pal::string_t hkcuPrefix = _X("HKEY_CURRENT_USER\\");
+            pal::string_t hkcuPrefix = PAL_X("HKEY_CURRENT_USER\\");
             if (environmentRegistryPathOverride.substr(0, hkcuPrefix.length()) == hkcuPrefix)
             {
                 *key_hive = HKEY_CURRENT_USER;
@@ -359,14 +359,14 @@ namespace
             dotnet_key_path = environmentRegistryPathOverride;
         }
 
-        *sub_key = dotnet_key_path + pal::string_t(_X("\\Setup\\InstalledVersions\\")) + get_arch_name(arch);
-        *value = _X("InstallLocation");
+        *sub_key = dotnet_key_path + pal::string_t(PAL_X("\\Setup\\InstalledVersions\\")) + get_arch_name(arch);
+        *value = PAL_X("InstallLocation");
     }
 
     pal::string_t registry_path_as_string(const HKEY& key_hive, const pal::string_t& sub_key, const pal::char_t* value)
     {
         assert(key_hive == HKEY_CURRENT_USER || key_hive == HKEY_LOCAL_MACHINE);
-        return (key_hive == HKEY_CURRENT_USER ? _X("HKCU\\") : _X("HKLM\\")) + sub_key + _X("\\") + value;
+        return (key_hive == HKEY_CURRENT_USER ? PAL_X("HKCU\\") : PAL_X("HKLM\\")) + sub_key + PAL_X("\\") + value;
     }
 }
 
@@ -402,7 +402,7 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     get_dotnet_install_location_registry_path(arch, &hkeyHive, &sub_key, &value);
 
     if (trace::is_enabled())
-        trace::verbose(_X("Looking for architecture-specific registry value in '%s'."), registry_path_as_string(hkeyHive, sub_key, value).c_str());
+        trace::verbose(PAL_X("Looking for architecture-specific registry value in '%s'."), registry_path_as_string(hkeyHive, sub_key, value).c_str());
 
     // Must use RegOpenKeyEx to be able to specify KEY_WOW64_32KEY to access the 32-bit registry in all cases.
     // The RegGetValue has this option available only on Win10.
@@ -412,11 +412,11 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     {
         if (result == ERROR_FILE_NOT_FOUND)
         {
-            trace::verbose(_X("The registry key ['%s'] does not exist."), sub_key.c_str());
+            trace::verbose(PAL_X("The registry key ['%s'] does not exist."), sub_key.c_str());
         }
         else
         {
-            trace::verbose(_X("Failed to open the registry key. Error code: 0x%X"), result);
+            trace::verbose(PAL_X("Failed to open the registry key. Error code: 0x%X"), result);
         }
 
         return false;
@@ -427,7 +427,7 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     result = ::RegGetValueW(hkey, nullptr, value, RRF_RT_REG_SZ, nullptr, nullptr, &size);
     if (result != ERROR_SUCCESS || size == 0)
     {
-        trace::verbose(_X("Failed to get the size of the install location registry value or it's empty. Error code: 0x%X"), result);
+        trace::verbose(PAL_X("Failed to get the size of the install location registry value or it's empty. Error code: 0x%X"), result);
         ::RegCloseKey(hkey);
         return false;
     }
@@ -437,14 +437,14 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     result = ::RegGetValueW(hkey, nullptr, value, RRF_RT_REG_SZ, nullptr, &buffer[0], &size);
     if (result != ERROR_SUCCESS)
     {
-        trace::verbose(_X("Failed to get the value of the install location registry value. Error code: 0x%X"), result);
+        trace::verbose(PAL_X("Failed to get the value of the install location registry value. Error code: 0x%X"), result);
         ::RegCloseKey(hkey);
         return false;
     }
 
     recv->assign(buffer.data());
     ::RegCloseKey(hkey);
-    trace::verbose(_X("Found registered install location '%s'."), recv->c_str());
+    trace::verbose(PAL_X("Found registered install location '%s'."), recv->c_str());
     return true;
 }
 
@@ -516,22 +516,22 @@ pal::string_t pal::get_current_os_rid_platform()
                     switch(minorVer)
                     {
                         case 1:
-                            ridOS.append(_X("win7"));
+                            ridOS.append(PAL_X("win7"));
                             break;
                         case 2:
-                            ridOS.append(_X("win8"));
+                            ridOS.append(PAL_X("win8"));
                             break;
                         case 3:
                         default:
                             // For unknown version, we will support the highest RID that we know for this major version.
-                            ridOS.append(_X("win81"));
+                            ridOS.append(PAL_X("win81"));
                             break;
                     }
                 }
                 else if (majorVer >= 10)
                 {
                     // Return the major version for use in RID computation without applying any cap.
-                    ridOS.append(_X("win"));
+                    ridOS.append(PAL_X("win"));
                     ridOS.append(pal::to_string(majorVer));
                 }
             }
@@ -666,11 +666,11 @@ bool pal::get_default_bundle_extraction_base_dir(pal::string_t& extraction_dir)
 {
     if (!get_extraction_base_parent_directory(extraction_dir))
     {
-        trace::error(_X("Failed to determine default extraction location. Check if 'TMP' or 'TEMP' points to existing path."));
+        trace::error(PAL_X("Failed to determine default extraction location. Check if 'TMP' or 'TEMP' points to existing path."));
         return false;
     }
 
-    append_path(&extraction_dir, _X(".net"));
+    append_path(&extraction_dir, PAL_X(".net"));
     // Windows Temp-Path is already user-private.
 
     if (fullpath(&extraction_dir))
@@ -682,7 +682,7 @@ bool pal::get_default_bundle_extraction_base_dir(pal::string_t& extraction_dir)
     if (CreateDirectoryW(extraction_dir.c_str(), NULL) == 0 &&
         GetLastError() != ERROR_ALREADY_EXISTS)
     {
-        trace::error(_X("Failed to create default extraction directory [%s]. %s, error code: %d"), extraction_dir.c_str(), pal::strerror(errno).c_str(), GetLastError());
+        trace::error(PAL_X("Failed to create default extraction directory [%s]. %s, error code: %d"), extraction_dir.c_str(), pal::strerror(errno).c_str(), GetLastError());
         return false;
     }
 
@@ -773,7 +773,7 @@ bool pal::realpath(pal::string_t* path, bool skip_error_logging)
         {
             if (!skip_error_logging)
             {
-                trace::error(_X("Error resolving full path [%s]. Error code: %d"), path->c_str(), error);
+                trace::error(PAL_X("Error resolving full path [%s]. Error code: %d"), path->c_str(), error);
             }
             return false;
         }
@@ -799,7 +799,7 @@ bool pal::realpath(pal::string_t* path, bool skip_error_logging)
                 {
                     if (!skip_error_logging)
                     {
-                        trace::error(_X("Error resolving full path [%s]. Error code: %d"), path->c_str(), ::GetLastError());
+                        trace::error(PAL_X("Error resolving full path [%s]. Error code: %d"), path->c_str(), ::GetLastError());
                     }
                     return false;
                 }
@@ -874,7 +874,7 @@ static void readdir(const pal::string_t& path, const pal::string_t& pattern, boo
         if (!onlydirectories || (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
             pal::string_t filepath(data.cFileName);
-            if (filepath != _X(".") && filepath != _X(".."))
+            if (filepath != PAL_X(".") && filepath != PAL_X(".."))
             {
                 files.push_back(filepath);
             }
@@ -890,7 +890,7 @@ void pal::readdir(const string_t& path, const string_t& pattern, std::vector<pal
 
 void pal::readdir(const string_t& path, std::vector<pal::string_t>* list)
 {
-    ::readdir(path, _X("*"), false, list);
+    ::readdir(path, PAL_X("*"), false, list);
 }
 
 void pal::readdir_onlydirectories(const pal::string_t& path, const string_t& pattern, std::vector<pal::string_t>* list)

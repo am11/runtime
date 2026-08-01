@@ -55,14 +55,14 @@ extern "C" void hostfxr_resolver_init(hostfxr_resolver_t* resolver, const pal_ch
     resolver->fxr_path = nullptr;
     resolver->status_code = Success;
 
-    if (app_root == nullptr || app_root[0] == _X('\0'))
+    if (app_root == nullptr || app_root[0] == PAL_X('\0'))
     {
-        trace_info(_X("Application root path is empty. This shouldn't happen"));
+        trace_info(PAL_X("Application root path is empty. This shouldn't happen"));
         resolver->status_code = CoreHostLibMissingFailure;
         return;
     }
 
-    trace_info(_X("Using internal fxr"));
+    trace_info(PAL_X("Using internal fxr"));
 
     pal_char_t* dotnet_root = pal_strdup(app_root);
     pal_char_t* fxr_path = pal_strdup(app_root);

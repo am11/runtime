@@ -36,8 +36,8 @@ file_entry_t file_entry_t::read(reader_t &reader, uint32_t bundle_major_version,
 
     if (!entry.is_valid())
     {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Invalid FileEntry detected."));
+        trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+        trace::error(PAL_X("Invalid FileEntry detected."));
         throw StatusCode::BundleExtractionFailure;
     }
 

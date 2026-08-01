@@ -38,8 +38,8 @@ void dir_utils_t::create_directory_tree(const pal::string_t &path)
             return;
         }
 
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Failed to create directory [%s] for extracting bundled files. Error code: %d"), path.c_str(), mkdir_error);
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Failed to create directory [%s] for extracting bundled files. Error code: %d"), path.c_str(), mkdir_error);
         throw StatusCode::BundleExtractionIOError;
     }
 }
@@ -72,13 +72,13 @@ void dir_utils_t::remove_directory_tree(const pal::string_t& path)
 
         if (!pal::remove(file_path.c_str()))
         {
-            trace::warning(_X("Failed to remove temporary file [%s]."), file_path.c_str());
+            trace::warning(PAL_X("Failed to remove temporary file [%s]."), file_path.c_str());
         }
     }
 
     if (!pal::rmdir(path.c_str()))
     {
-        trace::warning(_X("Failed to remove temporary directory [%s]."), path.c_str());
+        trace::warning(PAL_X("Failed to remove temporary directory [%s]."), path.c_str());
     }
 }
 
@@ -128,7 +128,7 @@ bool dir_utils_t::rename_with_retries(pal::string_t& old_name, pal::string_t& ne
 
         if (should_retry)
         {
-            trace::info(_X("Retrying Rename [%s] to [%s] due to EACCES error"), old_name.c_str(), new_name.c_str());
+            trace::info(PAL_X("Retrying Rename [%s] to [%s] due to EACCES error"), old_name.c_str(), new_name.c_str());
             pal::sleep(100);
             continue;
         }

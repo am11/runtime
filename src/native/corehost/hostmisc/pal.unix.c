@@ -74,7 +74,7 @@ pal_char_t* pal_fullpath(const pal_char_t* path, bool skip_error_logging)
     if (resolved == NULL)
     {
         if (errno != ENOENT && !skip_error_logging)
-            trace_error(_X("realpath(%s) failed: %s"), path, strerror(errno));
+            trace_error(PAL_X("realpath(%s) failed: %s"), path, strerror(errno));
 
         return NULL;
     }
@@ -102,6 +102,10 @@ bool pal_readdir_onlydirectories(const pal_char_t* path, pal_readdir_callback_t 
 #if HAVE_DIRENT_D_TYPE
         int entry_type = entry->d_type;
 #else
+#define DT_UNKNOWN 0
+#define DT_DIR 4
+#define DT_REG 8
+#define DT_LNK 10
         int entry_type = DT_UNKNOWN;
 #endif
 
@@ -150,10 +154,10 @@ pal_process_emulation_t pal_get_process_emulation(void)
     size_t size = sizeof(is_translated_process);
     if (sysctlbyname("sysctl.proc_translated", &is_translated_process, &size, NULL, 0) == -1)
     {
-        trace_info(_X("Could not determine whether the current process is running under Rosetta."));
+        trace_info(PAL_X("Could not determine whether the current process is running under Rosetta."));
         if (errno != ENOENT)
         {
-            trace_info(_X("Call to sysctlbyname failed: %s"), strerror(errno));
+            trace_info(PAL_X("Call to sysctlbyname failed: %s"), strerror(errno));
         }
 
         return pal_process_emulation_none;
@@ -203,17 +207,17 @@ static bool get_install_location_from_file(const pal_char_t* file_path, bool* ou
     *out_file_found = true;
     *out_location = NULL;
 
-    FILE* file = pal_file_open(file_path, _X("r"));
+    FILE* file = pal_file_open(file_path, PAL_X("r"));
     if (file == NULL)
     {
         if (errno == ENOENT)
         {
-            trace_verbose(_X("The install_location file ['%s'] does not exist - skipping."), file_path);
+            trace_verbose(PAL_X("The install_location file ['%s'] does not exist - skipping."), file_path);
             *out_file_found = false;
         }
         else
         {
-            trace_error(_X("The install_location file ['%s'] failed to open: %s."), file_path, strerror(errno));
+            trace_error(PAL_X("The install_location file ['%s'] failed to open: %s."), file_path, strerror(errno));
         }
 
         return false;
@@ -224,7 +228,7 @@ static bool get_install_location_from_file(const pal_char_t* file_path, bool* ou
 
     if (!got_line)
     {
-        trace_warning(_X("Did not find any install location in '%s'."), file_path);
+        trace_warning(PAL_X("Did not find any install location in '%s'."), file_path);
         return false;
     }
 
@@ -233,16 +237,16 @@ static bool get_install_location_from_file(const pal_char_t* file_path, bool* ou
 
 pal_char_t* pal_get_dotnet_self_registered_config_location(void)
 {
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_INSTALL_LOCATION_PATH"));
-    const pal_char_t* base = override != NULL ? override : _X("/etc/dotnet");
-    pal_char_t* result = utils_append_path_alloc(base, _X("install_location_") _STRINGIFY(CURRENT_ARCH_NAME));
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_INSTALL_LOCATION_PATH"));
+    const pal_char_t* base = override != NULL ? override : PAL_X("/etc/dotnet");
+    pal_char_t* result = utils_append_path_alloc(base, PAL_X("install_location_") _STRINGIFY(CURRENT_ARCH_NAME));
     free(override);
     return result;
 }
 
 pal_char_t* pal_get_dotnet_self_registered_dir(void)
 {
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_GLOBALLY_REGISTERED_PATH"));
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_GLOBALLY_REGISTERED_PATH"));
     if (override != NULL)
         return override;
 
@@ -250,7 +254,7 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
     if (path == NULL)
         return NULL;
 
-    trace_verbose(_X("Looking for architecture-specific install_location file in '%s'."), path);
+    trace_verbose(PAL_X("Looking for architecture-specific install_location file in '%s'."), path);
 
     pal_char_t* location = NULL;
     bool file_found = false;
@@ -259,9 +263,9 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
     {
         // Fall back to the non-arch-specific file in the same directory:
         // install_location instead of install_location_<arch>.
-        path[pal_strlen(path) - (sizeof(_X("_") _STRINGIFY(CURRENT_ARCH_NAME)) - 1)] = '\0';
+        path[pal_strlen(path) - (sizeof(PAL_X("_") _STRINGIFY(CURRENT_ARCH_NAME)) - 1)] = '\0';
 
-        trace_verbose(_X("Looking for install_location file in '%s'."), path);
+        trace_verbose(PAL_X("Looking for install_location file in '%s'."), path);
         success = get_install_location_from_file(path, &file_found, &location);
     }
 
@@ -271,18 +275,18 @@ pal_char_t* pal_get_dotnet_self_registered_dir(void)
         return NULL;
 
     assert(file_found);
-    trace_verbose(_X("Found registered install location '%s'."), location);
+    trace_verbose(PAL_X("Found registered install location '%s'."), location);
     return location;
 }
 
 pal_char_t* pal_get_default_installation_dir(void)
 {
-    pal_char_t* override = utils_test_only_getenv(_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"));
+    pal_char_t* override = utils_test_only_getenv(PAL_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"));
     if (override != NULL)
         return override;
 
 #if defined(TARGET_OSX)
-    const pal_char_t* base = _X("/usr/local/share/dotnet");
+    const pal_char_t* base = PAL_X("/usr/local/share/dotnet");
     if (pal_get_process_emulation() == pal_process_emulation_x64)
     {
         return utils_append_path_alloc(base, _STRINGIFY(CURRENT_ARCH_NAME));
@@ -298,14 +302,14 @@ pal_char_t* pal_get_default_installation_dir(void)
     mib[1] = USER_LOCALBASE;
     if (sysctl(mib, 2, buf, &len, NULL, 0) == 0)
     {
-        return utils_append_path_alloc(buf, _X("share/dotnet"));
+        return utils_append_path_alloc(buf, PAL_X("share/dotnet"));
     }
 
-    return pal_strdup(_X("/usr/local/share/dotnet"));
+    return pal_strdup(PAL_X("/usr/local/share/dotnet"));
 #elif defined(TARGET_OPENBSD)
-    return pal_strdup(_X("/usr/local/share/dotnet"));
+    return pal_strdup(PAL_X("/usr/local/share/dotnet"));
 #else
-    return pal_strdup(_X("/usr/share/dotnet"));
+    return pal_strdup(PAL_X("/usr/share/dotnet"));
 #endif
 }
 
@@ -319,7 +323,7 @@ bool pal_load_library(const pal_char_t* path, pal_dll_t* dll)
     *dll = dlopen(path, RTLD_LAZY);
     if (*dll == NULL)
     {
-        trace_error(_X("Failed to load %s, error: %s"), path, dlerror());
+        trace_error(PAL_X("Failed to load %s, error: %s"), path, dlerror());
         return false;
     }
     return true;
@@ -329,7 +333,7 @@ void pal_unload_library(pal_dll_t library)
 {
     if (dlclose(library) != 0)
     {
-        trace_warning(_X("Failed to unload library, error: %s"), dlerror());
+        trace_warning(PAL_X("Failed to unload library, error: %s"), dlerror());
     }
 }
 
@@ -338,7 +342,7 @@ pal_proc_t pal_get_symbol(pal_dll_t library, const char* name)
     void* result = dlsym(library, name);
     if (result == NULL)
     {
-        trace_info(_X("Probed for and did not find library symbol %s, error: %s"), name, dlerror());
+        trace_info(PAL_X("Probed for and did not find library symbol %s, error: %s"), name, dlerror());
     }
     return result;
 }
@@ -357,18 +361,13 @@ bool pal_utf8_to_palstr(const char* utf8, pal_char_t* out, size_t out_len)
     return true;
 }
 
-// Two-level stringize so PATH_MAX's value (not its name) can be used as an
-// explicit sscanf field width below.
-#define PROC_MAPS_STR2(x) #x
-#define PROC_MAPS_STR(x) PROC_MAPS_STR2(x)
-
 // dlopen on some systems only finds a loaded library when given its full path.
 // As a fallback, scan /proc/self/maps for a mapped file whose name contains
 // library_name. On success sets *dll and *out_path (heap-allocated, caller
 // frees) and returns true.
 static bool get_loaded_library_from_proc_maps(const pal_char_t* library_name, pal_dll_t* dll, pal_char_t** out_path)
 {
-    FILE* file = pal_file_open(_X("/proc/self/maps"), _X("r"));
+    FILE* file = pal_file_open(PAL_X("/proc/self/maps"), PAL_X("r"));
     if (file == NULL)
         return false;
 
@@ -379,7 +378,7 @@ static bool get_loaded_library_from_proc_maps(const pal_char_t* library_name, pa
     while (getline(&line, &line_cap, file) != -1)
     {
         char buf[PATH_MAX + 1]; // + 1 for the NUL terminator
-        if (sscanf(line, "%*p-%*p %*[-rwxsp] %*p %*[:0-9a-f] %*d %" PROC_MAPS_STR(PATH_MAX) "s\n", buf) == 1)
+        if (sscanf(line, "%*p-%*p %*[-rwxsp] %*p %*[:0-9a-f] %*d %1024s\n", buf) == 1)
         {
             const char* last_sep = strrchr(buf, DIR_SEPARATOR);
             if (last_sep == NULL)
@@ -429,12 +428,12 @@ bool pal_get_loaded_library(
     pal_char_t* rpath_name = NULL;
     if (!pal_is_path_fully_qualified(library_name))
     {
-        size_t cap = STRING_LENGTH(_X("@rpath/")) + pal_strlen(library_name) + 1;
+        size_t cap = STRING_LENGTH(PAL_X("@rpath/")) + pal_strlen(library_name) + 1;
         rpath_name = (pal_char_t*)malloc(cap * sizeof(pal_char_t));
         if (rpath_name == NULL)
             return false;
 
-        pal_str_printf(rpath_name, cap, _X("@rpath/%s"), library_name);
+        pal_str_printf(rpath_name, cap, PAL_X("@rpath/%s"), library_name);
         lookup_name = rpath_name;
     }
 #endif

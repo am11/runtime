@@ -22,7 +22,7 @@ namespace
     {
         pal::string_t lineStr;
         pal::clr_palstring(line, &lineStr);
-        trace::error(_X("%s"), lineStr.c_str());
+        trace::error(PAL_X("%s"), lineStr.c_str());
     }
 }
 
@@ -35,7 +35,7 @@ pal::hresult_t coreclr_t::create(
 {
     if (!coreclr_bind(libcoreclr_path))
     {
-        trace::error(_X("Failed to bind to CoreCLR at '%s'"), libcoreclr_path.c_str());
+        trace::error(PAL_X("Failed to bind to CoreCLR at '%s'"), libcoreclr_path.c_str());
         return StatusCode::CoreClrBindFailure;
     }
 
@@ -155,16 +155,16 @@ namespace
 {
     const pal::char_t *PropertyNameMapping[] =
     {
-        _X("TRUSTED_PLATFORM_ASSEMBLIES"),
-        _X("NATIVE_DLL_SEARCH_DIRECTORIES"),
-        _X("PLATFORM_RESOURCE_ROOTS"),
-        _X("APP_CONTEXT_BASE_DIRECTORY"),
-        _X("APP_CONTEXT_DEPS_FILES"),
-        _X("FX_DEPS_FILE"),
-        _X("PROBING_DIRECTORIES"),
-        _X("STARTUP_HOOKS"),
-        _X("APP_PATHS"),
-        _X("RUNTIME_IDENTIFIER"),
+        PAL_X("TRUSTED_PLATFORM_ASSEMBLIES"),
+        PAL_X("NATIVE_DLL_SEARCH_DIRECTORIES"),
+        PAL_X("PLATFORM_RESOURCE_ROOTS"),
+        PAL_X("APP_CONTEXT_BASE_DIRECTORY"),
+        PAL_X("APP_CONTEXT_DEPS_FILES"),
+        PAL_X("FX_DEPS_FILE"),
+        PAL_X("PROBING_DIRECTORIES"),
+        PAL_X("STARTUP_HOOKS"),
+        PAL_X("APP_PATHS"),
+        PAL_X("RUNTIME_IDENTIFIER"),
     };
 
     static_assert((sizeof(PropertyNameMapping) / sizeof(*PropertyNameMapping)) == static_cast<size_t>(common_property::Last), "Invalid property count");
@@ -206,7 +206,7 @@ bool coreclr_property_bag_t::add(const pal::char_t *key, const pal::char_t *valu
     }
     else
     {
-        trace::verbose(_X("Overwriting property %s. New value: '%s'. Old value: '%s'."), key, value, (*iter).second.c_str());
+        trace::verbose(PAL_X("Overwriting property %s. New value: '%s'. Old value: '%s'."), key, value, (*iter).second.c_str());
         _properties[key] = value;
         return false;
     }
@@ -240,14 +240,14 @@ void coreclr_property_bag_t::remove(const pal::char_t *key)
     if (iter == _properties.cend())
         return;
 
-    trace::verbose(_X("Removing property %s. Old value: '%s'."), key, (*iter).second.c_str());
+    trace::verbose(PAL_X("Removing property %s. Old value: '%s'."), key, (*iter).second.c_str());
     _properties.erase(iter);
 }
 
 void coreclr_property_bag_t::log_properties() const
 {
     for (auto &kv : _properties)
-        trace::verbose(_X("Property %s = %s"), kv.first.c_str(), kv.second.c_str());
+        trace::verbose(PAL_X("Property %s = %s"), kv.first.c_str(), kv.second.c_str());
 }
 
 int coreclr_property_bag_t::count() const

@@ -12,8 +12,8 @@
 #include <shellapi.h>
 
 #define APPHOST_DETAILS_MESSAGE \
-    _X("Architecture: ") _STRINGIFY(CURRENT_ARCH_NAME) _X("\n") \
-    _X("App host version: ") _STRINGIFY(HOST_VERSION) _X("\n\n")
+    PAL_X("Architecture: ") _STRINGIFY(CURRENT_ARCH_NAME) PAL_X("\n") \
+    PAL_X("App host version: ") _STRINGIFY(HOST_VERSION) PAL_X("\n\n")
 
 // Allocate and format a string. Caller must free() the returned pointer.
 static pal_char_t* format_alloc(const pal_char_t* format, ...)
@@ -42,10 +42,10 @@ static pal_char_t* format_alloc(const pal_char_t* format, ...)
 static const pal_char_t* get_next_line(const pal_char_t** cursor, size_t* line_len)
 {
     const pal_char_t* start = *cursor;
-    if (start == NULL || *start == _X('\0'))
+    if (start == NULL || *start == PAL_X('\0'))
         return NULL;
 
-    const pal_char_t* nl = pal_strchr(start, _X('\n'));
+    const pal_char_t* nl = pal_strchr(start, PAL_X('\n'));
     *line_len = (nl != NULL) ? (size_t)(nl - start) : pal_strlen(start);
     *cursor = (nl != NULL) ? nl + 1 : start + *line_len;
     return start;
@@ -62,8 +62,8 @@ static void __cdecl buffering_trace_writer(const pal_char_t* message)
     if (grown != NULL)
     {
         memcpy(grown + existing_len, message, message_len * sizeof(pal_char_t));
-        grown[existing_len + message_len] = _X('\n');
-        grown[existing_len + message_len + 1] = _X('\0');
+        grown[existing_len + message_len] = PAL_X('\n');
+        grown[existing_len + message_len + 1] = PAL_X('\0');
         g_buffered_errors = grown;
     }
 
@@ -88,16 +88,16 @@ static bool is_gui_application(void)
 static void write_errors_to_event_log(const pal_char_t* executable_path, const pal_char_t* executable_name)
 {
     // Report errors to the Windows Event Log.
-    HANDLE eventSource = RegisterEventSourceW(NULL, _X(".NET Runtime"));
+    HANDLE eventSource = RegisterEventSourceW(NULL, PAL_X(".NET Runtime"));
     const DWORD traceErrorID = 1023; // Matches CoreCLR ERT_UnmanagedFailFast
     pal_char_t* message = format_alloc(
-        _X("Description: A .NET application failed.\n")
-        _X("Application: %s\n")
-        _X("Path: %s\n")
-        _X("Message: %s\n"),
+        PAL_X("Description: A .NET application failed.\n")
+        PAL_X("Application: %s\n")
+        PAL_X("Path: %s\n")
+        PAL_X("Message: %s\n"),
         executable_name,
         executable_path,
-        g_buffered_errors != NULL ? g_buffered_errors : _X(""));
+        g_buffered_errors != NULL ? g_buffered_errors : PAL_X(""));
 
     if (message != NULL)
     {
@@ -113,19 +113,19 @@ static void write_errors_to_event_log(const pal_char_t* executable_path, const p
 // writes the URL into url (size url_len, safely truncated) and returns true.
 static bool try_get_url_from_line(const pal_char_t* line, size_t line_len, pal_char_t* url, size_t url_len)
 {
-    const pal_char_t url_prefix[] = DOTNET_CORE_APPLAUNCH_URL _X("?");
+    const pal_char_t url_prefix[] = DOTNET_CORE_APPLAUNCH_URL PAL_X("?");
     if (utils_starts_with(line, line_len, url_prefix, STRING_LENGTH(url_prefix), true))
     {
-        pal_str_printf(url, url_len, _X("%.*s"), (int)line_len, line);
+        pal_str_printf(url, url_len, PAL_X("%.*s"), (int)line_len, line);
         return true;
     }
 
-    const pal_char_t url_prefix_before_7_0[] = _X("  - ") DOTNET_CORE_APPLAUNCH_URL _X("?");
+    const pal_char_t url_prefix_before_7_0[] = PAL_X("  - ") DOTNET_CORE_APPLAUNCH_URL PAL_X("?");
     if (utils_starts_with(line, line_len, url_prefix_before_7_0, STRING_LENGTH(url_prefix_before_7_0), true))
     {
         // Strip the "  - " indent so the stored URL begins at the applaunch URL.
-        size_t offset = STRING_LENGTH(_X("  - "));
-        pal_str_printf(url, url_len, _X("%.*s"), (int)(line_len - offset), line + offset);
+        size_t offset = STRING_LENGTH(PAL_X("  - "));
+        pal_str_printf(url, url_len, PAL_X("%.*s"), (int)(line_len - offset), line + offset);
         return true;
     }
 
@@ -137,7 +137,7 @@ static void open_url(const pal_char_t* url)
     // Open the URL in default browser
     ShellExecuteW(
         NULL,
-        _X("open"),
+        PAL_X("open"),
         url,
         NULL,
         NULL,
@@ -150,7 +150,7 @@ static bool enable_visual_styles(void)
     // See https://learn.microsoft.com/windows/win32/controls/cookbook-overview
     // To avoid increasing the size of all applications by embedding a manifest,
     // we just use the WindowsShell manifest.
-    const pal_char_t manifest_name[] = _X("WindowsShell.Manifest");
+    const pal_char_t manifest_name[] = PAL_X("WindowsShell.Manifest");
 
     // GetWindowsDirectoryW writes at most MAX_PATH chars; reserve room to append
     // a separator and the manifest file name.
@@ -158,7 +158,7 @@ static bool enable_visual_styles(void)
     UINT len = GetWindowsDirectoryW(manifest, MAX_PATH);
     if (len == 0 || len >= MAX_PATH)
     {
-        trace_verbose(_X("GetWindowsDirectory failed. Error code: %d"), GetLastError());
+        trace_verbose(PAL_X("GetWindowsDirectory failed. Error code: %d"), GetLastError());
         return false;
     }
 
@@ -170,14 +170,14 @@ static bool enable_visual_styles(void)
     HANDLE context_handle = CreateActCtxW(&actctx);
     if (context_handle == INVALID_HANDLE_VALUE)
     {
-        trace_verbose(_X("CreateActCtxW failed using manifest '%s'. Error code: %d"), manifest, GetLastError());
+        trace_verbose(PAL_X("CreateActCtxW failed using manifest '%s'. Error code: %d"), manifest, GetLastError());
         return false;
     }
 
     ULONG_PTR cookie;
     if (ActivateActCtx(context_handle, &cookie) == FALSE)
     {
-        trace_verbose(_X("ActivateActCtx failed. Error code: %d"), GetLastError());
+        trace_verbose(PAL_X("ActivateActCtx failed. Error code: %d"), GetLastError());
         return false;
     }
 
@@ -198,12 +198,12 @@ static pal_char_t* format_hyperlink(const pal_char_t* url)
     for (size_t i = 0; i < url_len; ++i)
     {
         display[j++] = url[i];
-        if (url[i] == _X('&'))
-            display[j++] = _X('&');
+        if (url[i] == PAL_X('&'))
+            display[j++] = PAL_X('&');
     }
-    display[j] = _X('\0');
+    display[j] = PAL_X('\0');
 
-    pal_char_t* result = format_alloc(_X("<A HREF=\"%s\">%s</A>"), url, display);
+    pal_char_t* result = format_alloc(PAL_X("<A HREF=\"%s\">%s</A>"), url, display);
     free(display);
     return result;
 }
@@ -264,7 +264,7 @@ static bool try_show_error_with_task_dialog(
     }
 
     int download_button_id = 1000;
-    TASKDIALOG_BUTTON download_button = { download_button_id, _X("Download it now\n") _X("You will need to run the downloaded installer") };
+    TASKDIALOG_BUTTON download_button = { download_button_id, PAL_X("Download it now\n") PAL_X("You will need to run the downloaded installer") };
     config.cButtons = 1;
     config.pButtons = &download_button;
     config.nDefaultButton = download_button_id;
@@ -272,10 +272,10 @@ static bool try_show_error_with_task_dialog(
     pal_char_t* app_launch_link = format_hyperlink(DOTNET_APP_LAUNCH_FAILED_URL);
     pal_char_t* download_link = format_hyperlink(url);
     pal_char_t* expanded_info = format_alloc(
-        _X("%s") DOC_LINK_INTRO _X("\n%s\n\nDownload link:\n%s"),
+        PAL_X("%s") DOC_LINK_INTRO PAL_X("\n%s\n\nDownload link:\n%s"),
         details,
-        app_launch_link != NULL ? app_launch_link : _X(""),
-        download_link != NULL ? download_link : _X(""));
+        app_launch_link != NULL ? app_launch_link : PAL_X(""),
+        download_link != NULL ? download_link : PAL_X(""));
     config.pszExpandedInformation = expanded_info;
 
     // Callback to handle hyperlink clicks
@@ -295,7 +295,7 @@ static bool try_show_error_with_task_dialog(
 
 static void show_error_dialog(const pal_char_t* executable_name, int error_code)
 {
-    pal_char_t* gui_errors_disabled = pal_getenv(_X("DOTNET_DISABLE_GUI_ERRORS"));
+    pal_char_t* gui_errors_disabled = pal_getenv(PAL_X("DOTNET_DISABLE_GUI_ERRORS"));
     if (gui_errors_disabled != NULL)
     {
         bool disabled = pal_xtoi(gui_errors_disabled) == 1;
@@ -307,7 +307,7 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
     const pal_char_t* instruction = NULL;
     pal_char_t* details = NULL;
     pal_char_t url[MAX_DOWNLOAD_URL_LEN];
-    url[0] = _X('\0');
+    url[0] = PAL_X('\0');
 
     if (error_code == CoreHostLibMissingFailure)
     {
@@ -328,9 +328,9 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
         // just match the expected error string. See fx_resolver.messages.cpp.
         instruction = INSTALL_OR_UPDATE_NET_ERROR_MESSAGE;
 
-        const pal_char_t prefix[] = _X("Framework: '");
-        const pal_char_t prefix_before_7_0[] = _X("The framework '");
-        const pal_char_t suffix_before_7_0[] = _X(" was not found.");
+        const pal_char_t prefix[] = PAL_X("Framework: '");
+        const pal_char_t prefix_before_7_0[] = PAL_X("The framework '");
+        const pal_char_t suffix_before_7_0[] = PAL_X(" was not found.");
 
         const pal_char_t* cursor = g_buffered_errors;
         const pal_char_t* line;
@@ -346,14 +346,14 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
                 if (has_prefix)
                 {
                     size_t offset = STRING_LENGTH(prefix) - 1;
-                    details = format_alloc(_X("Required: %.*s\n\n"), (int)(line_len - offset), line + offset);
+                    details = format_alloc(PAL_X("Required: %.*s\n\n"), (int)(line_len - offset), line + offset);
                 }
                 else
                 {
                     size_t prefix_len = STRING_LENGTH(prefix_before_7_0) - 1;
                     size_t suffix_len = STRING_LENGTH(suffix_before_7_0);
                     size_t len = (line_len > prefix_len + suffix_len) ? line_len - prefix_len - suffix_len : 0;
-                    details = format_alloc(_X("Required: %.*s\n\n"), (int)len, line + prefix_len);
+                    details = format_alloc(PAL_X("Required: %.*s\n\n"), (int)len, line + prefix_len);
                 }
             }
             else if (try_get_url_from_line(line, line_len, url, ARRAY_SIZE(url)))
@@ -364,7 +364,7 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
     }
     else if (error_code == BundleExtractionFailure)
     {
-        const pal_char_t bundle_error_prefix[] = _X("Bundle header version compatibility check failed.");
+        const pal_char_t bundle_error_prefix[] = PAL_X("Bundle header version compatibility check failed.");
         const pal_char_t* cursor = g_buffered_errors;
         const pal_char_t* line;
         size_t line_len;
@@ -376,7 +376,7 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
 
                 utils_get_download_url(url, ARRAY_SIZE(url), NULL, NULL);
                 size_t len = pal_strlen(url);
-                pal_str_printf(url + len, ARRAY_SIZE(url) - len, _X("&apphost_version=") _STRINGIFY(HOST_VERSION));
+                pal_str_printf(url + len, ARRAY_SIZE(url) - len, PAL_X("&apphost_version=") _STRINGIFY(HOST_VERSION));
                 break;
             }
         }
@@ -389,14 +389,14 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
         return;
     }
 
-    assert(url[0] != _X('\0'));
+    assert(url[0] != PAL_X('\0'));
     assert(is_gui_application());
 
     size_t url_len = pal_strlen(url);
-    pal_str_printf(url + url_len, ARRAY_SIZE(url) - url_len, _X("&gui=true"));
+    pal_str_printf(url + url_len, ARRAY_SIZE(url) - url_len, PAL_X("&gui=true"));
     const pal_char_t* details_text = details != NULL ? details : APPHOST_DETAILS_MESSAGE;
 
-    trace_verbose(_X("Showing error dialog for application: '%s' - error code: 0x%x - url: '%s' - details: %s"),
+    trace_verbose(PAL_X("Showing error dialog for application: '%s' - error code: 0x%x - url: '%s' - details: %s"),
         executable_name, error_code, url, details_text);
 
     // Prefer the rich task dialog (requires enabling visual styles).
@@ -408,8 +408,8 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
 
     // Fall back to a plain message box if the task dialog can't be shown.
     pal_char_t* dialog_message = format_alloc(
-        _X("%s\n\n%s") DOC_LINK_INTRO _X("\n") DOTNET_APP_LAUNCH_FAILED_URL _X("\n\n")
-        _X("Would you like to download it now?"),
+        PAL_X("%s\n\n%s") DOC_LINK_INTRO PAL_X("\n") DOTNET_APP_LAUNCH_FAILED_URL PAL_X("\n\n")
+        PAL_X("Would you like to download it now?"),
         instruction,
         details_text);
     if (dialog_message != NULL
@@ -424,7 +424,7 @@ static void show_error_dialog(const pal_char_t* executable_name, int error_code)
 
 void apphost_buffer_errors(void)
 {
-    trace_verbose(_X("Redirecting errors to custom writer."));
+    trace_verbose(PAL_X("Redirecting errors to custom writer."));
     trace_set_error_writer(buffering_trace_writer);
 }
 
@@ -440,7 +440,7 @@ void apphost_write_buffered_errors(int error_code)
         utils_get_filename(executable_path, executable_name, ARRAY_SIZE(executable_name));
     }
 
-    write_errors_to_event_log(executable_path != NULL ? executable_path : _X(""), executable_name);
+    write_errors_to_event_log(executable_path != NULL ? executable_path : PAL_X(""), executable_name);
 
     if (is_gui_application())
         show_error_dialog(executable_name, error_code);

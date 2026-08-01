@@ -29,7 +29,7 @@ runtime_config_t::runtime_config_t()
     , m_roll_forward_to_prerelease(false)
 {
     pal::string_t roll_forward_to_prerelease_env;
-    if (pal::getenv(_X("DOTNET_ROLL_FORWARD_TO_PRERELEASE"), &roll_forward_to_prerelease_env))
+    if (pal::getenv(PAL_X("DOTNET_ROLL_FORWARD_TO_PRERELEASE"), &roll_forward_to_prerelease_env))
     {
         auto roll_forward_to_prerelease_val = pal::xtoi(roll_forward_to_prerelease_env.c_str());
         m_roll_forward_to_prerelease = (roll_forward_to_prerelease_val == 1);
@@ -56,7 +56,7 @@ void runtime_config_t::parse(const pal::string_t& path, const pal::string_t& dev
 
     // Step #1: set the defaults from the environment DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX (apply patches has no env. variable)
     pal::string_t env_roll_forward_on_no_candidate_fx;
-    if (pal::getenv(_X("DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX"), &env_roll_forward_on_no_candidate_fx))
+    if (pal::getenv(PAL_X("DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX"), &env_roll_forward_on_no_candidate_fx))
     {
         auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(pal::xtoi(env_roll_forward_on_no_candidate_fx.c_str()));
         roll_forward = roll_fwd_on_no_candidate_fx_to_roll_forward(val);
@@ -67,7 +67,7 @@ void runtime_config_t::parse(const pal::string_t& path, const pal::string_t& dev
     // Parse the file
     m_valid = ensure_parsed();
 
-    trace::verbose(_X("Runtime config [%s] is valid=[%d]"), path.c_str(), m_valid);
+    trace::verbose(PAL_X("Runtime config [%s] is valid=[%d]"), path.c_str(), m_valid);
 }
 
 bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
@@ -87,7 +87,7 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
 
     const auto& opts_obj = opts.GetObject();
 
-    const auto& properties = opts_obj.FindMember(_X("configProperties"));
+    const auto& properties = opts_obj.FindMember(PAL_X("configProperties"));
     if (properties != opts_obj.MemberEnd())
     {
         const auto& properties_obj = properties->value.GetObject();
@@ -115,7 +115,7 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
     }
 
-    const auto& probe_paths = opts_obj.FindMember(_X("additionalProbingPaths"));
+    const auto& probe_paths = opts_obj.FindMember(PAL_X("additionalProbingPaths"));
     if (probe_paths != opts_obj.MemberEnd())
     {
         if (probe_paths->value.IsString())
@@ -135,19 +135,19 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
         else
         {
-            trace::error(_X("Invalid value for property 'additionalProbingPaths'."));
+            trace::error(PAL_X("Invalid value for property 'additionalProbingPaths'."));
             return false;
         }
     }
 
     // Step #2: set the defaults from the "runtimeOptions"
-    const auto& roll_forward = opts_obj.FindMember(_X("rollForward"));
+    const auto& roll_forward = opts_obj.FindMember(PAL_X("rollForward"));
     if (roll_forward != opts_obj.MemberEnd())
     {
         auto val = roll_forward_option_from_string(roll_forward->value.GetString());
         if (val == roll_forward_option::__Last)
         {
-            trace::error(_X("Invalid value for property 'rollForward'."));
+            trace::error(PAL_X("Invalid value for property 'rollForward'."));
             return false;
         }
         m_default_settings.set_roll_forward(val);
@@ -158,7 +158,7 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
     }
 
-    const auto& apply_patches = opts_obj.FindMember(_X("applyPatches"));
+    const auto& apply_patches = opts_obj.FindMember(PAL_X("applyPatches"));
     if (apply_patches != opts_obj.MemberEnd())
     {
         m_default_settings.set_apply_patches(apply_patches->value.GetBool());
@@ -168,7 +168,7 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
     }
 
-    const auto& roll_fwd_on_no_candidate_fx = opts_obj.FindMember(_X("rollForwardOnNoCandidateFx"));
+    const auto& roll_fwd_on_no_candidate_fx = opts_obj.FindMember(PAL_X("rollForwardOnNoCandidateFx"));
     if (roll_fwd_on_no_candidate_fx != opts_obj.MemberEnd())
     {
         auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(roll_fwd_on_no_candidate_fx->value.GetInt());
@@ -179,14 +179,14 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
     }
 
-    const auto& tfm = opts_obj.FindMember(_X("tfm"));
+    const auto& tfm = opts_obj.FindMember(PAL_X("tfm"));
     if (tfm != opts_obj.MemberEnd())
     {
         m_tfm = tfm->value.GetString();
     }
 
     // Step #3: read the "framework" and "frameworks" section
-    const auto& framework = opts_obj.FindMember(_X("framework"));
+    const auto& framework = opts_obj.FindMember(PAL_X("framework"));
     if (framework != opts_obj.MemberEnd())
     {
         m_is_framework_dependent = true;
@@ -200,7 +200,7 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         m_frameworks.push_back(fx_out);
     }
 
-    const auto& iter = opts_obj.FindMember(_X("frameworks"));
+    const auto& iter = opts_obj.FindMember(PAL_X("frameworks"));
     if (iter != opts_obj.MemberEnd())
     {
         m_is_framework_dependent = true;
@@ -211,12 +211,12 @@ bool runtime_config_t::parse_opts(const json_parser_t::value_t& opts)
         }
     }
 
-    const auto& includedFrameworks = opts_obj.FindMember(_X("includedFrameworks"));
+    const auto& includedFrameworks = opts_obj.FindMember(PAL_X("includedFrameworks"));
     if (includedFrameworks != opts_obj.MemberEnd())
     {
         if (m_is_framework_dependent)
         {
-            trace::error(_X("It's invalid to specify both `framework`/`frameworks` and `includedFrameworks` properties."));
+            trace::error(PAL_X("It's invalid to specify both `framework`/`frameworks` and `includedFrameworks` properties."));
             return false;
         }
 
@@ -252,7 +252,7 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
         apply_settings_to_fx_reference(m_default_settings, fx_out);
     }
 
-    const auto& fx_name = fx_obj.FindMember(_X("name"));
+    const auto& fx_name = fx_obj.FindMember(PAL_X("name"));
     if (fx_name == fx_obj.MemberEnd())
     {
         using string_buffer_t = rapidjson::GenericStringBuffer<json_parser_t::internal_encoding_type_t>;
@@ -261,16 +261,16 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
             json_parser_t::internal_encoding_type_t> writer{sb};
         fx_obj.Accept(writer);
 
-        trace::error(_X("No framework name specified: %s"), sb.GetString());
+        trace::error(PAL_X("No framework name specified: %s"), sb.GetString());
         return false;
     }
 
     fx_out.set_fx_name(fx_name->value.GetString());
 
-    const auto& fx_ver = fx_obj.FindMember(_X("version"));
+    const auto& fx_ver = fx_obj.FindMember(PAL_X("version"));
     if (fx_ver == fx_obj.MemberEnd())
     {
-        trace::error(_X("Framework '%s' is missing a version."), fx_out.get_fx_name().c_str());
+        trace::error(PAL_X("Framework '%s' is missing a version."), fx_out.get_fx_name().c_str());
         return false;
     }
 
@@ -286,13 +286,13 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
         fx_out.set_prefer_release(true);
     }
 
-    const auto& roll_forward = fx_obj.FindMember(_X("rollForward"));
+    const auto& roll_forward = fx_obj.FindMember(PAL_X("rollForward"));
     if (roll_forward != fx_obj.MemberEnd())
     {
         auto val = roll_forward_option_from_string(roll_forward->value.GetString());
         if (val == roll_forward_option::__Last)
         {
-            trace::error(_X("Invalid value for property 'rollForward'."));
+            trace::error(PAL_X("Invalid value for property 'rollForward'."));
             return false;
         }
         fx_out.set_roll_forward(val);
@@ -302,7 +302,7 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
         }
     }
 
-    const auto& apply_patches = fx_obj.FindMember(_X("applyPatches"));
+    const auto& apply_patches = fx_obj.FindMember(PAL_X("applyPatches"));
     if (apply_patches != fx_obj.MemberEnd())
     {
         fx_out.set_apply_patches(apply_patches->value.GetBool());
@@ -312,7 +312,7 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
         }
     }
 
-    const auto& roll_fwd_on_no_candidate_fx = fx_obj.FindMember(_X("rollForwardOnNoCandidateFx"));
+    const auto& roll_fwd_on_no_candidate_fx = fx_obj.FindMember(PAL_X("rollForwardOnNoCandidateFx"));
     if (roll_fwd_on_no_candidate_fx != fx_obj.MemberEnd())
     {
         auto val = static_cast<roll_fwd_on_no_candidate_fx_option>(roll_fwd_on_no_candidate_fx->value.GetInt());
@@ -325,12 +325,12 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
 
     // Step #4: apply environment for DOTNET_ROLL_FORWARD
     pal::string_t env_roll_forward;
-    if (pal::getenv(_X("DOTNET_ROLL_FORWARD"), &env_roll_forward))
+    if (pal::getenv(PAL_X("DOTNET_ROLL_FORWARD"), &env_roll_forward))
     {
         auto val = roll_forward_option_from_string(env_roll_forward);
         if (val == roll_forward_option::__Last)
         {
-            trace::error(_X("Invalid value for environment variable 'DOTNET_ROLL_FORWARD'."));
+            trace::error(PAL_X("Invalid value for environment variable 'DOTNET_ROLL_FORWARD'."));
             return false;
         }
 
@@ -345,7 +345,7 @@ bool runtime_config_t::parse_framework(const json_parser_t::value_t& fx_obj, boo
 
 bool runtime_config_t::ensure_dev_config_parsed()
 {
-    trace::verbose(_X("Attempting to read dev runtime config: %s"), m_dev_path.c_str());
+    trace::verbose(PAL_X("Attempting to read dev runtime config: %s"), m_dev_path.c_str());
 
     pal::string_t retval;
     if (!pal::fullpath(&m_dev_path, true))
@@ -362,7 +362,7 @@ bool runtime_config_t::ensure_dev_config_parsed()
         return false;
     }
 
-    const auto& runtime_opts = json.document().FindMember(_X("runtimeOptions"));
+    const auto& runtime_opts = json.document().FindMember(PAL_X("runtimeOptions"));
     if (runtime_opts != json.document().MemberEnd())
     {
         parse_opts(runtime_opts->value);
@@ -385,7 +385,7 @@ bool runtime_config_t::read_framework_array(const json_parser_t::value_t& framew
                 [&](const fx_reference_t& item) { return fx_out.get_fx_name() == item.get_fx_name(); })
             != frameworks_out.end())
         {
-            trace::verbose(_X("Framework %s already specified."), fx_out.get_fx_name().c_str());
+            trace::verbose(PAL_X("Framework %s already specified."), fx_out.get_fx_name().c_str());
             return false;
         }
 
@@ -399,25 +399,25 @@ bool runtime_config_t::ensure_parsed()
 {
     if (!ensure_dev_config_parsed())
     {
-        trace::verbose(_X("Did not successfully parse the runtimeconfig.dev.json"));
+        trace::verbose(PAL_X("Did not successfully parse the runtimeconfig.dev.json"));
     }
 
-    trace::verbose(_X("Attempting to read runtime config: %s"), m_path.c_str());
+    trace::verbose(PAL_X("Attempting to read runtime config: %s"), m_path.c_str());
     if (!bundle::info_t::config_t::probe(m_path) && !pal::fullpath(&m_path, true))
     {
         // Not existing is not an error.
-        trace::verbose(_X("Runtime config does not exist at [%s]"), m_path.c_str());
+        trace::verbose(PAL_X("Runtime config does not exist at [%s]"), m_path.c_str());
         return true;
     }
 
     json_parser_t json;
     if (!json.parse_fully_trusted_file(m_path))
     {
-        trace::error(_X("Failed to parse file [%s]. %s"), m_path.c_str(), json.get_error_message().c_str());
+        trace::error(PAL_X("Failed to parse file [%s]. %s"), m_path.c_str(), json.get_error_message().c_str());
         return false;
     }
 
-    const auto& runtimeOpts = json.document().FindMember(_X("runtimeOptions"));
+    const auto& runtimeOpts = json.document().FindMember(PAL_X("runtimeOptions"));
     if (runtimeOpts != json.document().MemberEnd())
     {
         return parse_opts(runtimeOpts->value);
@@ -446,14 +446,14 @@ const uint32_t runtime_config_t::get_compat_major_version_from_tfm() const
         return runtime_config_t::unknown_version;
 
     size_t majorVersionStartIndex;
-    const pal::char_t netcoreapp_prefix[] = _X("netcoreapp");
+    const pal::char_t netcoreapp_prefix[] = PAL_X("netcoreapp");
     if (utils::starts_with(m_tfm, netcoreapp_prefix, true))
     {
         majorVersionStartIndex = utils::strlen(netcoreapp_prefix);
     }
     else
     {
-        majorVersionStartIndex = utils::strlen(_X("net"));
+        majorVersionStartIndex = utils::strlen(PAL_X("net"));
     }
 
     if (majorVersionStartIndex >= m_tfm.length())
@@ -510,7 +510,7 @@ bool runtime_config_t::mark_specified_setting(specified_setting setting)
     // If there's any flag set but the one we're trying to set, it's invalid
     if (m_specified_settings & ~setting)
     {
-        trace::error(_X("It's invalid to use both `rollForward` and one of `rollForwardOnNoCandidateFx` or `applyPatches` in the same runtime config."));
+        trace::error(PAL_X("It's invalid to use both `rollForward` and one of `rollForwardOnNoCandidateFx` or `applyPatches` in the same runtime config."));
         return false;
     }
 

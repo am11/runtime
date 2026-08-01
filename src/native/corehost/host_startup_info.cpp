@@ -43,11 +43,11 @@ void host_startup_info_t::parse(
     app_path.assign(dotnet_root);
     pal::string_t app_name = get_filename(strip_executable_ext(host_path));
     append_path(&app_path, app_name.c_str());
-    app_path.append(_X(".dll"));
+    app_path.append(PAL_X(".dll"));
 
-    trace::info(_X("Host path: [%s]"), host_path.c_str());
-    trace::info(_X("Dotnet path: [%s]"), dotnet_root.c_str());
-    trace::info(_X("App path: [%s]"), app_path.c_str());
+    trace::info(PAL_X("Host path: [%s]"), host_path.c_str());
+    trace::info(PAL_X("Dotnet path: [%s]"), dotnet_root.c_str());
+    trace::info(PAL_X("App path: [%s]"), app_path.c_str());
 }
 
 bool host_startup_info_t::is_valid(host_mode_t mode) const
@@ -76,10 +76,10 @@ const pal::string_t host_startup_info_t::get_app_name() const
         host_path->assign(argv[0]);
         if (!host_path->empty())
         {
-            trace::info(_X("Attempting to use argv[0] as path [%s]"), host_path->c_str());
+            trace::info(PAL_X("Attempting to use argv[0] as path [%s]"), host_path->c_str());
             if (!get_path_from_argv(host_path))
             {
-                trace::warning(_X("Failed to resolve argv[0] as path [%s]. Using location of current executable instead."), host_path->c_str());
+                trace::warning(PAL_X("Failed to resolve argv[0] as path [%s]. Using location of current executable instead."), host_path->c_str());
                 host_path->clear();
             }
         }
@@ -88,7 +88,7 @@ const pal::string_t host_startup_info_t::get_app_name() const
     // If argv[0] did not work, get the executable name
     if (host_path->empty() && (!pal::get_own_executable_path(host_path) || !pal::fullpath(host_path)))
     {
-        trace::error(_X("Failed to resolve full path of the current executable [%s]"), host_path->c_str());
+        trace::error(PAL_X("Failed to resolve full path of the current executable [%s]"), host_path->c_str());
         return StatusCode::CurrentHostFindFailure;
     }
 

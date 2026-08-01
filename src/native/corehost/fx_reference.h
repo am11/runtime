@@ -18,8 +18,8 @@ public:
         , version_compatibility_range(version_compatibility_range_t::minor)
         , roll_to_highest_version(false)
         , prefer_release(false)
-        , fx_name(_X(""))
-        , fx_version(_X(""))
+        , fx_name(PAL_X(""))
+        , fx_version(PAL_X(""))
         , fx_version_number()
         { }
 

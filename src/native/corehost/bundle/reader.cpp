@@ -15,8 +15,8 @@ const char* reader_t::add_without_overflow(const char* ptr, int64_t len)
     // even if the actual arthmetic didn't overflow.
     if (new_ptr < ptr)
     {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Arithmetic overflow computing bundle-bounds."));
+        trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+        trace::error(PAL_X("Arithmetic overflow computing bundle-bounds."));
         throw StatusCode::BundleExtractionFailure;
     }
 
@@ -27,8 +27,8 @@ void reader_t::set_offset(int64_t offset)
 {
     if (offset < 0 || offset >= m_bound)
     {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Arithmetic overflow while reading bundle."));
+        trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+        trace::error(PAL_X("Arithmetic overflow while reading bundle."));
         throw StatusCode::BundleExtractionFailure;
     }
 
@@ -42,8 +42,8 @@ void reader_t::bounds_check(int64_t len)
     // It is legal for post_read_ptr == m_bound_ptr after reading the last byte.
     if (m_ptr < m_base_ptr || post_read_ptr > m_bound_ptr)
     {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Bounds check failed while reading the bundle."));
+        trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+        trace::error(PAL_X("Bounds check failed while reading the bundle."));
         throw StatusCode::BundleExtractionFailure;
     }
 }
@@ -68,8 +68,8 @@ size_t reader_t::read_path_length()
         if (second_byte & 0x80)
         {
             // There can be no more than two bytes in path_length
-            trace::error(_X("Failure processing application bundle; possible file corruption."));
-            trace::error(_X("Path length encoding read beyond two bytes."));
+            trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+            trace::error(PAL_X("Path length encoding read beyond two bytes."));
 
             throw StatusCode::BundleExtractionFailure;
         }
@@ -79,8 +79,8 @@ size_t reader_t::read_path_length()
 
     if (length <= 0 || length > PATH_MAX)
     {
-        trace::error(_X("Failure processing application bundle; possible file corruption."));
-        trace::error(_X("Path length is zero or too long."));
+        trace::error(PAL_X("Failure processing application bundle; possible file corruption."));
+        trace::error(PAL_X("Path length is zero or too long."));
         throw StatusCode::BundleExtractionFailure;
     }
 

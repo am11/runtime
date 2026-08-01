@@ -22,20 +22,20 @@ namespace
 
     const host_option KnownHostOptions[] =
     {
-        { _X("--additionalprobingpath"), _X("<path>"), _X("Path containing probing policy and assemblies to probe for.") },
-        { _X("--depsfile"), _X("<path>"), _X("Path to <application>.deps.json file.") },
-        { _X("--runtimeconfig"), _X("<path>"), _X("Path to <application>.runtimeconfig.json file.") },
-        { _X("--fx-version"), _X("<version>"), _X("Version of the installed Shared Framework to use to run the application.") },
-        { _X("--roll-forward"), _X("<value>"), _X("Roll forward to framework version (LatestPatch, Minor, LatestMinor, Major, LatestMajor, Disable)") },
-        { _X("--additional-deps"), _X("<path>"), _X("Path to additional deps.json file.") },
-        { _X("--roll-forward-on-no-candidate-fx"), _X("<n>"), _X("<obsolete>") }
+        { PAL_X("--additionalprobingpath"), PAL_X("<path>"), PAL_X("Path containing probing policy and assemblies to probe for.") },
+        { PAL_X("--depsfile"), PAL_X("<path>"), PAL_X("Path to <application>.deps.json file.") },
+        { PAL_X("--runtimeconfig"), PAL_X("<path>"), PAL_X("Path to <application>.runtimeconfig.json file.") },
+        { PAL_X("--fx-version"), PAL_X("<version>"), PAL_X("Version of the installed Shared Framework to use to run the application.") },
+        { PAL_X("--roll-forward"), PAL_X("<value>"), PAL_X("Roll forward to framework version (LatestPatch, Minor, LatestMinor, Major, LatestMajor, Disable)") },
+        { PAL_X("--additional-deps"), PAL_X("<path>"), PAL_X("Path to additional deps.json file.") },
+        { PAL_X("--roll-forward-on-no-candidate-fx"), PAL_X("<n>"), PAL_X("<obsolete>") }
     };
     static_assert((sizeof(KnownHostOptions) / sizeof(*KnownHostOptions)) == static_cast<size_t>(known_options::__last), "Invalid host option count");
 
     bool is_sdk_dir_present(const pal::string_t& dotnet_root)
     {
         pal::string_t sdk_path = dotnet_root;
-        append_path(&sdk_path, _X("sdk"));
+        append_path(&sdk_path, PAL_X("sdk"));
         return pal::directory_exists(sdk_path);
     }
 
@@ -102,7 +102,7 @@ namespace
                 return false;
             }
 
-            trace::verbose(_X("Parsed known arg %s = %s"), arg, argv[arg_i + 1]);
+            trace::verbose(PAL_X("Parsed known arg %s = %s"), arg, argv[arg_i + 1]);
             (*opts)[*iter].push_back(argv[arg_i + 1]);
 
             // Increment for both the option and its value.
@@ -131,11 +131,11 @@ namespace
         int num_parsed = 0;
         if (!parse_known_args(argc - argoff, &argv[argoff], known_opts, &opts, &num_parsed))
         {
-            trace::error(_X("Failed to parse supported options or their values:"));
+            trace::error(PAL_X("Failed to parse supported options or their values:"));
             for (const auto& opt : known_opts)
             {
                 const host_option &arg = get_host_option(opt);
-                trace::error(_X("  %s %-*s  %s"), arg.option, 36 - (int)pal::strlen(arg.option), arg.argument, arg.description);
+                trace::error(PAL_X("  %s %-*s  %s"), arg.option, 36 - (int)pal::strlen(arg.option), arg.argument, arg.description);
             }
             return StatusCode::InvalidArgFailure;
         }
@@ -149,7 +149,7 @@ namespace
         }
         else
         {
-            trace::verbose(_X("Using the provided arguments to determine the application to execute."));
+            trace::verbose(PAL_X("Using the provided arguments to determine the application to execute."));
             if (*new_argoff >= argc)
             {
                 command_line::print_muxer_usage(!is_sdk_dir_present(host_info.dotnet_root));
@@ -158,10 +158,10 @@ namespace
 
             app_candidate = argv[*new_argoff];
 
-            bool is_app_managed = utils::ends_with(app_candidate, _X(".dll"), false) || utils::ends_with(app_candidate, _X(".exe"), false);
+            bool is_app_managed = utils::ends_with(app_candidate, PAL_X(".dll"), false) || utils::ends_with(app_candidate, PAL_X(".exe"), false);
             if (!is_app_managed)
             {
-                trace::verbose(_X("Application '%s' is not a managed executable."), app_candidate.c_str());
+                trace::verbose(PAL_X("Application '%s' is not a managed executable."), app_candidate.c_str());
                 if (!exec_mode)
                 {
                     // Route to CLI.
@@ -172,7 +172,7 @@ namespace
             doesAppExist = pal::fullpath(&app_candidate);
             if (!doesAppExist)
             {
-                trace::verbose(_X("Application '%s' does not exist."), app_candidate.c_str());
+                trace::verbose(PAL_X("Application '%s' does not exist."), app_candidate.c_str());
                 if (!exec_mode)
                 {
                     // Route to CLI.
@@ -183,7 +183,7 @@ namespace
             if (!is_app_managed && doesAppExist)
             {
                 assert(exec_mode == true);
-                trace::error(_X("dotnet exec needs a managed .dll or .exe extension. The application specified was '%s'"), app_candidate.c_str());
+                trace::error(PAL_X("dotnet exec needs a managed .dll or .exe extension. The application specified was '%s'"), app_candidate.c_str());
                 return StatusCode::InvalidArgFailure;
             }
         }
@@ -191,7 +191,7 @@ namespace
         // App is managed executable.
         if (!doesAppExist)
         {
-            trace::error(_X("The application to execute does not exist: '%s'"), app_candidate.c_str());
+            trace::error(PAL_X("The application to execute does not exist: '%s'"), app_candidate.c_str());
             return StatusCode::InvalidArgFailure;
         }
 
@@ -232,14 +232,14 @@ int command_line::parse_args_for_mode(
     if (mode == host_mode_t::apphost)
     {
         // Invoked from the application base.
-        trace::verbose(_X("--- Executing in a native executable mode..."));
+        trace::verbose(PAL_X("--- Executing in a native executable mode..."));
         result = parse_args(host_info, argoff, argc, argv, false, mode, new_argoff, app_candidate, opts);
     }
     else
     {
         // Invoked as the dotnet.exe muxer.
         assert(mode == host_mode_t::muxer);
-        trace::verbose(_X("--- Executing in muxer mode..."));
+        trace::verbose(PAL_X("--- Executing in muxer mode..."));
 
         if (argc <= argoff)
         {
@@ -247,7 +247,7 @@ int command_line::parse_args_for_mode(
             return StatusCode::InvalidArgFailure;
         }
 
-        if (pal::strcasecmp(_X("exec"), argv[argoff]) == 0)
+        if (pal::strcasecmp(PAL_X("exec"), argv[argoff]) == 0)
         {
             // arg offset +1 for exec
             argoff++;
@@ -277,65 +277,65 @@ int command_line::parse_args_for_sdk_command(
 void command_line::print_muxer_info(const pal::string_t &dotnet_root, const sdk_resolver::global_file_info &global_json, bool skip_sdk_info_output)
 {
     pal::string_t commit = _STRINGIFY(REPO_COMMIT_HASH);
-    trace::println(_X("\n")
-        _X("Host:\n")
-        _X("  Version:      ") _STRINGIFY(HOST_VERSION) _X("\n")
-        _X("  Architecture: ") _STRINGIFY(CURRENT_ARCH_NAME) _X("\n")
-        _X("  Commit:       %s"),
+    trace::println(PAL_X("\n")
+        PAL_X("Host:\n")
+        PAL_X("  Version:      ") _STRINGIFY(HOST_VERSION) PAL_X("\n")
+        PAL_X("  Architecture: ") _STRINGIFY(CURRENT_ARCH_NAME) PAL_X("\n")
+        PAL_X("  Commit:       %s"),
         commit.substr(0, 10).c_str());
 
     if (!skip_sdk_info_output)
-        trace::println(_X("  RID:          %s"), get_runtime_id().c_str());
+        trace::println(PAL_X("  RID:          %s"), get_runtime_id().c_str());
 
-    trace::println(_X("\n")
-        _X(".NET SDKs installed:"));
-    if (!sdk_info::print_all_sdks(dotnet_root, _X("  ")))
+    trace::println(PAL_X("\n")
+        PAL_X(".NET SDKs installed:"));
+    if (!sdk_info::print_all_sdks(dotnet_root, PAL_X("  ")))
     {
-        trace::println(_X("  No SDKs were found."));
+        trace::println(PAL_X("  No SDKs were found."));
     }
 
-    trace::println(_X("\n")
-        _X(".NET runtimes installed:"));
-    if (!framework_info::print_all_frameworks(dotnet_root, _X("  ")))
+    trace::println(PAL_X("\n")
+        PAL_X(".NET runtimes installed:"));
+    if (!framework_info::print_all_frameworks(dotnet_root, PAL_X("  ")))
     {
-        trace::println(_X("  No runtimes were found."));
+        trace::println(PAL_X("  No runtimes were found."));
     }
 
-    trace::println(_X("\n")
-        _X("Other architectures found:"));
-    if (!install_info::print_other_architectures(_X("  ")))
+    trace::println(PAL_X("\n")
+        PAL_X("Other architectures found:"));
+    if (!install_info::print_other_architectures(PAL_X("  ")))
     {
-        trace::println(_X("  None"));
+        trace::println(PAL_X("  None"));
     }
 
-    trace::println(_X("\n")
-        _X("Environment variables:"));
-    if (!install_info::print_environment(_X("  ")))
+    trace::println(PAL_X("\n")
+        PAL_X("Environment variables:"));
+    if (!install_info::print_environment(PAL_X("  ")))
     {
-        trace::println(_X("  Not set"));
+        trace::println(PAL_X("  Not set"));
     }
 
-    trace::println(_X("\n")
-        _X("global.json file:"));
+    trace::println(PAL_X("\n")
+        PAL_X("global.json file:"));
     switch (global_json.state)
     {
         case sdk_resolver::global_file_info::state::not_found:
-            trace::println(_X("  Not found"));
+            trace::println(PAL_X("  Not found"));
             break;
         case sdk_resolver::global_file_info::state::valid:
-            trace::println(_X("  %s"), global_json.path.c_str());
+            trace::println(PAL_X("  %s"), global_json.path.c_str());
             break;
         case sdk_resolver::global_file_info::state::invalid_json:
         case sdk_resolver::global_file_info::state::invalid_data:
         case sdk_resolver::global_file_info::state::__invalid_data_no_fallback:
-            trace::println(_X("  Invalid [%s]"), global_json.path.c_str());
+            trace::println(PAL_X("  Invalid [%s]"), global_json.path.c_str());
             if (!global_json.error_message.empty())
             {
-                trace::println(_X("    %s"), global_json.error_message.c_str());
+                trace::println(PAL_X("    %s"), global_json.error_message.c_str());
             }
             if (global_json.state != sdk_resolver::global_file_info::state::__invalid_data_no_fallback)
             {
-                trace::println(_X("    Invalid global.json is ignored for SDK resolution."));
+                trace::println(PAL_X("    Invalid global.json is ignored for SDK resolution."));
             }
             break;
         case sdk_resolver::global_file_info::state::__last:
@@ -343,13 +343,13 @@ void command_line::print_muxer_info(const pal::string_t &dotnet_root, const sdk_
             break;
     }
 
-    trace::println(_X("\n")
-        _X("Learn more:\n")
-        _X("  ") DOTNET_INFO_URL);
+    trace::println(PAL_X("\n")
+        PAL_X("Learn more:\n")
+        PAL_X("  ") DOTNET_INFO_URL);
 
-    trace::println(_X("\n")
-        _X("Download .NET:\n")
-        _X("  ") DOTNET_CORE_DOWNLOAD_URL);
+    trace::println(PAL_X("\n")
+        PAL_X("Download .NET:\n")
+        PAL_X("  ") DOTNET_CORE_DOWNLOAD_URL);
 }
 
 void command_line::print_muxer_usage(bool is_sdk_present)
@@ -359,29 +359,29 @@ void command_line::print_muxer_usage(bool is_sdk_present)
     if (!is_sdk_present)
     {
         trace::println();
-        trace::println(_X("Usage: dotnet [host-options] [path-to-application]"));
-        trace::println(_X("Usage: dotnet [host-commands]"));
+        trace::println(PAL_X("Usage: dotnet [host-options] [path-to-application]"));
+        trace::println(PAL_X("Usage: dotnet [host-commands]"));
         trace::println();
-        trace::println(_X("path-to-application:"));
-        trace::println(_X("  The path to an application .dll file to execute."));
+        trace::println(PAL_X("path-to-application:"));
+        trace::println(PAL_X("  The path to an application .dll file to execute."));
     }
     trace::println();
-    trace::println(_X("host-options:"));
+    trace::println(PAL_X("host-options:"));
 
     for (const auto& opt : known_opts)
     {
         const host_option &arg = get_host_option(opt);
-        trace::println(_X("  %s %-*s  %s"), arg.option, 30 - (int)pal::strlen(arg.option), arg.argument, arg.description);
+        trace::println(PAL_X("  %s %-*s  %s"), arg.option, 30 - (int)pal::strlen(arg.option), arg.argument, arg.description);
     }
 
     trace::println();
-    trace::println(_X("host-commands:"));
+    trace::println(PAL_X("host-commands:"));
     if (!is_sdk_present)
     {
-        trace::println(_X("  -h|--help                        Displays this help."));
-        trace::println(_X("  --info                           Display .NET information."));
+        trace::println(PAL_X("  -h|--help                        Displays this help."));
+        trace::println(PAL_X("  --info                           Display .NET information."));
     }
 
-    trace::println(_X("  --list-runtimes [--arch <arch>]  Display the installed runtimes matching the host or specified architecture. Example architectures: arm64, x64, x86."));
-    trace::println(_X("  --list-sdks [--arch <arch>]      Display the installed SDKs matching the host or specified architecture. Example architectures: arm64, x64, x86."));
+    trace::println(PAL_X("  --list-runtimes [--arch <arch>]  Display the installed runtimes matching the host or specified architecture. Example architectures: arm64, x64, x86."));
+    trace::println(PAL_X("  --list-sdks [--arch <arch>]      Display the installed SDKs matching the host or specified architecture. Example architectures: arm64, x64, x86."));
 }

@@ -34,13 +34,13 @@ pal::string_t& extractor_t::extraction_dir()
         // If DOTNET_BUNDLE_EXTRACT_BASE_DIR is not set in the environment,
         // a default is chosen within the temporary directory.
 
-        if (!pal::getenv(_X("DOTNET_BUNDLE_EXTRACT_BASE_DIR"), &m_extraction_dir))
+        if (!pal::getenv(PAL_X("DOTNET_BUNDLE_EXTRACT_BASE_DIR"), &m_extraction_dir))
         {
             if (!pal::get_default_bundle_extraction_base_dir(m_extraction_dir))
             {
-                trace::error(_X("Failure processing application bundle."));
-                trace::error(_X("Failed to determine location for extracting embedded files."));
-                trace::error(_X("DOTNET_BUNDLE_EXTRACT_BASE_DIR is not set, and a read-write cache directory couldn't be created."));
+                trace::error(PAL_X("Failure processing application bundle."));
+                trace::error(PAL_X("Failed to determine location for extracting embedded files."));
+                trace::error(PAL_X("DOTNET_BUNDLE_EXTRACT_BASE_DIR is not set, and a read-write cache directory couldn't be created."));
                 throw StatusCode::BundleExtractionFailure;
             }
         }
@@ -51,8 +51,8 @@ pal::string_t& extractor_t::extraction_dir()
             pal::string_t relative_path(m_extraction_dir);
             if (!pal::getcwd(&m_extraction_dir))
             {
-                trace::error(_X("Failure processing application bundle."));
-                trace::error(_X("Failed to obtain current working dir."));
+                trace::error(PAL_X("Failure processing application bundle."));
+                trace::error(PAL_X("Failed to obtain current working dir."));
                 assert(m_extraction_dir.empty());
                 throw StatusCode::BundleExtractionFailure;
             }
@@ -63,7 +63,7 @@ pal::string_t& extractor_t::extraction_dir()
         append_path(&m_extraction_dir, host_name.c_str());
         append_path(&m_extraction_dir, m_bundle_id.c_str());
 
-        trace::info(_X("Files embedded within the bundle will be extracted to [%s] directory."), m_extraction_dir.c_str());
+        trace::info(PAL_X("Files embedded within the bundle will be extracted to [%s] directory."), m_extraction_dir.c_str());
     }
 
     return m_extraction_dir;
@@ -79,10 +79,10 @@ pal::string_t& extractor_t::working_extraction_dir()
 
         m_working_extraction_dir = get_directory(extraction_dir());
         pal::char_t pid[32];
-        pal::snwprintf(pid, 32, _X("%x"), pal::get_pid());
+        pal::snwprintf(pid, 32, PAL_X("%x"), pal::get_pid());
         append_path(&m_working_extraction_dir, pid);
 
-        trace::info(_X("Temporary directory used to extract bundled files is [%s]."), m_working_extraction_dir.c_str());
+        trace::info(PAL_X("Temporary directory used to extract bundled files is [%s]."), m_working_extraction_dir.c_str());
     }
 
     return m_working_extraction_dir;
@@ -101,12 +101,12 @@ FILE* extractor_t::create_extraction_file(const pal::string_t& relative_path)
         dir_utils_t::create_directory_tree(get_directory(file_path));
     }
 
-    FILE* file = pal::file_open(file_path.c_str(), _X("wb"));
+    FILE* file = pal::file_open(file_path.c_str(), PAL_X("wb"));
 
     if (file == nullptr)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Failed to open file [%s] for writing."), file_path.c_str());
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Failed to open file [%s] for writing."), file_path.c_str());
         throw StatusCode::BundleExtractionIOError;
     }
 
@@ -122,7 +122,7 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
     size_t cast_size = to_size_t_dbgchecked(size);
     size_t extracted_size = 0;
 
-    trace::verbose(_X("  %s (size: %" PRId64 ")"), entry.relative_path().c_str(), size);
+    trace::verbose(PAL_X("  %s (size: %" PRId64 ")"), entry.relative_path().c_str(), size);
     if (entry.compressedSize() != 0)
     {
 #if defined(NATIVE_LIBS_EMBEDDED)
@@ -136,7 +136,7 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
         int ret = CompressionNative_InflateInit2_(&zStream, Deflate_DefaultWindowBits);
         if (ret != PAL_Z_OK)
         {
-            trace::error(_X("Failure initializing zLib stream."));
+            trace::error(PAL_X("Failure initializing zLib stream."));
             throw StatusCode::BundleExtractionIOError;
         }
 
@@ -152,7 +152,7 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
             if (ret < 0)
             {
                 CompressionNative_InflateEnd(&zStream);
-                trace::error(_X("Failure inflating zLib stream. %s"), zStream.msg);
+                trace::error(PAL_X("Failure inflating zLib stream. %s"), zStream.msg);
                 throw StatusCode::BundleExtractionIOError;
             }
 
@@ -161,7 +161,7 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
             {
                 int error_code = errno;
                 CompressionNative_InflateEnd(&zStream);
-                trace::error(_X("I/O failure when writing decompressed file. %s (%d)"), pal::strerror(error_code).c_str(), error_code);
+                trace::error(PAL_X("I/O failure when writing decompressed file. %s (%d)"), pal::strerror(error_code).c_str(), error_code);
                 throw StatusCode::BundleExtractionIOError;
             }
 
@@ -170,7 +170,7 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
 
         CompressionNative_InflateEnd(&zStream);
 #else
-        trace::error(_X("Failure extracting contents of the application bundle. Compressed files used with a standalone (not singlefile) apphost."));
+        trace::error(PAL_X("Failure extracting contents of the application bundle. Compressed files used with a standalone (not singlefile) apphost."));
         throw StatusCode::BundleExtractionIOError;
 #endif
     }
@@ -180,13 +180,13 @@ void extractor_t::extract(const file_entry_t &entry, reader_t &reader)
         if (extracted_size != cast_size)
         {
             int error_code = errno;
-            trace::error(_X("I/O failure when writing extracted files. %s (%d)"), pal::strerror(error_code).c_str(), error_code);
+            trace::error(PAL_X("I/O failure when writing extracted files. %s (%d)"), pal::strerror(error_code).c_str(), error_code);
         }
     }
 
     if (extracted_size != cast_size)
     {
-        trace::error(_X("Failure extracting contents of the application bundle. Expected size:%" PRId64 " Actual size:%zu"), size, extracted_size);
+        trace::error(PAL_X("Failure extracting contents of the application bundle. Expected size:%" PRId64 " Actual size:%zu"), size, extracted_size);
         throw StatusCode::BundleExtractionIOError;
     }
 
@@ -234,18 +234,18 @@ void extractor_t::commit_dir()
     if (extracted_by_concurrent_process)
     {
         // Another process successfully extracted the dependencies
-        trace::info(_X("Extraction completed by another process, aborting current extraction."));
+        trace::info(PAL_X("Extraction completed by another process, aborting current extraction."));
         clean();
     }
 
     if (!extracted_by_current_process && !extracted_by_concurrent_process)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Failed to commit extracted files to directory [%s]."), extraction_dir().c_str());
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Failed to commit extracted files to directory [%s]."), extraction_dir().c_str());
         throw StatusCode::BundleExtractionFailure;
     }
 
-    trace::info(_X("Completed new extraction."));
+    trace::info(PAL_X("Completed new extraction."));
 }
 
 void extractor_t::commit_file(const pal::string_t& relative_path)
@@ -270,17 +270,17 @@ void extractor_t::commit_file(const pal::string_t& relative_path)
     if (extracted_by_concurrent_process)
     {
         // Another process successfully extracted the dependencies
-        trace::info(_X("Extraction completed by another process, aborting current extraction."));
+        trace::info(PAL_X("Extraction completed by another process, aborting current extraction."));
     }
 
     if (!extracted_by_current_process && !extracted_by_concurrent_process)
     {
-        trace::error(_X("Failure processing application bundle."));
-        trace::error(_X("Failed to commit extracted files to directory [%s]."), extraction_dir().c_str());
+        trace::error(PAL_X("Failure processing application bundle."));
+        trace::error(PAL_X("Failed to commit extracted files to directory [%s]."), extraction_dir().c_str());
         throw StatusCode::BundleExtractionFailure;
     }
 
-    trace::info(_X("Extraction recovered [%s]"), relative_path.c_str());
+    trace::info(PAL_X("Extraction recovered [%s]"), relative_path.c_str());
 }
 
 void extractor_t::extract_new(reader_t& reader)
@@ -336,12 +336,12 @@ pal::string_t& extractor_t::extract(reader_t& reader)
 {
     if (pal::directory_exists(extraction_dir()))
     {
-        trace::info(_X("Reusing existing extraction of application bundle."));
+        trace::info(PAL_X("Reusing existing extraction of application bundle."));
         verify_recover_extraction(reader);
     }
     else
     {
-        trace::info(_X("Starting new extraction of application bundle."));
+        trace::info(PAL_X("Starting new extraction of application bundle."));
         extract_new(reader);
     }
 

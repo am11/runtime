@@ -76,11 +76,11 @@ namespace
         int* exit_code)
     {
         pal::string_t sdk_aot_path(sdk_dir);
-        append_path(&sdk_aot_path, LIB_FILE_NAME_X("dotnet-aot"));
+        append_path(&sdk_aot_path, LIB_FILE_NAMEPAL_X("dotnet-aot"));
         if (!pal::file_exists(sdk_aot_path))
             return false;
 
-        trace::verbose(_X("Found AOT-ed SDK [%s]"), sdk_aot_path.c_str());
+        trace::verbose(PAL_X("Found AOT-ed SDK [%s]"), sdk_aot_path.c_str());
 
         pal::dll_t aot_dll = nullptr;
         if (!pal::load_library(&sdk_aot_path, &aot_dll))
@@ -98,7 +98,7 @@ namespace
         auto dotnet_execute = reinterpret_cast<dotnet_execute_fn>(pal::get_symbol(aot_dll, "dotnet_execute"));
         if (dotnet_execute == nullptr)
         {
-            trace::info(_X("AOT-ed SDK [%s] does not contain 'dotnet_execute' entry point."), sdk_aot_path.c_str());
+            trace::info(PAL_X("AOT-ed SDK [%s] does not contain 'dotnet_execute' entry point."), sdk_aot_path.c_str());
             pal::unload_library(aot_dll);
             return false;
         }
@@ -106,7 +106,7 @@ namespace
         pal::string_t hostfxr_path;
         if (!pal::get_own_module_path(&hostfxr_path))
         {
-            trace::info(_X("Failed to determine hostfxr path."));
+            trace::info(PAL_X("Failed to determine hostfxr path."));
             pal::unload_library(aot_dll);
             return false;
         }
@@ -115,7 +115,7 @@ namespace
             ? host_info.dotnet_root.c_str()
             : sdk_root.c_str();
 
-        trace::info(_X("Using AOT-ed SDK=[%s]"), sdk_aot_path.c_str());
+        trace::info(PAL_X("Using AOT-ed SDK=[%s]"), sdk_aot_path.c_str());
 
         *exit_code = dotnet_execute(
             host_info.host_path.c_str(),
@@ -137,7 +137,7 @@ int load_hostpolicy(
     int rc = hostpolicy_resolver::load(lib_dir, h_host, hostpolicy_contract);
     if (rc != StatusCode::Success)
     {
-        trace::error(_X("An error occurred while loading required library %s from [%s]"), LIBHOSTPOLICY_NAME, lib_dir.c_str());
+        trace::error(PAL_X("An error occurred while loading required library %s from [%s]"), LIBHOSTPOLICY_NAME, lib_dir.c_str());
         return rc;
     }
 
@@ -156,7 +156,7 @@ static int execute_app(
 
         if (g_active_host_context != nullptr)
         {
-            trace::error(_X("Hosting components are already initialized. Re-initialization to execute an app is not allowed."));
+            trace::error(PAL_X("Hosting components are already initialized. Re-initialization to execute an app is not allowed."));
             return StatusCode::HostInvalidState;
         }
 
@@ -263,8 +263,8 @@ void get_runtime_config_paths_from_arg(const pal::string_t& arg, pal::string_t* 
 {
     auto name = get_filename_without_ext(arg);
 
-    auto json_name = name + _X(".json");
-    auto dev_json_name = name + _X(".dev.json");
+    auto json_name = name + PAL_X(".json");
+    auto dev_json_name = name + PAL_X(".dev.json");
 
     auto json_path = get_directory(arg);
     auto dev_json_path = json_path;
@@ -272,7 +272,7 @@ void get_runtime_config_paths_from_arg(const pal::string_t& arg, pal::string_t* 
     append_path(&json_path, json_name.c_str());
     append_path(&dev_json_path, dev_json_name.c_str());
 
-    trace::verbose(_X("Runtime config is cfg=%s dev=%s"), json_path.c_str(), dev_json_path.c_str());
+    trace::verbose(PAL_X("Runtime config is cfg=%s dev=%s"), json_path.c_str(), dev_json_path.c_str());
 
     dev_cfg->assign(dev_json_path);
     cfg->assign(json_path);
@@ -299,11 +299,11 @@ void append_probe_fullpath(const pal::string_t& path, std::vector<pal::string_t>
     {
         // Check if we can extrapolate |arch|<DIR_SEPARATOR>|tfm| for probing stores
         // Check for both forward and back slashes
-        pal::string_t placeholder = _X("|arch|\\|tfm|");
+        pal::string_t placeholder = PAL_X("|arch|\\|tfm|");
         auto pos_placeholder = probe_path.find(placeholder);
         if (pos_placeholder == pal::string_t::npos)
         {
-            placeholder = _X("|arch|/|tfm|");
+            placeholder = PAL_X("|arch|/|tfm|");
             pos_placeholder = probe_path.find(placeholder);
         }
 
@@ -320,12 +320,12 @@ void append_probe_fullpath(const pal::string_t& path, std::vector<pal::string_t>
             }
             else
             {
-                trace::verbose(_X("Ignoring host interpreted additional probing path %s as it does not exist."), probe_path.c_str());
+                trace::verbose(PAL_X("Ignoring host interpreted additional probing path %s as it does not exist."), probe_path.c_str());
             }
         }
         else
         {
-            trace::verbose(_X("Ignoring additional probing path %s as it does not exist."), probe_path.c_str());
+            trace::verbose(PAL_X("Ignoring additional probing path %s as it does not exist."), probe_path.c_str());
         }
     }
 }
@@ -341,7 +341,7 @@ namespace
         // Check for the runtimeconfig.json file specified at the command line
         if (!runtime_config.empty() && !pal::fullpath(&runtime_config))
         {
-            trace::error(_X("The specified runtimeconfig.json [%s] does not exist"), runtime_config.c_str());
+            trace::error(PAL_X("The specified runtimeconfig.json [%s] does not exist"), runtime_config.c_str());
             return StatusCode::InvalidConfigFile;
         }
 
@@ -349,19 +349,19 @@ namespace
 
         if (runtime_config.empty())
         {
-            trace::verbose(_X("App runtimeconfig.json from [%s]"), app_candidate.c_str());
+            trace::verbose(PAL_X("App runtimeconfig.json from [%s]"), app_candidate.c_str());
             get_runtime_config_paths_from_app(app_candidate, &config_file, &dev_config_file);
         }
         else
         {
-            trace::verbose(_X("Specified runtimeconfig.json from [%s]"), runtime_config.c_str());
+            trace::verbose(PAL_X("Specified runtimeconfig.json from [%s]"), runtime_config.c_str());
             get_runtime_config_paths_from_arg(runtime_config, &config_file, &dev_config_file);
         }
 
         app.parse_runtime_config(config_file, dev_config_file, override_settings);
         if (!app.get_runtime_config().is_valid())
         {
-            trace::error(_X("Invalid runtimeconfig.json [%s] [%s]"), app.get_runtime_config().get_path().c_str(), app.get_runtime_config().get_dev_path().c_str());
+            trace::error(PAL_X("Invalid runtimeconfig.json [%s] [%s]"), app.get_runtime_config().get_path().c_str(), app.get_runtime_config().get_dev_path().c_str());
             return StatusCode::InvalidConfigFile;
         }
 
@@ -419,13 +419,13 @@ namespace
         /*out*/ pal::string_t &hostpolicy_dir,
         /*out*/ std::unique_ptr<corehost_init_t> &init)
     {
-        pal::string_t runtime_config = command_line::get_option_value(opts, known_options::runtime_config, _X(""));
+        pal::string_t runtime_config = command_line::get_option_value(opts, known_options::runtime_config, PAL_X(""));
 
         // This check is for --depsfile option, which must be an actual file.
-        pal::string_t deps_file = command_line::get_option_value(opts, known_options::deps_file, _X(""));
+        pal::string_t deps_file = command_line::get_option_value(opts, known_options::deps_file, PAL_X(""));
         if (!deps_file.empty() && !pal::fullpath(&deps_file))
         {
-            trace::error(_X("The specified deps.json [%s] does not exist"), deps_file.c_str());
+            trace::error(PAL_X("The specified deps.json [%s] does not exist"), deps_file.c_str());
             return StatusCode::InvalidArgFailure;
         }
 
@@ -444,25 +444,25 @@ namespace
         // The conflicts will be resolved by following the priority rank described above (from 1 to 5, lower number wins over higher number).
         // The env var condition is verified in the config file processing
 
-        pal::string_t roll_forward = command_line::get_option_value(opts, known_options::roll_forward, _X(""));
+        pal::string_t roll_forward = command_line::get_option_value(opts, known_options::roll_forward, PAL_X(""));
         if (roll_forward.length() > 0)
         {
             auto val = roll_forward_option_from_string(roll_forward);
             if (val == roll_forward_option::__Last)
             {
-                trace::error(_X("Invalid value for command line argument '%s'"), command_line::get_option_name(known_options::roll_forward));
+                trace::error(PAL_X("Invalid value for command line argument '%s'"), command_line::get_option_name(known_options::roll_forward));
                 return StatusCode::InvalidArgFailure;
             }
 
             override_settings.set_roll_forward(val);
         }
 
-        pal::string_t roll_fwd_on_no_candidate_fx = command_line::get_option_value(opts, known_options::roll_forward_on_no_candidate_fx, _X(""));
+        pal::string_t roll_fwd_on_no_candidate_fx = command_line::get_option_value(opts, known_options::roll_forward_on_no_candidate_fx, PAL_X(""));
         if (roll_fwd_on_no_candidate_fx.length() > 0)
         {
             if (override_settings.has_roll_forward)
             {
-                trace::error(_X("It's invalid to use both '%s' and '%s' command line options."),
+                trace::error(PAL_X("It's invalid to use both '%s' and '%s' command line options."),
                     command_line::get_option_name(known_options::roll_forward),
                     command_line::get_option_name(known_options::roll_forward_on_no_candidate_fx));
                 return StatusCode::InvalidArgFailure;
@@ -487,7 +487,7 @@ namespace
         if (is_framework_dependent)
         {
             // Apply the --fx-version option to the first framework
-            pal::string_t fx_version_specified = command_line::get_option_value(opts, known_options::fx_version, _X(""));
+            pal::string_t fx_version_specified = command_line::get_option_value(opts, known_options::fx_version, PAL_X(""));
             if (fx_version_specified.length() > 0)
             {
                 // This will also set roll forward defaults on the ref
@@ -495,12 +495,12 @@ namespace
             }
 
             // Determine additional deps
-            pal::string_t additional_deps = command_line::get_option_value(opts, known_options::additional_deps, _X(""));
+            pal::string_t additional_deps = command_line::get_option_value(opts, known_options::additional_deps, PAL_X(""));
             additional_deps_serialized = additional_deps;
             if (additional_deps_serialized.empty())
             {
                 // additional_deps_serialized stays empty if DOTNET_ADDITIONAL_DEPS env var is not defined
-                pal::getenv(_X("DOTNET_ADDITIONAL_DEPS"), &additional_deps_serialized);
+                pal::getenv(PAL_X("DOTNET_ADDITIONAL_DEPS"), &additional_deps_serialized);
             }
 
             rc = fx_resolver_t::resolve_frameworks_for_app(host_info.dotnet_root, override_settings, app_config, fx_definitions, mode == host_mode_t::muxer ? app_candidate.c_str() : host_info.host_path.c_str());
@@ -517,15 +517,15 @@ namespace
             pal::get_own_module_path(&fxr_path);
 
             // We pass the loaded hostfxr path to the SDK can load it without relying on dlopen/LoadLibrary to find it.
-            additional_properties.push_back(std::make_pair(_X("HOSTFXR_PATH"), fxr_path));
+            additional_properties.push_back(std::make_pair(PAL_X("HOSTFXR_PATH"), fxr_path));
         }
 
         const known_options opts_probe_path = known_options::additional_probing_path;
         std::vector<pal::string_t> spec_probe_paths = opts.count(opts_probe_path) ? opts.find(opts_probe_path)->second : std::vector<pal::string_t>();
         std::vector<pal::string_t> probe_fullpaths = get_probe_fullpaths(fx_definitions, spec_probe_paths);
 
-        trace::verbose(_X("Executing as a %s app as per config file [%s]"),
-            (is_framework_dependent ? _X("framework-dependent") : _X("self-contained")), app_config.get_path().c_str());
+        trace::verbose(PAL_X("Executing as a %s app as per config file [%s]"),
+            (is_framework_dependent ? PAL_X("framework-dependent") : PAL_X("self-contained")), app_config.get_path().c_str());
 
         if (!hostpolicy_resolver::try_get_dir(mode, host_info.dotnet_root, fx_definitions, app_candidate, deps_file, &hostpolicy_dir))
         {
@@ -652,7 +652,7 @@ namespace
         const runtime_config_t app_config = app->get_runtime_config();
         if (!app_config.get_is_framework_dependent())
         {
-            trace::error(_X("Initialization for self-contained components is not supported"));
+            trace::error(PAL_X("Initialization for self-contained components is not supported"));
             return StatusCode::InvalidConfigFile;
         }
 
@@ -662,7 +662,7 @@ namespace
 
         const std::vector<pal::string_t> probe_fullpaths = get_probe_fullpaths(fx_definitions, std::vector<pal::string_t>() /* specified_probing_paths */);
 
-        trace::verbose(_X("Libhost loading occurring for a framework-dependent component per config file [%s]"), app_config.get_path().c_str());
+        trace::verbose(PAL_X("Libhost loading occurring for a framework-dependent component per config file [%s]"), app_config.get_path().c_str());
 
         const pal::string_t deps_file;
         if (!hostpolicy_resolver::try_get_dir(mode, host_info.dotnet_root, fx_definitions, host_info.app_path, deps_file, &hostpolicy_dir))
@@ -694,7 +694,7 @@ namespace
         const runtime_config_t app_config = app.get_runtime_config();
         if (!app_config.get_is_framework_dependent())
         {
-            trace::error(_X("Initialization for self-contained components is not supported"));
+            trace::error(PAL_X("Initialization for self-contained components is not supported"));
             return StatusCode::InvalidConfigFile;
         }
 
@@ -713,7 +713,7 @@ namespace
         }
         else
         {
-            trace::verbose(_X("Skipped framework validation for loading a component in a self-contained app without information about included frameworks"));
+            trace::verbose(PAL_X("Skipped framework validation for loading a component in a self-contained app without information about included frameworks"));
         }
 
         app_config.combine_properties(config_properties);
@@ -731,7 +731,7 @@ namespace
         int rc = hostpolicy_resolver::load(hostpolicy_dir, &hostpolicy_dll, hostpolicy_contract);
         if (rc != StatusCode::Success)
         {
-            trace::error(_X("An error occurred while loading required library %s from [%s]"), LIBHOSTPOLICY_NAME, hostpolicy_dir.c_str());
+            trace::error(PAL_X("An error occurred while loading required library %s from [%s]"), LIBHOSTPOLICY_NAME, hostpolicy_dir.c_str());
         }
         else
         {
@@ -760,7 +760,7 @@ int fx_muxer_t::initialize_for_app(
 
         if (g_active_host_context != nullptr)
         {
-            trace::error(_X("Hosting components are already initialized. Re-initialization for an app is not allowed."));
+            trace::error(PAL_X("Hosting components are already initialized. Re-initialization for an app is not allowed."));
             return StatusCode::HostInvalidState;
         }
 
@@ -789,7 +789,7 @@ int fx_muxer_t::initialize_for_app(
     rc = initialize_context(hostpolicy_dir, *init, initialization_options_t::none, context);
     if (rc != StatusCode::Success)
     {
-        trace::error(_X("Failed to initialize context for app: %s. Error code: 0x%x"), host_info.app_path.c_str(), rc);
+        trace::error(PAL_X("Failed to initialize context for app: %s. Error code: 0x%x"), host_info.app_path.c_str(), rc);
         return rc;
     }
 
@@ -797,7 +797,7 @@ int fx_muxer_t::initialize_for_app(
     for (int i = 0; i < argc; ++i)
         context->argv.push_back(argv[i]);
 
-    trace::info(_X("Initialized context for app: %s"), host_info.app_path.c_str());
+    trace::info(PAL_X("Initialized context for app: %s"), host_info.app_path.c_str());
     *host_context_handle = context.release();
     return rc;
 }
@@ -859,13 +859,13 @@ int fx_muxer_t::initialize_for_runtime_config(
 
     if (!STATUS_CODE_SUCCEEDED(rc))
     {
-        trace::error(_X("Failed to initialize context for config: %s. Error code: 0x%x"), runtime_config_path, rc);
+        trace::error(PAL_X("Failed to initialize context for config: %s. Error code: 0x%x"), runtime_config_path, rc);
         return rc;
     }
 
     context->is_app = false;
 
-    trace::info(_X("Initialized %s for config: %s"), already_initialized ? _X("secondary context") : _X("context"), runtime_config_path);
+    trace::info(PAL_X("Initialized %s for config: %s"), already_initialized ? PAL_X("secondary context") : PAL_X("context"), runtime_config_path);
     *host_context_handle = context.release();
     return rc;
 }
@@ -939,7 +939,7 @@ int fx_muxer_t::get_runtime_delegate(const host_context_t *context, coreclr_dele
     if (type > coreclr_delegate_type::load_assembly_and_get_function_pointer
         && (size_t)type > context->hostpolicy_context_contract.last_known_delegate_type)
     {
-        trace::error(_X("The requested delegate type is not available in the target framework."));
+        trace::error(PAL_X("The requested delegate type is not available in the target framework."));
         return StatusCode::HostApiUnsupportedVersion;
     }
 
@@ -967,7 +967,7 @@ const host_context_t* fx_muxer_t::get_active_host_context()
     const hostpolicy_contract_t &hostpolicy_contract = g_active_host_context->hostpolicy_contract;
     if (hostpolicy_contract.initialize == nullptr)
     {
-        trace::warning(_X("Getting the contract for the initialized hostpolicy is only supported for .NET Core 3.0 or a higher version."));
+        trace::warning(PAL_X("Getting the contract for the initialized hostpolicy is only supported for .NET Core 3.0 or a higher version."));
         return nullptr;
     }
 
@@ -979,7 +979,7 @@ const host_context_t* fx_muxer_t::get_active_host_context()
         int rc = hostpolicy_contract.initialize(nullptr, options, &hostpolicy_context_contract);
         if (rc != StatusCode::Success)
         {
-            trace::error(_X("Failed to get contract for existing initialized hostpolicy: 0x%x"), rc);
+            trace::error(PAL_X("Failed to get contract for existing initialized hostpolicy: 0x%x"), rc);
             return nullptr;
         }
     }
@@ -1038,7 +1038,7 @@ int fx_muxer_t::handle_exec_host_command(
         new_argc = (int32_t)vec_argv.size();
     }
 
-    trace::info(_X("Using dotnet root path [%s]"), host_info.dotnet_root.c_str());
+    trace::info(PAL_X("Using dotnet root path [%s]"), host_info.dotnet_root.c_str());
 
     // Transform dotnet [exec] [--additionalprobingpath path] [--depsfile file] [dll] [args] -> dotnet [dll] [args]
     return read_config_and_execute(
@@ -1061,7 +1061,7 @@ namespace
     {
         // Expected format: --arch <arch>
         // Default to current architecture if architecture is not specified in the expected format
-        if (argc < 2 || pal::strcasecmp(_X("--arch"), argv[0]) != 0)
+        if (argc < 2 || pal::strcasecmp(PAL_X("--arch"), argv[0]) != 0)
             return get_current_arch();
 
         pal::string_t arch_arg = argv[1];
@@ -1072,7 +1072,7 @@ namespace
                 return arch;
         }
 
-        trace::error(_X("Unknown architecture: %s"), arch_arg.c_str());
+        trace::error(PAL_X("Unknown architecture: %s"), arch_arg.c_str());
         return pal::architecture::__last;
     }
 }
@@ -1087,8 +1087,8 @@ int fx_muxer_t::handle_cli(
     assert(argc > 1);
 
     // Check for commands that don't depend on the CLI SDK to be loaded
-    bool list_sdks = pal::strcasecmp(_X("--list-sdks"), argv[1]) == 0;
-    bool list_runtimes = !list_sdks && pal::strcasecmp(_X("--list-runtimes"), argv[1]) == 0;
+    bool list_sdks = pal::strcasecmp(PAL_X("--list-sdks"), argv[1]) == 0;
+    bool list_runtimes = !list_sdks && pal::strcasecmp(PAL_X("--list-runtimes"), argv[1]) == 0;
 
     if (list_sdks || list_runtimes)
     {
@@ -1109,11 +1109,11 @@ int fx_muxer_t::handle_cli(
 
         if (list_sdks)
         {
-            sdk_info::print_all_sdks(dotnet_root, _X(""));
+            sdk_info::print_all_sdks(dotnet_root, PAL_X(""));
         }
         else if (list_runtimes)
         {
-            framework_info::print_all_frameworks(dotnet_root, _X(""));
+            framework_info::print_all_frameworks(dotnet_root, PAL_X(""));
         }
 
         return StatusCode::Success;
@@ -1129,27 +1129,27 @@ int fx_muxer_t::handle_cli(
     if (sdk_dotnet.empty())
     {
         assert(argc > 1);
-        if (pal::strcasecmp(_X("-h"), argv[1]) == 0 ||
-            pal::strcasecmp(_X("--help"), argv[1]) == 0 ||
-            pal::strcasecmp(_X("-?"), argv[1]) == 0 ||
-            pal::strcasecmp(_X("/?"), argv[1]) == 0)
+        if (pal::strcasecmp(PAL_X("-h"), argv[1]) == 0 ||
+            pal::strcasecmp(PAL_X("--help"), argv[1]) == 0 ||
+            pal::strcasecmp(PAL_X("-?"), argv[1]) == 0 ||
+            pal::strcasecmp(PAL_X("/?"), argv[1]) == 0)
         {
             command_line::print_muxer_usage(false);
             return StatusCode::InvalidArgFailure;
         }
-        else if (pal::strcasecmp(_X("--info"), argv[1]) == 0)
+        else if (pal::strcasecmp(PAL_X("--info"), argv[1]) == 0)
         {
             command_line::print_muxer_info(host_info.dotnet_root, resolver.global_file(), false /*skip_sdk_info_output*/);
             return StatusCode::Success;
         }
 
         trace::error(
-            _X("The command could not be loaded, possibly because:\n")
-            _X("  * You intended to execute a .NET application:\n")
-            _X("      The application '%s' does not exist or is not a managed .dll or .exe.\n")
-            _X("  * You intended to execute a .NET SDK command:"),
+            PAL_X("The command could not be loaded, possibly because:\n")
+            PAL_X("  * You intended to execute a .NET application:\n")
+            PAL_X("      The application '%s' does not exist or is not a managed .dll or .exe.\n")
+            PAL_X("  * You intended to execute a .NET SDK command:"),
             app_candidate.c_str());
-        resolver.print_resolution_error(host_info.dotnet_root, _X("      "));
+        resolver.print_resolution_error(host_info.dotnet_root, PAL_X("      "));
 
         return StatusCode::SdkResolveFailure;
     }
@@ -1158,7 +1158,7 @@ int fx_muxer_t::handle_cli(
     int aot_exit_code;
     if (try_invoke_aot_sdk(host_info, sdk_dotnet, sdk_root, argc, argv, &aot_exit_code))
     {
-        if (pal::strcasecmp(_X("--info"), argv[1]) == 0)
+        if (pal::strcasecmp(PAL_X("--info"), argv[1]) == 0)
         {
             command_line::print_muxer_info(host_info.dotnet_root, resolver.global_file(), aot_exit_code == 0 /*skip_sdk_info_output*/);
         }
@@ -1182,7 +1182,7 @@ int fx_muxer_t::handle_cli(
     new_argv.push_back(sdk_dotnet.c_str());
     new_argv.insert(new_argv.end(), argv + 1, argv + argc);
 
-    trace::verbose(_X("Using .NET SDK dll=[%s]"), sdk_dotnet.c_str());
+    trace::verbose(PAL_X("Using .NET SDK dll=[%s]"), sdk_dotnet.c_str());
 
     int new_argoff;
     pal::string_t sdk_app_candidate;
@@ -1206,7 +1206,7 @@ int fx_muxer_t::handle_cli(
             nullptr/*required_buffer_size*/);
     }
 
-    if (pal::strcasecmp(_X("--info"), argv[1]) == 0)
+    if (pal::strcasecmp(PAL_X("--info"), argv[1]) == 0)
     {
         command_line::print_muxer_info(host_info.dotnet_root, resolver.global_file(), result == 0 /*skip_sdk_info_output*/);
     }

@@ -49,7 +49,7 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
     for (const pal::string_t& dir : hive_dir)
     {
         auto fx_shared_dir = dir;
-        append_path(&fx_shared_dir, _X("shared"));
+        append_path(&fx_shared_dir, PAL_X("shared"));
 
         if (!pal::directory_exists(fx_shared_dir))
             continue;
@@ -74,9 +74,9 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
             if (!pal::directory_exists(fx_dir))
                 continue;
 
-            trace::verbose(_X("Gathering FX locations in [%s]"), fx_dir.c_str());
+            trace::verbose(PAL_X("Gathering FX locations in [%s]"), fx_dir.c_str());
 
-            const pal::string_t deps_file_name = fx_name_local + _X(".deps.json");
+            const pal::string_t deps_file_name = fx_name_local + PAL_X(".deps.json");
             std::vector<pal::string_t> versions;
             pal::readdir_onlydirectories(fx_dir, &versions);
             for (const pal::string_t& ver : versions)
@@ -91,18 +91,18 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
                 append_path(&fx_version_dir, ver.c_str());
                 if (!file_exists_in_dir(fx_version_dir, deps_file_name.c_str(), nullptr))
                 {
-                    trace::verbose(_X("Ignoring FX version [%s] without .deps.json"), ver.c_str());
+                    trace::verbose(PAL_X("Ignoring FX version [%s] without .deps.json"), ver.c_str());
                     continue;
                 }
 
                 bool is_disabled = std::find(disabled_versions.begin(), disabled_versions.end(), ver) != disabled_versions.end();
                 if (is_disabled && !include_disabled_versions)
                 {
-                    trace::verbose(_X("Ignoring disabled version [%s]"), ver.c_str());
+                    trace::verbose(PAL_X("Ignoring disabled version [%s]"), ver.c_str());
                     continue;
                 }
 
-                trace::verbose(_X("Found FX version [%s]"), ver.c_str());
+                trace::verbose(PAL_X("Found FX version [%s]"), ver.c_str());
 
                 framework_info info(fx_name_local, fx_dir, parsed, hive_depth, is_disabled);
                 framework_infos->push_back(info);
@@ -123,7 +123,7 @@ bool compare_by_name_and_version(const framework_info &a, const framework_info &
     get_all_framework_infos(dotnet_dir, nullptr, /*disable_multilevel_lookup*/ true, /*include_disabled_versions*/ false, &framework_infos);
     for (framework_info info : framework_infos)
     {
-        trace::println(_X("%s%s %s [%s]"), leading_whitespace, info.name.c_str(), info.version.as_str().c_str(), info.path.c_str());
+        trace::println(PAL_X("%s%s %s [%s]"), leading_whitespace, info.name.c_str(), info.version.as_str().c_str(), info.path.c_str());
     }
 
     return framework_infos.size() > 0;

@@ -68,20 +68,20 @@ namespace
         switch (del_type)
         {
         case hostfxr_delegate_type::hdt_com_activation:
-            method_name = _X("GetClassFactoryForTypeInternal");
+            method_name = PAL_X("GetClassFactoryForTypeInternal");
             break;
         case hostfxr_delegate_type::hdt_com_register:
-            method_name = _X("RegisterClassForTypeInternal");
+            method_name = PAL_X("RegisterClassForTypeInternal");
             break;
         case hostfxr_delegate_type::hdt_com_unregister:
-            method_name = _X("UnregisterClassForTypeInternal");
+            method_name = PAL_X("UnregisterClassForTypeInternal");
             break;
         default:
             return StatusCode::InvalidArgFailure;
         }
 
         return get_function_pointer(
-            _X("Internal.Runtime.InteropServices.ComActivator, System.Private.CoreLib"),
+            PAL_X("Internal.Runtime.InteropServices.ComActivator, System.Private.CoreLib"),
             method_name,
             UNMANAGEDCALLERSONLY_METHOD,
             nullptr, // load context
@@ -100,15 +100,15 @@ namespace
             [app_path](const pal::string_t& host_path, pal::string_t* config_path_out)
             {
                 // Strip the comhost suffix to get the 'app' and config
-                size_t idx = host_path.rfind(_X(".comhost.dll"));
+                size_t idx = host_path.rfind(PAL_X(".comhost.dll"));
                 assert(idx != pal::string_t::npos);
 
                 pal::string_t app_path_local{ host_path };
-                app_path_local.replace(app_path_local.begin() + idx, app_path_local.end(), _X(".dll"));
+                app_path_local.replace(app_path_local.begin() + idx, app_path_local.end(), PAL_X(".dll"));
                 *app_path = std::move(app_path_local);
 
                 pal::string_t config_path_local { host_path };
-                config_path_local.replace(config_path_local.begin() + idx, config_path_local.end(), _X(".runtimeconfig.json"));
+                config_path_local.replace(config_path_local.begin() + idx, config_path_local.end(), PAL_X(".runtimeconfig.json"));
                 *config_path_out = std::move(config_path_local);
 
                 return StatusCode::Success;
@@ -118,8 +118,8 @@ namespace
                 *load_context = ISOLATED_CONTEXT;
                 auto get_runtime_property_value = reinterpret_cast<hostfxr_get_runtime_property_value_fn>(pal::get_symbol(fxr, "hostfxr_get_runtime_property_value"));
                 const pal::char_t* value;
-                if (get_runtime_property_value(context, _X("System.Runtime.InteropServices.COM.LoadComponentInDefaultContext"), &value) == StatusCode::Success
-                    && pal::strcasecmp(value, _X("true")) == 0)
+                if (get_runtime_property_value(context, PAL_X("System.Runtime.InteropServices.COM.LoadComponentInDefaultContext"), &value) == StatusCode::Success
+                    && pal::strcasecmp(value, PAL_X("true")) == 0)
                 {
                     *load_context = nullptr; // Default context
                 }
@@ -134,20 +134,20 @@ namespace
         switch (del_type)
         {
         case hostfxr_delegate_type::hdt_com_activation:
-            method_name = _X("GetClassFactoryForTypeInContext");
+            method_name = PAL_X("GetClassFactoryForTypeInContext");
             break;
         case hostfxr_delegate_type::hdt_com_register:
-            method_name = _X("RegisterClassForTypeInContext");
+            method_name = PAL_X("RegisterClassForTypeInContext");
             break;
         case hostfxr_delegate_type::hdt_com_unregister:
-            method_name = _X("UnregisterClassForTypeInContext");
+            method_name = PAL_X("UnregisterClassForTypeInContext");
             break;
         default:
             return StatusCode::InvalidArgFailure;
         }
 
         status = get_function_pointer(
-            _X("Internal.Runtime.InteropServices.ComActivator, System.Private.CoreLib"),
+            PAL_X("Internal.Runtime.InteropServices.ComActivator, System.Private.CoreLib"),
             method_name,
             UNMANAGEDCALLERSONLY_METHOD,
             nullptr, // load context
@@ -287,8 +287,8 @@ COM_API HRESULT STDMETHODCALLTYPE DllCanUnloadNow(void)
 
 namespace
 {
-    const WCHAR ClsidKeyFmt[] = _X("SOFTWARE\\Classes\\CLSID\\%s");
-    const WCHAR ProgIDKeyFmt[] = _X("SOFTWARE\\Classes\\%s");
+    const WCHAR ClsidKeyFmt[] = PAL_X("SOFTWARE\\Classes\\CLSID\\%s");
+    const WCHAR ProgIDKeyFmt[] = PAL_X("SOFTWARE\\Classes\\%s");
 
     struct OleStr : public std::unique_ptr<std::remove_pointer<LPOLESTR>::type, decltype(&::CoTaskMemFree)>
     {
@@ -533,7 +533,7 @@ namespace
         {
             res = ::RegSetValueExW(
                 regKey.get(),
-                _X("ThreadingModel"),
+                PAL_X("ThreadingModel"),
                 0,
                 REG_SZ,
                 reinterpret_cast<const BYTE*>(threadingModel),
@@ -594,7 +594,7 @@ COM_API HRESULT STDMETHODCALLTYPE DllRegisterServer(void)
     clsid_map map;
     RETURN_HRESULT_IF_EXCEPT(map = comhost::get_clsid_map());
 
-    trace::info(_X("Registering %d CLSIDs"), (int)map.size());
+    trace::info(PAL_X("Registering %d CLSIDs"), (int)map.size());
 
     HRESULT hr;
     pal::string_t app_path;
@@ -617,7 +617,7 @@ COM_API HRESULT STDMETHODCALLTYPE DllRegisterServer(void)
     for (clsid_map::const_reference p : map)
     {
         // Register the CLSID in registry
-        RETURN_IF_FAILED(RegisterClsid(p.second, _X("Both")));
+        RETURN_IF_FAILED(RegisterClsid(p.second, PAL_X("Both")));
 
         // Call user-defined register function
         cxt.class_id = p.first;
@@ -647,7 +647,7 @@ COM_API HRESULT STDMETHODCALLTYPE DllUnregisterServer(void)
     clsid_map map;
     RETURN_HRESULT_IF_EXCEPT(map = comhost::get_clsid_map());
 
-    trace::info(_X("Unregistering %d CLSIDs"), (int)map.size());
+    trace::info(PAL_X("Unregistering %d CLSIDs"), (int)map.size());
 
     HRESULT hr;
     pal::string_t app_path;

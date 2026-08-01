@@ -26,12 +26,12 @@ namespace
 {
     const pal::char_t* OptionNameMapping[] =
     {
-        _X("Disable"),
-        _X("LatestPatch"),
-        _X("Minor"),
-        _X("LatestMinor"),
-        _X("Major"),
-        _X("LatestMajor")
+        PAL_X("Disable"),
+        PAL_X("LatestPatch"),
+        PAL_X("Minor"),
+        PAL_X("LatestMinor"),
+        PAL_X("Major"),
+        PAL_X("LatestMajor")
     };
 
     static_assert((sizeof(OptionNameMapping) / sizeof(*OptionNameMapping)) == static_cast<size_t>(roll_forward_option::__Last), "Invalid option count");
@@ -47,7 +47,7 @@ roll_forward_option roll_forward_option_from_string(const pal::string_t& value)
         }
     }
 
-    trace::error(_X("Unrecognized roll forward setting value '%s'."), value.c_str());
+    trace::error(PAL_X("Unrecognized roll forward setting value '%s'."), value.c_str());
     return roll_forward_option::__Last;
 }
 

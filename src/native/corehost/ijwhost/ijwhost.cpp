@@ -30,12 +30,12 @@ pal::hresult_t get_load_in_memory_assembly_delegate(pal::dll_t handle, load_in_m
             pal::string_t mod_path;
             if (!pal::get_module_path(handle, &mod_path))
             {
-                trace::error(_X("Failed to resolve full path of the current mixed-mode module [%s]"), host_path.c_str());
+                trace::error(PAL_X("Failed to resolve full path of the current mixed-mode module [%s]"), host_path.c_str());
                 return StatusCode::CurrentHostFindFailure;
             }
 
             pal::string_t config_path_local { strip_file_ext(mod_path) };
-            config_path_local.append(_X(".runtimeconfig.json"));
+            config_path_local.append(PAL_X(".runtimeconfig.json"));
             *config_path_out = std::move(config_path_local);
 
             return StatusCode::Success;
@@ -45,8 +45,8 @@ pal::hresult_t get_load_in_memory_assembly_delegate(pal::dll_t handle, load_in_m
             *load_context = nullptr;   // default load context
             auto get_runtime_property_value = reinterpret_cast<hostfxr_get_runtime_property_value_fn>(pal::get_symbol(fxr, "hostfxr_get_runtime_property_value"));
             const pal::char_t* value;
-            if (get_runtime_property_value(context, _X("System.Runtime.InteropServices.CppCLI.LoadComponentInIsolatedContext"), &value) == StatusCode::Success
-                && pal::strcasecmp(value, _X("true")) == 0)
+            if (get_runtime_property_value(context, PAL_X("System.Runtime.InteropServices.CppCLI.LoadComponentInIsolatedContext"), &value) == StatusCode::Success
+                && pal::strcasecmp(value, PAL_X("true")) == 0)
             {
                 *load_context = ISOLATED_CONTEXT; // Isolated load context
             }
@@ -58,8 +58,8 @@ pal::hresult_t get_load_in_memory_assembly_delegate(pal::dll_t handle, load_in_m
         return status;
 
     return get_function_pointer(
-        _X("Internal.Runtime.InteropServices.InMemoryAssemblyLoader, System.Private.CoreLib"),
-        _X("LoadInMemoryAssemblyInContext"),
+        PAL_X("Internal.Runtime.InteropServices.InMemoryAssemblyLoader, System.Private.CoreLib"),
+        PAL_X("LoadInMemoryAssemblyInContext"),
         UNMANAGEDCALLERSONLY_METHOD,
         nullptr, // load context
         nullptr, // reserved

@@ -98,11 +98,11 @@ SHARED_API pal::hresult_t STDMETHODCALLTYPE coreclr_execute_assembly(
     }
 
     pal::string_t signalFile;
-    if (pal::getenv(_X("TEST_SIGNAL_MOCK_EXECUTE_ASSEMBLY"), &signalFile))
+    if (pal::getenv(PAL_X("TEST_SIGNAL_MOCK_EXECUTE_ASSEMBLY"), &signalFile))
         pal::touch_file(signalFile);
 
     pal::string_t path;
-    if (pal::getenv(_X("TEST_BLOCK_MOCK_EXECUTE_ASSEMBLY"), &path))
+    if (pal::getenv(PAL_X("TEST_BLOCK_MOCK_EXECUTE_ASSEMBLY"), &path))
     {
         while (pal::file_exists(path))
         {

@@ -17,9 +17,9 @@
 
 namespace
 {
-    const pal::char_t *app_log_prefix = _X("[APP] ");
-    const pal::char_t *config_log_prefix = _X("[CONFIG] ");
-    const pal::char_t *secondary_log_prefix = _X("[SECONDARY] ");
+    const pal::char_t *app_log_prefix = PAL_X("[APP] ");
+    const pal::char_t *config_log_prefix = PAL_X("[CONFIG] ");
+    const pal::char_t *secondary_log_prefix = PAL_X("[SECONDARY] ");
 
     const hostfxr_delegate_type first_delegate_type = hostfxr_delegate_type::hdt_com_activation;
     const hostfxr_delegate_type secondary_delegate_type = hostfxr_delegate_type::hdt_load_in_memory_assembly;
@@ -39,13 +39,13 @@ namespace
             int rc = hostfxr.get_prop_value(handle, key, &value);
             if (rc == StatusCode::Success)
             {
-                test_output << log_prefix << _X("hostfxr_get_runtime_property_value succeeded for property: ")
-                    << key << _X("=") << value << std::endl;
+                test_output << log_prefix << PAL_X("hostfxr_get_runtime_property_value succeeded for property: ")
+                    << key << PAL_X("=") << value << std::endl;
             }
             else
             {
-                test_output << log_prefix << _X("hostfxr_get_runtime_property_value failed for property: ") << key
-                    << _X(" - ") << std::hex << std::showbase << rc << std::endl;
+                test_output << log_prefix << PAL_X("hostfxr_get_runtime_property_value failed for property: ") << key
+                    << PAL_X(" - ") << std::hex << std::showbase << rc << std::endl;
             }
         }
     }
@@ -62,16 +62,16 @@ namespace
         for (int i = 0; i < property_count; ++i)
         {
             const pal::char_t *key = property_keys[i];
-            const pal::char_t *value = remove ? nullptr : _X("VALUE_FROM_HOST");
+            const pal::char_t *value = remove ? nullptr : PAL_X("VALUE_FROM_HOST");
             int rc = hostfxr.set_prop_value(handle, key, value);
             if (rc == StatusCode::Success)
             {
-                test_output << log_prefix << _X("hostfxr_set_runtime_property_value succeeded for property: ") << key << std::endl;
+                test_output << log_prefix << PAL_X("hostfxr_set_runtime_property_value succeeded for property: ") << key << std::endl;
             }
             else
             {
-                test_output << log_prefix << _X("hostfxr_set_runtime_property_value failed for property: ") << key
-                    << _X(" - ") << std::hex << std::showbase << rc << std::endl;
+                test_output << log_prefix << PAL_X("hostfxr_set_runtime_property_value failed for property: ") << key
+                    << PAL_X(" - ") << std::hex << std::showbase << rc << std::endl;
             }
         }
     }
@@ -95,16 +95,16 @@ namespace
 
         if (rc != StatusCode::Success)
         {
-            test_output << log_prefix << _X("hostfxr_get_runtime_properties failed - ")
+            test_output << log_prefix << PAL_X("hostfxr_get_runtime_properties failed - ")
                 << std::hex << std::showbase << rc << std::endl;
             return;
         }
 
-        test_output << log_prefix << _X("hostfxr_get_runtime_properties succeeded.") << std::endl;
+        test_output << log_prefix << PAL_X("hostfxr_get_runtime_properties succeeded.") << std::endl;
         for (size_t i = 0; i < keys.size(); ++i)
         {
-            test_output << log_prefix << _X("hostfxr_get_runtime_properties: ")
-                << keys[i] << _X("=") << values[i] << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_get_runtime_properties: ")
+                << keys[i] << PAL_X("=") << values[i] << std::endl;
         }
     }
 
@@ -152,7 +152,7 @@ namespace
     {
         int rc = hostfxr.init_config(config_path, nullptr, handle);
         bool success = STATUS_CODE_SUCCEEDED(rc);
-        test_output << log_prefix << _X("hostfxr_initialize_for_runtime_config ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("hostfxr_initialize_for_runtime_config ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         return success;
     }
 
@@ -166,7 +166,7 @@ namespace
     {
         int rc = hostfxr.init_command_line(argc, argv, nullptr, handle);
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("hostfxr_initialize_for_command_line ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("hostfxr_initialize_for_command_line ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         return success;
     }
 
@@ -180,7 +180,7 @@ namespace
     {
         int rc = hostfxr.get_delegate(handle, delegate_type, delegate);
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("hostfxr_get_runtime_delegate ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("hostfxr_get_runtime_delegate ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         return success;
     }
 
@@ -205,7 +205,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -221,14 +221,14 @@ namespace
         {
             int rc = run_app(handle);
             if (rc != StatusCode::Success)
-                test_output << _X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
+                test_output << PAL_X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
 
             return rc == StatusCode::Success;
         }
 #if defined(WIN32)
         __except(GetExceptionCode() != 0)
         {
-            test_output << _X("hostfxr_run_app threw exception: ") << std::hex << std::showbase << GetExceptionCode() << std::endl;
+            test_output << PAL_X("hostfxr_run_app threw exception: ") << std::hex << std::showbase << GetExceptionCode() << std::endl;
         }
 #endif
 
@@ -246,14 +246,14 @@ namespace
 #endif
         {
             int result = component_entry_point((void*)(static_cast<size_t>(0xdeadbeef)), 42);
-            test_output << log_prefix << method_name << _X(" delegate result: ") << std::hex << std::showbase << result << std::endl;
+            test_output << log_prefix << method_name << PAL_X(" delegate result: ") << std::hex << std::showbase << result << std::endl;
 
             return true;
         }
 #if defined(WIN32)
         __except(GetExceptionCode() != 0)
         {
-            test_output << log_prefix << method_name << _X(" delegate threw exception: ") << std::hex << std::showbase << GetExceptionCode() << std::endl;
+            test_output << log_prefix << method_name << PAL_X(" delegate threw exception: ") << std::hex << std::showbase << GetExceptionCode() << std::endl;
         }
 #endif
 
@@ -269,15 +269,15 @@ namespace
     {
         if (p.name == nullptr)
         {
-            return stream << _X("nullptr");
+            return stream << PAL_X("nullptr");
         }
         else if (p.name == UNMANAGEDCALLERSONLY_METHOD)
         {
-            return stream << _X("UNMANAGEDCALLERSONLY_METHOD");
+            return stream << PAL_X("UNMANAGEDCALLERSONLY_METHOD");
         }
         else
         {
-            return stream << _X("\"") << p.name << _X("\"");
+            return stream << PAL_X("\"") << p.name << PAL_X("\"");
         }
     }
 
@@ -296,15 +296,15 @@ namespace
     {
         const pal::char_t *delegate_name = nullptr;
         pal::string_t method_name_local{ method_name };
-        if (pal::string_t::npos != method_name_local.find(_X("Unmanaged")))
+        if (pal::string_t::npos != method_name_local.find(PAL_X("Unmanaged")))
             delegate_name = UNMANAGEDCALLERSONLY_METHOD;
 
-        test_output << log_prefix << _X("calling load_assembly_and_get_function_pointer(\"")
-            << assembly_path << _X("\", \"")
-            << type_name << _X("\", \"")
-            << method_name << _X("\", ")
-            << to_printable_delegate_name(delegate_name) << _X(", ")
-            << _X("nullptr, &componentEntryPointDelegate)")
+        test_output << log_prefix << PAL_X("calling load_assembly_and_get_function_pointer(\"")
+            << assembly_path << PAL_X("\", \"")
+            << type_name << PAL_X("\", \"")
+            << method_name << PAL_X("\", ")
+            << to_printable_delegate_name(delegate_name) << PAL_X(", ")
+            << PAL_X("nullptr, &componentEntryPointDelegate)")
             << std::endl;
 
         component_entry_point_fn componentEntryPointDelegate = nullptr;
@@ -315,7 +315,7 @@ namespace
                         nullptr /* reserved */,
                         (void **)&componentEntryPointDelegate);
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("load_assembly_and_get_function_pointer ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("load_assembly_and_get_function_pointer ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         if (success)
             success &= call_delegate_with_try_except(componentEntryPointDelegate, method_name, log_prefix, test_output);
 
@@ -331,14 +331,14 @@ namespace
     {
         const pal::char_t *delegate_name = nullptr;
         pal::string_t method_name_local{ method_name };
-        if (pal::string_t::npos != method_name_local.find(_X("Unmanaged")))
+        if (pal::string_t::npos != method_name_local.find(PAL_X("Unmanaged")))
             delegate_name = UNMANAGEDCALLERSONLY_METHOD;
 
-        test_output << log_prefix << _X("calling get_function_pointer(\"")
-            << type_name << _X("\", \"")
-            << method_name << _X("\", ")
-            << to_printable_delegate_name(delegate_name) << _X(", ")
-            << _X("nullptr, nullptr, &functionPointerDelegate)")
+        test_output << log_prefix << PAL_X("calling get_function_pointer(\"")
+            << type_name << PAL_X("\", \"")
+            << method_name << PAL_X("\", ")
+            << to_printable_delegate_name(delegate_name) << PAL_X(", ")
+            << PAL_X("nullptr, nullptr, &functionPointerDelegate)")
             << std::endl;
 
         component_entry_point_fn functionPointerDelegate = nullptr;
@@ -350,7 +350,7 @@ namespace
                           (void **)&functionPointerDelegate);
 
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("get_function_pointer ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("get_function_pointer ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         if (success)
             success &= call_delegate_with_try_except(functionPointerDelegate, method_name, log_prefix, test_output);
 
@@ -363,14 +363,14 @@ namespace
         const pal::char_t *log_prefix,
         pal::stringstream_t &test_output)
     {
-        test_output << log_prefix << _X("calling load_assembly(\"")
-            << assembly_path << _X("\")")
+        test_output << log_prefix << PAL_X("calling load_assembly(\"")
+            << assembly_path << PAL_X("\")")
             << std::endl;
         int rc = load_assembly(assembly_path,
                                nullptr /* load_context */,
                                nullptr /* reserved */);
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("load_assembly ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("load_assembly ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         return success;
     }
 
@@ -386,17 +386,17 @@ namespace
         assembly_file.close();
 
         std::vector<char> symbols_bytes;
-        if (pal::strcmp(symbols_path, _X("nullptr")) != 0)
+        if (pal::strcmp(symbols_path, PAL_X("nullptr")) != 0)
         {
             std::ifstream symbols_file(symbols_path, std::ios::binary);
             symbols_bytes = std::vector<char>((std::istreambuf_iterator<char>(symbols_file)), (std::istreambuf_iterator<char>()));
             symbols_file.close();
         }
 
-        test_output << log_prefix << _X("calling load_assembly_bytes(")
-            << std::hex << (size_t)(assembly_bytes.data()) << _X(", ") << assembly_bytes.size() << _X(", ")
-            << std::hex << (size_t)(symbols_bytes.data()) << _X(", ") << symbols_bytes.size()
-            << _X(")") << std::endl;
+        test_output << log_prefix << PAL_X("calling load_assembly_bytes(")
+            << std::hex << (size_t)(assembly_bytes.data()) << PAL_X(", ") << assembly_bytes.size() << PAL_X(", ")
+            << std::hex << (size_t)(symbols_bytes.data()) << PAL_X(", ") << symbols_bytes.size()
+            << PAL_X(")") << std::endl;
 
         int rc = load_assembly_bytes(
             (unsigned char *)assembly_bytes.data(),
@@ -406,7 +406,7 @@ namespace
             nullptr /* load_context */,
             nullptr /* reserved */);
         bool success = rc == StatusCode::Success;
-        test_output << log_prefix << _X("load_assembly_bytes ") << (success ? _X("succeeded: ") : _X("failed: ")) << std::hex << std::showbase << rc << std::endl;
+        test_output << log_prefix << PAL_X("load_assembly_bytes ") << (success ? PAL_X("succeeded: ") : PAL_X("failed: ")) << std::hex << std::showbase << rc << std::endl;
         return success;
     }
 
@@ -444,7 +444,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -481,7 +481,7 @@ namespace
         }
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
         return success && rcClose == StatusCode::Success;
     }
 
@@ -520,7 +520,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -558,7 +558,7 @@ namespace
         }
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
         return success && rcClose == StatusCode::Success;
     }
 
@@ -590,7 +590,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -622,7 +622,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -654,7 +654,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -685,7 +685,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -708,12 +708,12 @@ namespace
         bool success = get_runtime_delegate(hostfxr, nullptr, delegate_type1, &delegate1, log_prefix, test_output);
         if (success)
         {
-            test_output << log_prefix << _X("get_runtime_delegate with active context succeeded unexpectedly.") << std::endl;
+            test_output << log_prefix << PAL_X("get_runtime_delegate with active context succeeded unexpectedly.") << std::endl;
             return false;
         }
         if (nullptr != delegate1)
         {
-            test_output << log_prefix << _X("Unexpectedly got a runtime delegate when get_runtime_delegate failed.") << std::endl;
+            test_output << log_prefix << PAL_X("Unexpectedly got a runtime delegate when get_runtime_delegate failed.") << std::endl;
             return false;
         }
 
@@ -728,7 +728,7 @@ namespace
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << log_prefix << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            test_output << log_prefix << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
         return success && rcClose == StatusCode::Success;
     }
@@ -736,27 +736,27 @@ namespace
 
 host_context_test::check_properties host_context_test::check_properties_from_string(const pal::char_t *str)
 {
-    if (pal::strcmp(str, _X("get")) == 0)
+    if (pal::strcmp(str, PAL_X("get")) == 0)
     {
         return host_context_test::check_properties::get;
     }
-    else if (pal::strcmp(str, _X("set")) == 0)
+    else if (pal::strcmp(str, PAL_X("set")) == 0)
     {
         return host_context_test::check_properties::set;
     }
-    else if (pal::strcmp(str, _X("remove")) == 0)
+    else if (pal::strcmp(str, PAL_X("remove")) == 0)
     {
         return host_context_test::check_properties::remove;
     }
-    else if (pal::strcmp(str, _X("get_all")) == 0)
+    else if (pal::strcmp(str, PAL_X("get_all")) == 0)
     {
         return host_context_test::check_properties::get_all;
     }
-    else if (pal::strcmp(str, _X("get_active")) == 0)
+    else if (pal::strcmp(str, PAL_X("get_active")) == 0)
     {
         return host_context_test::check_properties::get_active;
     }
-    else if (pal::strcmp(str, _X("get_all_active")) == 0)
+    else if (pal::strcmp(str, PAL_X("get_all_active")) == 0)
     {
         return host_context_test::check_properties::get_all_active;
     }
@@ -783,7 +783,7 @@ bool host_context_test::app(
 
     int rcClose = hostfxr.close(handle);
     if (rcClose != StatusCode::Success)
-        test_output << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+        test_output << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
 
     return success && rcClose == StatusCode::Success;
 }
@@ -825,7 +825,7 @@ namespace
     public:
         block_mock_execute_assembly()
         {
-            if (pal::getenv(_X("TEST_BLOCK_MOCK_EXECUTE_ASSEMBLY"), &_path))
+            if (pal::getenv(PAL_X("TEST_BLOCK_MOCK_EXECUTE_ASSEMBLY"), &_path))
                 pal::touch_file(_path);
         }
 
@@ -850,7 +850,7 @@ namespace
     void wait_for_signal_mock_execute_assembly()
     {
         pal::string_t path;
-        if (!pal::getenv(_X("TEST_SIGNAL_MOCK_EXECUTE_ASSEMBLY"), &path))
+        if (!pal::getenv(PAL_X("TEST_SIGNAL_MOCK_EXECUTE_ASSEMBLY"), &path))
             return;
 
         while (!pal::file_exists(path))
@@ -888,11 +888,11 @@ bool host_context_test::mixed(
     auto run_app = [&]{
         int rc = hostfxr.run_app(handle);
         if (rc != StatusCode::Success)
-            run_app_output << _X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
+            run_app_output << PAL_X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            run_app_output << _X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
+            run_app_output << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rcClose << std::endl;
     };
     std::thread app_start = std::thread(run_app);
 
@@ -920,7 +920,7 @@ bool host_context_test::non_context_mixed(
     pal::string_t host_path;
     if (!pal::get_own_executable_path(&host_path) || !pal::fullpath(&host_path))
     {
-        trace::error(_X("Failed to resolve full path of the current executable [%s]"), host_path.c_str());
+        trace::error(PAL_X("Failed to resolve full path of the current executable [%s]"), host_path.c_str());
         return false;
     }
 
@@ -937,10 +937,10 @@ bool host_context_test::non_context_mixed(
     pal::stringstream_t run_app_output;
     auto run_app = [&]{
         // Imitate running as dotnet by passing empty as app_path to hostfxr_main_startupinfo
-        const pal::char_t *app_path_local = launch_as_if_dotnet ? _X("") : app_path;
+        const pal::char_t *app_path_local = launch_as_if_dotnet ? PAL_X("") : app_path;
         int rc = hostfxr.main_startupinfo(static_cast<int32_t>(argv_local.size()), argv_local.data(), host_path.c_str(), get_dotnet_root_from_fxr_path(hostfxr_path).c_str(), app_path_local);
         if (rc != StatusCode::Success)
-            run_app_output << _X("hostfxr_main_startupinfo failed: ") << std::hex << std::showbase << rc << std::endl;
+            run_app_output << PAL_X("hostfxr_main_startupinfo failed: ") << std::hex << std::showbase << rc << std::endl;
     };
     std::thread app_start = std::thread(run_app);
 

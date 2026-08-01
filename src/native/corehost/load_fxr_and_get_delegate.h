@@ -21,7 +21,7 @@ int load_fxr_and_get_delegate(hostfxr_delegate_type type, THostPathToConfigCallb
     pal::string_t host_path;
     if (!pal::get_own_module_path(&host_path) || !pal::fullpath(&host_path))
     {
-        trace::error(_X("Failed to resolve full path of the current host module [%s]"), host_path.c_str());
+        trace::error(PAL_X("Failed to resolve full path of the current host module [%s]"), host_path.c_str());
         return StatusCode::CurrentHostFindFailure;
     }
 
@@ -33,7 +33,7 @@ int load_fxr_and_get_delegate(hostfxr_delegate_type type, THostPathToConfigCallb
         fxr_path.assign(existing_fxr_path);
         free(existing_fxr_path);
         dotnet_root = get_dotnet_root_from_fxr_path(fxr_path);
-        trace::verbose(_X("The library %s was already loaded. Reusing the previously loaded library [%s]."), LIBFXR_NAME, fxr_path.c_str());
+        trace::verbose(PAL_X("The library %s was already loaded. Reusing the previously loaded library [%s]."), LIBFXR_NAME, fxr_path.c_str());
     }
     else
     {
@@ -63,7 +63,7 @@ int load_fxr_and_get_delegate(hostfxr_delegate_type type, THostPathToConfigCallb
         // Load library
         if (!pal::load_library(&fxr_path, &fxr))
         {
-            trace::error(_X("The library %s was found, but loading it from %s failed"), LIBFXR_NAME, fxr_path.c_str());
+            trace::error(PAL_X("The library %s was found, but loading it from %s failed"), LIBFXR_NAME, fxr_path.c_str());
             return StatusCode::CoreHostLibLoadFailure;
         }
     }
@@ -105,7 +105,7 @@ int load_fxr_and_get_delegate(hostfxr_delegate_type type, THostPathToConfigCallb
             if (rcClose != StatusCode::Success)
             {
                 assert(false && "Failed to close host context");
-                trace::verbose(_X("Failed to close host context: 0x%x"), rcClose);
+                trace::verbose(PAL_X("Failed to close host context: 0x%x"), rcClose);
             }
 
             return rc;
@@ -116,7 +116,7 @@ int load_fxr_and_get_delegate(hostfxr_delegate_type type, THostPathToConfigCallb
             int rc = hostfxr_get_runtime_delegate(nullptr, type, delegate);
             if (rc == StatusCode::HostInvalidState)
             {
-                trace::error(_X("Expected active runtime context because runtimeconfig.json [%s] does not exist."), config_path.c_str());
+                trace::error(PAL_X("Expected active runtime context because runtimeconfig.json [%s] does not exist."), config_path.c_str());
             }
             return rc;
         }

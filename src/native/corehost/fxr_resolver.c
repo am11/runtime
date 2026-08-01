@@ -21,7 +21,7 @@ static bool find_max_version_callback(const pal_char_t* entry_name, void* ctx_in
 {
     c_fx_ver_t* max_ver = (c_fx_ver_t*)ctx_in;
 
-    trace_info(_X("Considering fxr version=[%s]..."), entry_name);
+    trace_info(PAL_X("Considering fxr version=[%s]..."), entry_name);
 
     c_fx_ver_t ver;
     c_fx_ver_init(&ver);
@@ -47,7 +47,7 @@ static bool find_max_version_callback(const pal_char_t* entry_name, void* ctx_in
 // its own trace_error and returns false.
 static bool get_latest_fxr(const pal_char_t* fxr_root, pal_char_t** out_fxr_path)
 {
-    trace_info(_X("Reading fx resolver directory=[%s]"), fxr_root);
+    trace_info(PAL_X("Reading fx resolver directory=[%s]"), fxr_root);
 
     c_fx_ver_t max_ver;
     c_fx_ver_init(&max_ver);
@@ -56,7 +56,7 @@ static bool get_latest_fxr(const pal_char_t* fxr_root, pal_char_t** out_fxr_path
 
     if (c_fx_ver_is_empty(&max_ver))
     {
-        trace_error(_X("Error: [%s] does not contain any version-numbered child folders"), fxr_root);
+        trace_error(PAL_X("Error: [%s] does not contain any version-numbered child folders"), fxr_root);
         c_fx_ver_cleanup(&max_ver);
         return false;
     }
@@ -71,17 +71,17 @@ static bool get_latest_fxr(const pal_char_t* fxr_root, pal_char_t** out_fxr_path
     if (fxr_dir == NULL)
         return false;
 
-    trace_info(_X("Detected latest fxr version=[%s]..."), fxr_dir);
+    trace_info(PAL_X("Detected latest fxr version=[%s]..."), fxr_dir);
 
     *out_fxr_path = utils_find_file_in_dir(fxr_dir, LIBFXR_NAME);
     if (*out_fxr_path == NULL)
     {
-        trace_error(_X("Error: the required library %s could not be found in [%s]"), LIBFXR_NAME, fxr_dir);
+        trace_error(PAL_X("Error: the required library %s could not be found in [%s]"), LIBFXR_NAME, fxr_dir);
         free(fxr_dir);
         return false;
     }
 
-    trace_info(_X("Resolved fxr [%s]..."), *out_fxr_path);
+    trace_info(PAL_X("Resolved fxr [%s]..."), *out_fxr_path);
     free(fxr_dir);
     return true;
 }
@@ -90,15 +90,15 @@ static bool get_latest_fxr(const pal_char_t* fxr_root, pal_char_t** out_fxr_path
 // Caller should free() the returned pointer.
 static pal_char_t* get_fxr_dir(const pal_char_t* dotnet_root)
 {
-    size_t cap = pal_strlen(dotnet_root) + STRING_LENGTH(_X("host")) + STRING_LENGTH(_X("fxr")) + 3; // 2 separators + NUL
+    size_t cap = pal_strlen(dotnet_root) + STRING_LENGTH(PAL_X("host")) + STRING_LENGTH(PAL_X("fxr")) + 3; // 2 separators + NUL
     pal_char_t* fxr_dir = (pal_char_t*)malloc(cap * sizeof(pal_char_t));
     if (fxr_dir == NULL)
         return NULL;
 
-    fxr_dir[0] = _X('\0');
+    fxr_dir[0] = PAL_X('\0');
     utils_append_path(fxr_dir, cap, dotnet_root);
-    utils_append_path(fxr_dir, cap, _X("host"));
-    utils_append_path(fxr_dir, cap, _X("fxr"));
+    utils_append_path(fxr_dir, cap, PAL_X("host"));
+    utils_append_path(fxr_dir, cap, PAL_X("fxr"));
     return fxr_dir;
 }
 
@@ -111,11 +111,11 @@ static void print_missing_runtime_error(
 {
     bool search_app_local = (search & fxr_search_location_app_local) != 0;
     bool search_app_relative = (search & fxr_search_location_app_relative) != 0
-        && app_relative_dotnet_root != NULL && app_relative_dotnet_root[0] != _X('\0');
+        && app_relative_dotnet_root != NULL && app_relative_dotnet_root[0] != PAL_X('\0');
     bool search_env = (search & fxr_search_location_environment_variable) != 0;
     bool search_global = (search & fxr_search_location_global) != 0;
 
-    trace_verbose(_X("The required library %s could not be found. Search location options [0x%x]"),
+    trace_verbose(PAL_X("The required library %s could not be found. Search location options [0x%x]"),
                   LIBFXR_NAME, (unsigned int)search);
 
     pal_char_t* host_path = pal_get_own_executable_path();
@@ -128,58 +128,58 @@ static void print_missing_runtime_error(
     const pal_char_t* message_parts[32];
     size_t index = 0;
 
-    message_parts[index++] = _X("Not found");
+    message_parts[index++] = PAL_X("Not found");
     if (search != FXR_SEARCH_LOCATION_DEFAULT_SET)
     {
-        message_parts[index++] = _X(" - search options: [");
+        message_parts[index++] = PAL_X(" - search options: [");
 
         if (search_app_local)
-            message_parts[index++] = _X(" app_local");
+            message_parts[index++] = PAL_X(" app_local");
 
         if (search_app_relative)
-            message_parts[index++] = _X(" app_relative");
+            message_parts[index++] = PAL_X(" app_relative");
 
         if (search_env)
-            message_parts[index++] = _X(" environment_variable");
+            message_parts[index++] = PAL_X(" environment_variable");
 
         if (search_global)
-            message_parts[index++] = _X(" global");
+            message_parts[index++] = PAL_X(" global");
 
-        message_parts[index++] = _X(" ]");
+        message_parts[index++] = PAL_X(" ]");
 
         if (search_app_relative)
         {
-            message_parts[index++] = _X(", app-relative path: ");
+            message_parts[index++] = PAL_X(", app-relative path: ");
             message_parts[index++] = app_relative_dotnet_root;
         }
     }
 
-    message_parts[index++] = _X("\n\nThe following locations were searched:");
+    message_parts[index++] = PAL_X("\n\nThe following locations were searched:");
 
-    if (search_app_local && root_path != NULL && root_path[0] != _X('\0'))
+    if (search_app_local && root_path != NULL && root_path[0] != PAL_X('\0'))
     {
-        message_parts[index++] = _X("\n  Application directory:\n    ");
+        message_parts[index++] = PAL_X("\n  Application directory:\n    ");
         message_parts[index++] = root_path;
     }
 
     if (search_app_relative)
     {
-        message_parts[index++] = _X("\n  App-relative location:\n    ");
+        message_parts[index++] = PAL_X("\n  App-relative location:\n    ");
         message_parts[index++] = app_relative_dotnet_root;
     }
 
     if (search_env)
     {
-        message_parts[index++] = _X("\n  Environment variable:\n    ");
+        message_parts[index++] = PAL_X("\n  Environment variable:\n    ");
         if (env_var_name == NULL)
         {
-            message_parts[index++] = DOTNET_ROOT_ARCH_ENV_VAR _X(" = <not set>\n    ")
-                                     DOTNET_ROOT_ENV_VAR      _X(" = <not set>");
+            message_parts[index++] = DOTNET_ROOT_ARCH_ENV_VAR PAL_X(" = <not set>\n    ")
+                                     DOTNET_ROOT_ENV_VAR      PAL_X(" = <not set>");
         }
         else
         {
             message_parts[index++] = env_var_name;
-            message_parts[index++] = _X(" = ");
+            message_parts[index++] = PAL_X(" = ");
             message_parts[index++] = dotnet_root;
         }
     }
@@ -189,12 +189,12 @@ static void print_missing_runtime_error(
     {
         registered_config_location = pal_get_dotnet_self_registered_config_location();
         self_registered_dir = pal_get_dotnet_self_registered_dir();
-        bool self_registered_empty = self_registered_dir == NULL || self_registered_dir[0] == _X('\0');
+        bool self_registered_empty = self_registered_dir == NULL || self_registered_dir[0] == PAL_X('\0');
 
-        message_parts[index++] = _X("\n  Registered location:\n    ");
-        message_parts[index++] = registered_config_location != NULL ? registered_config_location : _X("");
-        message_parts[index++] = _X(" = ");
-        message_parts[index++] = self_registered_empty ? _X("<not set>") : self_registered_dir;
+        message_parts[index++] = PAL_X("\n  Registered location:\n    ");
+        message_parts[index++] = registered_config_location != NULL ? registered_config_location : PAL_X("");
+        message_parts[index++] = PAL_X(" = ");
+        message_parts[index++] = self_registered_empty ? PAL_X("<not set>") : self_registered_dir;
 
         // Default install location is only searched if self-registered location is not set.
         if (self_registered_empty)
@@ -202,7 +202,7 @@ static void print_missing_runtime_error(
             default_install_location = pal_get_default_installation_dir();
             if (default_install_location != NULL)
             {
-                message_parts[index++] = _X("\n  Default location:\n    ");
+                message_parts[index++] = PAL_X("\n  Default location:\n    ");
                 message_parts[index++] = default_install_location;
             }
         }
@@ -226,7 +226,7 @@ static void print_missing_runtime_error(
             memcpy(dst, message_parts[i], len * sizeof(pal_char_t));
             dst += len;
         }
-        *dst = _X('\0');
+        *dst = PAL_X('\0');
     }
 
     pal_char_t download_url[MAX_DOWNLOAD_URL_LEN];
@@ -235,10 +235,10 @@ static void print_missing_runtime_error(
     trace_error(
         MISSING_RUNTIME_ERROR_FORMAT,
         INSTALL_NET_ERROR_MESSAGE,
-        host_path != NULL ? host_path : _X(""),
+        host_path != NULL ? host_path : PAL_X(""),
         _STRINGIFY(CURRENT_ARCH_NAME),
         _STRINGIFY(HOST_VERSION),
-        location != NULL ? location : _X(""),
+        location != NULL ? location : PAL_X(""),
         download_url,
         _STRINGIFY(HOST_VERSION));
 
@@ -265,7 +265,7 @@ bool fxr_resolver_try_get_path(
 
     bool search_app_local = (search & fxr_search_location_app_local) != 0;
     bool search_app_relative = (search & fxr_search_location_app_relative) != 0
-        && app_relative_dotnet_root != NULL && app_relative_dotnet_root[0] != _X('\0');
+        && app_relative_dotnet_root != NULL && app_relative_dotnet_root[0] != PAL_X('\0');
     bool search_env = (search & fxr_search_location_environment_variable) != 0;
     bool search_global = (search & fxr_search_location_global) != 0;
 
@@ -273,13 +273,13 @@ bool fxr_resolver_try_get_path(
     // For libhost, it may be empty if app-local search is not desired (e.g.
     // com/ijw/winrt hosts, nethost when no assembly path is specified).
     // If a hostfxr exists in root_path, then assume self-contained.
-    if (search_app_local && root_path != NULL && root_path[0] != _X('\0'))
+    if (search_app_local && root_path != NULL && root_path[0] != PAL_X('\0'))
     {
         pal_char_t* app_local_fxr = utils_find_file_in_dir(root_path, LIBFXR_NAME);
         if (app_local_fxr != NULL)
         {
-            trace_info(_X("Using app-local location [%s] as runtime location."), root_path);
-            trace_info(_X("Resolved fxr [%s]..."), app_local_fxr);
+            trace_info(PAL_X("Using app-local location [%s] as runtime location."), root_path);
+            trace_info(PAL_X("Resolved fxr [%s]..."), app_local_fxr);
             *out_dotnet_root = pal_strdup(root_path);
             if (*out_dotnet_root == NULL)
             {
@@ -308,7 +308,7 @@ bool fxr_resolver_try_get_path(
         pal_char_t* canonical_app_relative = pal_fullpath(app_relative_dotnet_root, /*skip_error_logging*/ false);
         if (canonical_app_relative != NULL)
         {
-            trace_info(_X("Using app-relative location [%s] as runtime location."), canonical_app_relative);
+            trace_info(PAL_X("Using app-relative location [%s] as runtime location."), canonical_app_relative);
             dotnet_root = pal_strdup(canonical_app_relative);
             if (dotnet_root == NULL)
             {
@@ -320,7 +320,7 @@ bool fxr_resolver_try_get_path(
             free(canonical_app_relative);
             if (app_rel_fxr != NULL)
             {
-                trace_info(_X("Resolved fxr [%s]..."), app_rel_fxr);
+                trace_info(PAL_X("Resolved fxr [%s]..."), app_rel_fxr);
                 *out_dotnet_root = dotnet_root;
                 *out_fxr_path = app_rel_fxr;
                 return true;
@@ -332,7 +332,7 @@ bool fxr_resolver_try_get_path(
     {
         if (utils_get_dotnet_root_from_env(&env_var_name, &dotnet_root))
         {
-            trace_info(_X("Using environment variable %s=[%s] as runtime location."), env_var_name, dotnet_root);
+            trace_info(PAL_X("Using environment variable %s=[%s] as runtime location."), env_var_name, dotnet_root);
         }
     }
 
@@ -344,12 +344,12 @@ bool fxr_resolver_try_get_path(
 
         if (global != NULL)
         {
-            trace_info(_X("Using global install location [%s] as runtime location."), global);
+            trace_info(PAL_X("Using global install location [%s] as runtime location."), global);
             dotnet_root = global; // transfer ownership
         }
         else
         {
-            trace_error(_X("Error: the default install location cannot be obtained."));
+            trace_error(PAL_X("Error: the default install location cannot be obtained."));
             // env_var_name and dotnet_root are NULL on this branch.
             return false;
         }
@@ -425,7 +425,7 @@ bool fxr_resolver_try_get_path_from_dotnet_root(
 
     if (!pal_directory_exists(fxr_dir))
     {
-        trace_error(_X("Error: [%s] does not exist"), fxr_dir);
+        trace_error(PAL_X("Error: [%s] does not exist"), fxr_dir);
         free(fxr_dir);
         return false;
     }
@@ -443,6 +443,6 @@ bool fxr_resolver_try_get_existing_fxr(pal_dll_t* out_fxr, pal_char_t** out_fxr_
     if (!pal_get_loaded_library(LIBFXR_NAME, "hostfxr_main", out_fxr, out_fxr_path))
         return false;
 
-    trace_verbose(_X("Found previously loaded library %s [%s]."), LIBFXR_NAME, *out_fxr_path);
+    trace_verbose(PAL_X("Found previously loaded library %s [%s]."), LIBFXR_NAME, *out_fxr_path);
     return true;
 }

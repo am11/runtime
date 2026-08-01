@@ -54,7 +54,7 @@ bool pal::touch_file(const pal::string_t& path)
     int fd = open(path.c_str(), (O_CREAT | O_EXCL), (S_IRUSR | S_IRGRP | S_IROTH));
     if (fd == -1)
     {
-        trace::warning(_X("open(%s) failed in %s"), path.c_str(), _STRINGIFY(__FUNCTION__));
+        trace::warning(PAL_X("open(%s) failed in %s"), path.c_str(), _STRINGIFY(__FUNCTION__));
         return false;
     }
     (void)close(fd);
@@ -66,14 +66,14 @@ static void* map_file(const pal::string_t& path, size_t* length, int prot, int f
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1)
     {
-        trace::error(_X("Failed to map file. open(%s) failed with error %d"), path.c_str(), errno);
+        trace::error(PAL_X("Failed to map file. open(%s) failed with error %d"), path.c_str(), errno);
         return nullptr;
     }
 
     struct stat buf;
     if (fstat(fd, &buf) != 0)
     {
-        trace::error(_X("Failed to map file. fstat(%s) failed with error %d"), path.c_str(), errno);
+        trace::error(PAL_X("Failed to map file. fstat(%s) failed with error %d"), path.c_str(), errno);
         close(fd);
         return nullptr;
     }
@@ -88,7 +88,7 @@ static void* map_file(const pal::string_t& path, size_t* length, int prot, int f
 
     if (address == MAP_FAILED)
     {
-        trace::error(_X("Failed to map file. mmap(%s) failed with error %d"), path.c_str(), errno);
+        trace::error(PAL_X("Failed to map file. mmap(%s) failed with error %d"), path.c_str(), errno);
         address = nullptr;
     }
 
@@ -117,7 +117,7 @@ bool pal::getcwd(pal::string_t* recv)
             return false;
         }
 
-        trace::error(_X("getcwd() failed: %s"), strerror(errno).c_str());
+        trace::error(PAL_X("getcwd() failed: %s"), strerror(errno).c_str());
         return false;
     }
 
@@ -177,28 +177,28 @@ bool pal::get_default_breadcrumb_store(string_t* recv)
 {
     recv->clear();
     pal::string_t ext;
-    if (pal::getenv(_X("CORE_BREADCRUMBS"), &ext) && pal::fullpath(&ext))
+    if (pal::getenv(PAL_X("CORE_BREADCRUMBS"), &ext) && pal::fullpath(&ext))
     {
         // We should have the path in ext.
-        trace::info(_X("Realpath CORE_BREADCRUMBS [%s]"), ext.c_str());
+        trace::info(PAL_X("Realpath CORE_BREADCRUMBS [%s]"), ext.c_str());
     }
 
     if (!pal::directory_exists(ext))
     {
-        trace::info(_X("Directory core breadcrumbs [%s] was not specified or found"), ext.c_str());
+        trace::info(PAL_X("Directory core breadcrumbs [%s] was not specified or found"), ext.c_str());
         ext.clear();
-        append_path(&ext, _X("opt"));
-        append_path(&ext, _X("corebreadcrumbs"));
+        append_path(&ext, PAL_X("opt"));
+        append_path(&ext, PAL_X("corebreadcrumbs"));
         if (!pal::directory_exists(ext))
         {
-            trace::info(_X("Fallback directory core breadcrumbs at [%s] was not found"), ext.c_str());
+            trace::info(PAL_X("Fallback directory core breadcrumbs at [%s] was not found"), ext.c_str());
             return false;
         }
     }
 
     if (access(ext.c_str(), (R_OK | W_OK)) != 0)
     {
-        trace::info(_X("Breadcrumb store [%s] is not ACL-ed with rw-"), ext.c_str());
+        trace::info(PAL_X("Breadcrumb store [%s] is not ACL-ed with rw-"), ext.c_str());
     }
 
     recv->assign(ext);
@@ -209,32 +209,32 @@ bool pal::get_default_servicing_directory(string_t* recv)
 {
     recv->clear();
     pal::string_t ext;
-    if (pal::getenv(_X("CORE_SERVICING"), &ext) && pal::fullpath(&ext))
+    if (pal::getenv(PAL_X("CORE_SERVICING"), &ext) && pal::fullpath(&ext))
     {
         // We should have the path in ext.
-        trace::info(_X("Realpath CORE_SERVICING [%s]"), ext.c_str());
+        trace::info(PAL_X("Realpath CORE_SERVICING [%s]"), ext.c_str());
     }
 
     if (!pal::directory_exists(ext))
     {
-        trace::info(_X("Directory core servicing at [%s] was not specified or found"), ext.c_str());
+        trace::info(PAL_X("Directory core servicing at [%s] was not specified or found"), ext.c_str());
         ext.clear();
-        append_path(&ext, _X("opt"));
-        append_path(&ext, _X("coreservicing"));
+        append_path(&ext, PAL_X("opt"));
+        append_path(&ext, PAL_X("coreservicing"));
         if (!pal::directory_exists(ext))
         {
-            trace::info(_X("Fallback directory core servicing at [%s] was not found"), ext.c_str());
+            trace::info(PAL_X("Fallback directory core servicing at [%s] was not found"), ext.c_str());
             return false;
         }
     }
 
     if (access(ext.c_str(), R_OK) != 0)
     {
-        trace::info(_X("Directory core servicing at [%s] was not ACL-ed properly"), ext.c_str());
+        trace::info(PAL_X("Directory core servicing at [%s] was not ACL-ed properly"), ext.c_str());
     }
 
     recv->assign(ext);
-    trace::info(_X("Using core servicing at [%s]"), ext.c_str());
+    trace::info(PAL_X("Using core servicing at [%s]"), ext.c_str());
     return true;
 }
 
@@ -247,7 +247,7 @@ bool is_read_write_able_directory(pal::string_t& dir)
 bool get_extraction_base_parent_directory(pal::string_t& directory)
 {
     // check for the POSIX standard environment variable
-    if (pal::getenv(_X("HOME"), &directory))
+    if (pal::getenv(PAL_X("HOME"), &directory))
     {
         if (is_read_write_able_directory(directory))
         {
@@ -255,7 +255,7 @@ bool get_extraction_base_parent_directory(pal::string_t& directory)
         }
         else
         {
-            trace::error(_X("Default extraction directory [%s] either doesn't exist or is not accessible for read/write."), directory.c_str());
+            trace::error(PAL_X("Default extraction directory [%s] either doesn't exist or is not accessible for read/write."), directory.c_str());
         }
     }
     else
@@ -277,12 +277,12 @@ bool get_extraction_base_parent_directory(pal::string_t& directory)
             }
             else
             {
-                trace::error(_X("Failed to determine default extraction location. Environment variable '$HOME' is not defined and directory reported by getpwuid() [%s] either doesn't exist or is not accessible for read/write."), pwuid->pw_dir);
+                trace::error(PAL_X("Failed to determine default extraction location. Environment variable '$HOME' is not defined and directory reported by getpwuid() [%s] either doesn't exist or is not accessible for read/write."), pwuid->pw_dir);
             }
         }
         else
         {
-            trace::error(_X("Failed to determine default extraction location. Environment variable '$HOME' is not defined and getpwuid() returned NULL."));
+            trace::error(PAL_X("Failed to determine default extraction location. Environment variable '$HOME' is not defined and getpwuid() returned NULL."));
         }
     }
 
@@ -296,7 +296,7 @@ bool pal::get_default_bundle_extraction_base_dir(pal::string_t& extraction_dir)
         return false;
     }
 
-    append_path(&extraction_dir, _X(".net"));
+    append_path(&extraction_dir, PAL_X(".net"));
     if (is_read_write_able_directory(extraction_dir))
     {
         return true;
@@ -309,7 +309,7 @@ bool pal::get_default_bundle_extraction_base_dir(pal::string_t& extraction_dir)
     }
     else if (errno != EEXIST)
     {
-        trace::error(_X("Failed to create default extraction directory [%s]. %s"), extraction_dir.c_str(), pal::strerror(errno).c_str());
+        trace::error(PAL_X("Failed to create default extraction directory [%s]. %s"), extraction_dir.c_str(), pal::strerror(errno).c_str());
         return false;
     }
 
@@ -324,16 +324,16 @@ bool pal::get_global_dotnet_dirs(std::vector<pal::string_t>* recv)
 
 pal::string_t pal::get_dotnet_self_registered_config_location(pal::architecture arch)
 {
-    pal::string_t config_location = _X("/etc/dotnet");
+    pal::string_t config_location = PAL_X("/etc/dotnet");
 
     //  ***Used only for testing***
     pal::string_t environment_install_location_override;
-    if (test_only_getenv(_X("_DOTNET_TEST_INSTALL_LOCATION_PATH"), &environment_install_location_override))
+    if (test_only_getenv(PAL_X("_DOTNET_TEST_INSTALL_LOCATION_PATH"), &environment_install_location_override))
     {
         config_location = environment_install_location_override;
     }
 
-    append_path(&config_location, (_X("install_location_") + to_lower(get_arch_name(arch))).c_str());
+    append_path(&config_location, (PAL_X("install_location_") + to_lower(get_arch_name(arch))).c_str());
     return config_location;
 }
 
@@ -364,12 +364,12 @@ bool get_install_location_from_file(const pal::string_t& file_path, bool& file_f
 {
     file_found = true;
     bool install_location_found = false;
-    FILE* install_location_file = pal::file_open(file_path, _X("r"));
+    FILE* install_location_file = pal::file_open(file_path, PAL_X("r"));
     if (install_location_file != nullptr)
     {
         if (!get_line_from_file(install_location_file, install_location))
         {
-            trace::warning(_X("Did not find any install location in '%s'."), file_path.c_str());
+            trace::warning(PAL_X("Did not find any install location in '%s'."), file_path.c_str());
         }
         else
         {
@@ -384,12 +384,12 @@ bool get_install_location_from_file(const pal::string_t& file_path, bool& file_f
     {
         if (errno == ENOENT)
         {
-            trace::verbose(_X("The install_location file ['%s'] does not exist - skipping."), file_path.c_str());
+            trace::verbose(PAL_X("The install_location file ['%s'] does not exist - skipping."), file_path.c_str());
             file_found = false;
         }
         else
         {
-            trace::error(_X("The install_location file ['%s'] failed to open: %s."), file_path.c_str(), pal::strerror(errno).c_str());
+            trace::error(PAL_X("The install_location file ['%s'] failed to open: %s."), file_path.c_str(), pal::strerror(errno).c_str());
         }
     }
 
@@ -413,7 +413,7 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     recv->clear();
 
     pal::string_t arch_specific_install_location_file_path = get_dotnet_self_registered_config_location(arch);
-    trace::verbose(_X("Looking for architecture-specific install_location file in '%s'."), arch_specific_install_location_file_path.c_str());
+    trace::verbose(PAL_X("Looking for architecture-specific install_location file in '%s'."), arch_specific_install_location_file_path.c_str());
 
     pal::string_t install_location;
     bool file_found = false;
@@ -428,8 +428,8 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
         if (arch == get_current_arch())
         {
             pal::string_t legacy_install_location_file_path = get_directory(arch_specific_install_location_file_path);
-            append_path(&legacy_install_location_file_path, _X("install_location"));
-            trace::verbose(_X("Looking for install_location file in '%s'."), legacy_install_location_file_path.c_str());
+            append_path(&legacy_install_location_file_path, PAL_X("install_location"));
+            trace::verbose(PAL_X("Looking for install_location file in '%s'."), legacy_install_location_file_path.c_str());
 
             if (!get_install_location_from_file(legacy_install_location_file_path, file_found, install_location))
             {
@@ -443,7 +443,7 @@ bool pal::get_dotnet_self_registered_dir_for_arch(pal::architecture arch, pal::s
     }
 
     recv->assign(install_location);
-    trace::verbose(_X("Found registered install location '%s'."), recv->c_str());
+    trace::verbose(PAL_X("Found registered install location '%s'."), recv->c_str());
     return file_found;
 }
 
@@ -476,7 +476,7 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
 {
     //  ***Used only for testing***
     pal::string_t environment_override;
-    if (test_only_getenv(_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"), &environment_override))
+    if (test_only_getenv(PAL_X("_DOTNET_TEST_DEFAULT_INSTALL_PATH"), &environment_override))
     {
         recv->assign(environment_override);
         return true;
@@ -490,7 +490,7 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
         return false;
 
 #if defined(TARGET_OSX)
-    recv->assign(_X("/usr/local/share/dotnet"));
+    recv->assign(PAL_X("/usr/local/share/dotnet"));
     if (is_current_arch && pal::is_emulating_x64())
     {
         append_path(recv, get_arch_name(arch));
@@ -513,14 +513,14 @@ bool pal::get_default_installation_dir_for_arch(pal::architecture arch, pal::str
     if (::sysctl(mib, 2, buf, &len, NULL, 0) == 0)
     {
         recv->assign(buf);
-        recv->append(_X("/share/dotnet"));
+        recv->append(PAL_X("/share/dotnet"));
     }
     else
     {
-        recv->assign(_X("/usr/local/share/dotnet"));
+        recv->assign(PAL_X("/usr/local/share/dotnet"));
     }
 #else
-    recv->assign(_X("/usr/share/dotnet"));
+    recv->assign(PAL_X("/usr/share/dotnet"));
 #endif
     return true;
 }
@@ -586,7 +586,7 @@ pal::string_t pal::get_current_os_rid_platform()
         }
 
         std::string release(str, strlen(str));
-        ridOS.append(_X("osx."));
+        ridOS.append(PAL_X("osx."));
         ridOS.append(release);
     }
 
@@ -606,7 +606,7 @@ pal::string_t pal::get_current_os_rid_platform()
         char* pos = strchr(str, '.');
         if (pos)
         {
-            ridOS.append(_X("freebsd."))
+            ridOS.append(PAL_X("freebsd."))
                 .append(str, pos - str);
         }
     }
@@ -633,7 +633,7 @@ pal::string_t pal::get_current_os_rid_platform()
         return ridOS;
     }
 
-    ridOS.append(_X("openbsd."))
+    ridOS.append(PAL_X("openbsd."))
         .append(utsname_obj.release); // e.g. openbsd.7.4
 
     return ridOS;
@@ -663,16 +663,16 @@ pal::string_t pal::get_current_os_rid_platform()
 
     if (strncmp(utsname_obj.version, "omnios", strlen("omnios")) == 0)
     {
-        ridOS.append(_X("omnios."))
+        ridOS.append(PAL_X("omnios."))
             .append(utsname_obj.version, strlen("omnios-r"), 2); // e.g. omnios.15
     }
     else if (strncmp(utsname_obj.version, "illumos-", strlen("illumos-")) == 0)
     {
-        ridOS.append(_X("openindiana")); // version-less
+        ridOS.append(PAL_X("openindiana")); // version-less
     }
     else if (strncmp(utsname_obj.version, "joyent_", strlen("joyent_")) == 0)
     {
-        ridOS.append(_X("smartos."))
+        ridOS.append(PAL_X("smartos."))
             .append(utsname_obj.version, strlen("joyent_"), 4); // e.g. smartos.2020
     }
 
@@ -699,7 +699,7 @@ pal::string_t pal::get_current_os_rid_platform()
     char* pos = strchr(utsname_obj.version, '.');
     if (pos)
     {
-        ridOS.append(_X("solaris."))
+        ridOS.append(PAL_X("solaris."))
             .append(utsname_obj.version, pos - utsname_obj.version); // e.g. solaris.11
     }
 
@@ -717,26 +717,26 @@ pal::string_t pal::get_current_os_rid_platform()
 static
 pal::string_t normalize_linux_rid(pal::string_t rid)
 {
-    pal::string_t rhelPrefix(_X("rhel."));
-    pal::string_t alpinePrefix(_X("alpine."));
-    pal::string_t rockyPrefix(_X("rocky."));
+    pal::string_t rhelPrefix(PAL_X("rhel."));
+    pal::string_t alpinePrefix(PAL_X("alpine."));
+    pal::string_t rockyPrefix(PAL_X("rocky."));
     size_t lastVersionSeparatorIndex = std::string::npos;
 
     if (rid.compare(0, rhelPrefix.length(), rhelPrefix) == 0)
     {
-        lastVersionSeparatorIndex = rid.find(_X("."), rhelPrefix.length());
+        lastVersionSeparatorIndex = rid.find(PAL_X("."), rhelPrefix.length());
     }
     else if (rid.compare(0, alpinePrefix.length(), alpinePrefix) == 0)
     {
-        size_t secondVersionSeparatorIndex = rid.find(_X("."), alpinePrefix.length());
+        size_t secondVersionSeparatorIndex = rid.find(PAL_X("."), alpinePrefix.length());
         if (secondVersionSeparatorIndex != std::string::npos)
         {
-            lastVersionSeparatorIndex = rid.find(_X("."), secondVersionSeparatorIndex + 1);
+            lastVersionSeparatorIndex = rid.find(PAL_X("."), secondVersionSeparatorIndex + 1);
         }
     }
     else if (rid.compare(0, rockyPrefix.length(), rockyPrefix) == 0)
     {
-        lastVersionSeparatorIndex = rid.find(_X("."), rockyPrefix.length());
+        lastVersionSeparatorIndex = rid.find(PAL_X("."), rockyPrefix.length());
     }
 
     if (lastVersionSeparatorIndex != std::string::npos)
@@ -750,21 +750,21 @@ pal::string_t normalize_linux_rid(pal::string_t rid)
 pal::string_t pal::get_current_os_rid_platform()
 {
     pal::string_t ridOS;
-    pal::string_t versionFile(_X("/etc/os-release"));
+    pal::string_t versionFile(PAL_X("/etc/os-release"));
 
     if (pal::file_exists(versionFile))
     {
         // Read the file to get ID and VERSION_ID data that will be used
         // to construct the RID.
-        FILE* fsVersionFile = pal::file_open(versionFile, _X("r"));
+        FILE* fsVersionFile = pal::file_open(versionFile, PAL_X("r"));
 
         // Proceed only if we were able to open the file
         if (fsVersionFile != nullptr)
         {
             pal::string_t line;
-            pal::string_t strID(_X("ID="));
+            pal::string_t strID(PAL_X("ID="));
             pal::string_t valID;
-            pal::string_t strVersionID(_X("VERSION_ID="));
+            pal::string_t strVersionID(PAL_X("VERSION_ID="));
             pal::string_t valVersionID;
 
             bool fFoundID = false, fFoundVersion = false;
@@ -816,7 +816,7 @@ pal::string_t pal::get_current_os_rid_platform()
 
             if (fFoundVersion)
             {
-                ridOS.append(_X("."));
+                ridOS.append(PAL_X("."));
                 ridOS.append(valVersionID);
             }
 
@@ -930,7 +930,7 @@ bool pal::realpath(pal::string_t* path, bool skip_error_logging)
 
         if (!skip_error_logging)
         {
-            trace::error(_X("realpath(%s) failed: %s"), path->c_str(), strerror(errno).c_str());
+            trace::error(PAL_X("realpath(%s) failed: %s"), path->c_str(), strerror(errno).c_str());
         }
 
         return false;
@@ -1031,7 +1031,7 @@ void pal::readdir(const string_t& path, const string_t& pattern, std::vector<pal
 
 void pal::readdir(const pal::string_t& path, std::vector<pal::string_t>* list)
 {
-    ::readdir(path, _X("*"), false, list);
+    ::readdir(path, PAL_X("*"), false, list);
 }
 
 void pal::readdir_onlydirectories(const pal::string_t& path, const string_t& pattern, std::vector<pal::string_t>* list)

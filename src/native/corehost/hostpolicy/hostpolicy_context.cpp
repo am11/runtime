@@ -16,8 +16,8 @@ namespace
 {
     void log_duplicate_property_error(const pal::char_t *property_key)
     {
-        trace::error(_X("Duplicate runtime property found: %s"), property_key);
-        trace::error(_X("It is invalid to specify values for properties populated by the hosting layer in the application's .runtimeconfig.json"));
+        trace::error(PAL_X("Duplicate runtime property found: %s"), property_key);
+        trace::error(PAL_X("It is invalid to specify values for properties populated by the hosting layer in the application's .runtimeconfig.json"));
     }
 
     // bundle_probe:
@@ -37,8 +37,8 @@ namespace
 
         if (!pal::clr_palstring(path, &file_path))
         {
-            trace::warning(_X("Failure probing contents of the application bundle."));
-            trace::warning(_X("Failed to convert path [%hs] to UTF8"), path);
+            trace::warning(PAL_X("Failure probing contents of the application bundle."));
+            trace::warning(PAL_X("Failed to convert path [%hs] to UTF8"), path);
 
             return false;
         }
@@ -151,11 +151,11 @@ namespace
 
 bool hostpolicy_context_t::should_read_rid_fallback_graph(const hostpolicy_init_t &init)
 {
-    const auto &iter = std::find(init.cfg_keys.cbegin(), init.cfg_keys.cend(), _X("System.Runtime.Loader.UseRidGraph"));
+    const auto &iter = std::find(init.cfg_keys.cbegin(), init.cfg_keys.cend(), PAL_X("System.Runtime.Loader.UseRidGraph"));
     if (iter != init.cfg_keys.cend())
     {
         size_t idx = iter - init.cfg_keys.cbegin();
-        return pal::strcasecmp(init.cfg_values[idx].data(), _X("true")) == 0;
+        return pal::strcasecmp(init.cfg_values[idx].data(), PAL_X("true")) == 0;
     }
 
     // Reading the RID fallback graph is disabled by default
@@ -188,7 +188,7 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
     pal::string_t resolver_errors;
     if (!resolver.valid(&resolver_errors))
     {
-        trace::error(_X("Error initializing the dependency resolver: %s"), resolver_errors.c_str());
+        trace::error(PAL_X("Error initializing the dependency resolver: %s"), resolver_errors.c_str());
         return StatusCode::ResolverInitFailure;
     }
 
@@ -206,7 +206,7 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
         // otherwise fail early.
         if (!bundle::info_t::is_single_file_bundle())
         {
-            trace::error(_X("Could not resolve CoreCLR path. For more details, enable tracing by setting DOTNET_HOST_TRACE environment variable to 1"));
+            trace::error(PAL_X("Could not resolve CoreCLR path. For more details, enable tracing by setting DOTNET_HOST_TRACE environment variable to 1"));
             return StatusCode::CoreClrResolveFailure;
         }
 
@@ -249,7 +249,7 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
     resolver.enum_app_context_deps_files([&](const pal::string_t& deps_file)
     {
         if (!app_context_deps_str.empty())
-            app_context_deps_str += _X(';');
+            app_context_deps_str += PAL_X(';');
 
         // For the application's .deps.json if this is single file, 3.1 backward compat
         // then the path used internally is the bundle path, but externally we need to report
@@ -285,9 +285,9 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
     {
         // Provide opt-in compatible behavior by using the switch to set APP_PATHS
         const pal::char_t *key = hostpolicy_init.cfg_keys[i].c_str();
-        if (pal::strcasecmp(key, _X("Microsoft.NETCore.DotNetHostPolicy.SetAppPaths")) == 0)
+        if (pal::strcasecmp(key, PAL_X("Microsoft.NETCore.DotNetHostPolicy.SetAppPaths")) == 0)
         {
-            set_app_paths = (pal::strcasecmp(hostpolicy_init.cfg_values[i].data(), _X("true")) == 0);
+            set_app_paths = (pal::strcasecmp(hostpolicy_init.cfg_values[i].data(), PAL_X("true")) == 0);
         }
 
         if (!coreclr_properties.add(key, hostpolicy_init.cfg_values[i].c_str()))
@@ -311,7 +311,7 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
 
     // Startup hooks
     pal::string_t startup_hooks;
-    if (pal::getenv(_X("DOTNET_STARTUP_HOOKS"), &startup_hooks))
+    if (pal::getenv(PAL_X("DOTNET_STARTUP_HOOKS"), &startup_hooks))
     {
         const pal::char_t *config_startup_hooks;
         if (coreclr_properties.try_get(common_property::StartUpHooks, &config_startup_hooks))
@@ -337,7 +337,7 @@ int hostpolicy_context_t::initialize(const hostpolicy_init_t &hostpolicy_init, c
 
         host_contract.get_runtime_property = &get_runtime_property;
         pal::char_t ptr_to_string_buffer[STRING_LENGTH("0xffffffffffffffff") + 1];
-        pal::snwprintf(ptr_to_string_buffer, ARRAY_SIZE(ptr_to_string_buffer), _X("0x%zx"), (size_t)(&host_contract));
+        pal::snwprintf(ptr_to_string_buffer, ARRAY_SIZE(ptr_to_string_buffer), PAL_X("0x%zx"), (size_t)(&host_contract));
         if (!coreclr_properties.add(_STRINGIFY(HOST_PROPERTY_RUNTIME_CONTRACT), ptr_to_string_buffer))
         {
             log_duplicate_property_error(_STRINGIFY(HOST_PROPERTY_RUNTIME_CONTRACT));

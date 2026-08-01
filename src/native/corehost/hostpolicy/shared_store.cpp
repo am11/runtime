@@ -5,8 +5,8 @@
 #include <trace.h>
 #include <utils.h>
 
-#define RUNTIME_STORE_DIRECTORY_NAME _X("store")
-#define SHARED_STORE_ENV _X("DOTNET_SHARED_STORE")
+#define RUNTIME_STORE_DIRECTORY_NAME PAL_X("store")
+#define SHARED_STORE_ENV PAL_X("DOTNET_SHARED_STORE")
 
 namespace
 {
@@ -26,7 +26,7 @@ namespace
                 append_path(&tok, tfm.c_str());
                 dirs.push_back(tok);
 
-                trace::verbose(_X("Shared store (%s): '%s'"), SHARED_STORE_ENV, tok.c_str());
+                trace::verbose(PAL_X("Shared store (%s): '%s'"), SHARED_STORE_ENV, tok.c_str());
             }
         }
     }
@@ -46,7 +46,7 @@ namespace
                 continue;
 
             dirs.push_back(dir);
-            trace::verbose(_X("Shared store (%s): '%s'"), _X("global"), dir.c_str());
+            trace::verbose(PAL_X("Shared store (%s): '%s'"), PAL_X("global"), dir.c_str());
         }
     }
 }
@@ -82,7 +82,7 @@ std::vector<pal::string_t> shared_store::get_paths(const pal::string_t& tfm, hos
         append_path(&dotnet_shared_store, arch);
         append_path(&dotnet_shared_store, tfm.c_str());
         shared_stores.push_back(dotnet_shared_store);
-        trace::verbose(_X("Shared store (%s): '%s'"), _X("dotnet"), dotnet_shared_store.c_str());
+        trace::verbose(PAL_X("Shared store (%s): '%s'"), PAL_X("dotnet"), dotnet_shared_store.c_str());
     }
 
     // Global shared store dir

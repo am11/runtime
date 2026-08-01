@@ -80,12 +80,12 @@ static pal_char_t* get_host_env_var(const pal_char_t* name)
     pal_char_t full_name[64];
     assert(STRING_LENGTH("DOTNET_HOST_") + pal_strlen(name) < ARRAY_SIZE(full_name));
 
-    pal_str_printf(full_name, ARRAY_SIZE(full_name), _X("DOTNET_HOST_%s"), name);
+    pal_str_printf(full_name, ARRAY_SIZE(full_name), PAL_X("DOTNET_HOST_%s"), name);
     pal_char_t* value = pal_getenv(full_name);
     if (value != NULL)
         return value;
 
-    pal_str_printf(full_name, ARRAY_SIZE(full_name), _X("COREHOST_%s"), name);
+    pal_str_printf(full_name, ARRAY_SIZE(full_name), PAL_X("COREHOST_%s"), name);
     return pal_getenv(full_name);
 }
 
@@ -123,7 +123,7 @@ static void trace_format_timestamp(pal_char_t* buffer, size_t buffer_len)
 //
 void trace_setup(void)
 {
-    pal_char_t* trace_str = get_host_env_var(_X("TRACE"));
+    pal_char_t* trace_str = get_host_env_var(PAL_X("TRACE"));
     if (trace_str == NULL)
         return;
 
@@ -136,7 +136,7 @@ void trace_setup(void)
         {
             pal_char_t timestamp[128];
             trace_format_timestamp(timestamp, ARRAY_SIZE(timestamp));
-            trace_info(_X("Tracing enabled @ %s"), timestamp);
+            trace_info(PAL_X("Tracing enabled @ %s"), timestamp);
         }
     }
 }
@@ -154,7 +154,7 @@ bool trace_enable(void)
     trace_lock_acquire();
 
     g_trace_file = stderr; // Trace to stderr by default.
-    tracefile_str = get_host_env_var(_X("TRACEFILE"));
+    tracefile_str = get_host_env_var(PAL_X("TRACEFILE"));
     if (tracefile_str != NULL)
     {
         tracefile_path_to_open = tracefile_str;
@@ -164,21 +164,21 @@ bool trace_enable(void)
             // <dir>/<exe_name>.<pid>.log
             pal_char_t* exe_path = pal_get_own_executable_path();
             pal_char_t exe_name[256];
-            exe_name[0] = _X('\0');
+            exe_name[0] = PAL_X('\0');
             if (exe_path != NULL)
             {
                 utils_get_filename(exe_path, exe_name, ARRAY_SIZE(exe_name));
                 free(exe_path);
                 // Strip extension from exe_name.
-                pal_char_t* dot = pal_strrchr(exe_name, _X('.'));
+                pal_char_t* dot = pal_strrchr(exe_name, PAL_X('.'));
                 if (dot != NULL)
-                    *dot = _X('\0');
+                    *dot = PAL_X('\0');
             }
 
             // Fall back to "host" if either the exe path lookup failed or the
             // filename did not fit in the buffer.
-            if (exe_name[0] == _X('\0'))
-                pal_str_printf(exe_name, ARRAY_SIZE(exe_name), _X("host"));
+            if (exe_name[0] == PAL_X('\0'))
+                pal_str_printf(exe_name, ARRAY_SIZE(exe_name), PAL_X("host"));
 
             // Allocate a buffer sized to fit "<dir>/<exe_name>.<pid>.log".
             const size_t max_pid_str_len = STRING_LENGTH("4294967295");
@@ -191,7 +191,7 @@ bool trace_enable(void)
             else
             {
                 pal_str_printf(trace_path, trace_path_len,
-                    _X("%s") DIR_SEPARATOR_STR _X("%s.%d.log"),
+                    PAL_X("%s") DIR_SEPARATOR_STR PAL_X("%s.%d.log"),
                     tracefile_str, exe_name, pal_get_pid());
                 tracefile_path_to_open = trace_path;
             }
@@ -199,7 +199,7 @@ bool trace_enable(void)
 
         if (!file_open_error)
         {
-            FILE* tracefile = pal_file_open(tracefile_path_to_open, _X("a"));
+            FILE* tracefile = pal_file_open(tracefile_path_to_open, PAL_X("a"));
             if (tracefile != NULL)
             {
                 setvbuf(tracefile, NULL, _IONBF, 0);
@@ -212,7 +212,7 @@ bool trace_enable(void)
         }
     }
 
-    pal_char_t* trace_verbosity_str = get_host_env_var(_X("TRACE_VERBOSITY"));
+    pal_char_t* trace_verbosity_str = get_host_env_var(PAL_X("TRACE_VERBOSITY"));
     if (trace_verbosity_str == NULL)
     {
         g_trace_verbosity = TRACE_VERBOSITY_VERBOSE; // Verbose trace by default.
@@ -226,7 +226,7 @@ bool trace_enable(void)
     trace_lock_release();
 
     if (file_open_error)
-        trace_error(_X("Unable to open specified trace file for writing: %s"), tracefile_path_to_open != NULL ? tracefile_path_to_open : tracefile_str);
+        trace_error(PAL_X("Unable to open specified trace file for writing: %s"), tracefile_path_to_open != NULL ? tracefile_path_to_open : tracefile_str);
 
     free(tracefile_str);
     free(trace_path);
@@ -349,7 +349,7 @@ void trace_println(const pal_char_t* format, ...)
 
 void trace_println_empty(void)
 {
-    trace_println(_X(""));
+    trace_println(PAL_X(""));
 }
 
 void trace_warning_v(const pal_char_t* format, va_list args)

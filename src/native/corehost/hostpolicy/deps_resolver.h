@@ -95,7 +95,7 @@ public:
             pal::string_t deps_file = i == 0
                 ? args.deps_path
                 : get_fx_deps(m_fx_definitions[i]->get_dir(), m_fx_definitions[i]->get_name());
-            trace::verbose(_X("Using %s deps file"), deps_file.c_str());
+            trace::verbose(PAL_X("Using %s deps file"), deps_file.c_str());
 
             // Parse as framework-dependent if we are not the lowest framework or if there is only one
             // framework, but framework-dependent is specified (for example, components)
@@ -123,14 +123,14 @@ public:
             {
                 if (!m_fx_deps[i]->exists())
                 {
-                    errors->assign(_X("A fatal error was encountered, missing dependencies manifest at: ") + m_fx_deps[i]->get_deps_file());
+                    errors->assign(PAL_X("A fatal error was encountered, missing dependencies manifest at: ") + m_fx_deps[i]->get_deps_file());
                     return false;
                 }
             }
 
             if (!m_fx_deps[i]->is_valid())
             {
-                errors->assign(_X("An error occurred while parsing: ") + m_fx_deps[i]->get_deps_file());
+                errors->assign(PAL_X("An error occurred while parsing: ") + m_fx_deps[i]->get_deps_file());
                 return false;
             }
         }
@@ -139,7 +139,7 @@ public:
         {
             if (!additional_deps->is_valid())
             {
-                errors->assign(_X("An error occurred while parsing: ") + additional_deps->get_deps_file());
+                errors->assign(PAL_X("An error occurred while parsing: ") + additional_deps->get_deps_file());
                 return false;
             }
         }
@@ -201,7 +201,7 @@ public: // static
     static pal::string_t get_fx_deps(const pal::string_t& fx_dir, const pal::string_t& fx_name)
     {
         pal::string_t fx_deps = fx_dir;
-        pal::string_t fx_deps_name = fx_name + _X(".deps.json");
+        pal::string_t fx_deps_name = fx_name + PAL_X(".deps.json");
         append_path(&fx_deps, fx_deps_name.c_str());
         return fx_deps;
     }

@@ -59,17 +59,17 @@ static bool to_path(const pal::string_t& base, const pal::string_t& relative_pat
             if (app->locate(relative_path, candidate, extracted_to_disk))
             {
                 found_in_bundle = !extracted_to_disk;
-                trace::verbose(_X("    %s found in bundle [%s] %s"), relative_path.c_str(), candidate.c_str(), extracted_to_disk ? _X("(extracted)") : _X(""));
+                trace::verbose(PAL_X("    %s found in bundle [%s] %s"), relative_path.c_str(), candidate.c_str(), extracted_to_disk ? PAL_X("(extracted)") : PAL_X(""));
                 return true;
             }
             else
             {
-                trace::verbose(_X("    %s not found in bundle"), relative_path.c_str());
+                trace::verbose(PAL_X("    %s not found in bundle"), relative_path.c_str());
             }
         }
         else
         {
-            trace::verbose(_X("    %s not searched in bundle base path %s doesn't match bundle base %s."),
+            trace::verbose(PAL_X("    %s not searched in bundle base path %s doesn't match bundle base %s."),
                              relative_path.c_str(), base.c_str(), app->base_path().c_str());
         }
     }
@@ -81,16 +81,16 @@ static bool to_path(const pal::string_t& base, const pal::string_t& relative_pat
     {
         if (!pal::file_exists(candidate))
         {
-            trace::verbose(_X("    Does not exist: %s"), candidate.c_str());
+            trace::verbose(PAL_X("    Does not exist: %s"), candidate.c_str());
             candidate.clear();
             return false;
         }
 
-        trace::verbose(_X("    Exists: %s"), candidate.c_str());
+        trace::verbose(PAL_X("    Exists: %s"), candidate.c_str());
     }
     else
     {
-        trace::verbose(_X("    Skipped file existence check: %s"), candidate.c_str());
+        trace::verbose(PAL_X("    Skipped file existence check: %s"), candidate.c_str());
     }
 
     // If a file is resolved to the servicing directory, mark it as disabled in the bundle.
@@ -106,7 +106,7 @@ static bool to_path(const pal::string_t& base, const pal::string_t& relative_pat
 
         if (app->disable(relative_path))
         {
-            trace::verbose(_X("    %s disabled in bundle because of servicing override %s"), relative_path.c_str(), candidate.c_str());
+            trace::verbose(PAL_X("    %s disabled in bundle because of servicing override %s"), relative_path.c_str(), candidate.c_str());
         }
     }
 
@@ -136,7 +136,7 @@ bool deps_entry_t::to_dir_path(const pal::string_t& base, pal::string_t* str, ui
     }
 
     // For runtimepack assets without a local path set, the relative path is set to the local path on disk - use it as is
-    if (library_type == _X("runtimepack"))
+    if (library_type == PAL_X("runtimepack"))
     {
         return to_path(base, asset.relative_path, str, search_options, found_in_bundle);
     }
@@ -158,7 +158,7 @@ bool deps_entry_t::to_dir_path(const pal::string_t& base, pal::string_t* str, ui
         // Extract IETF code from "lib/<netstandrd_ver>/<ietf-code>"
         ietf_dir = get_filename(ietf_dir);
 
-        trace::verbose(_X("  Detected a resource asset, will query <base>/<ietf>/<file_name> base: %s ietf: %s asset: %s"),
+        trace::verbose(PAL_X("  Detected a resource asset, will query <base>/<ietf>/<file_name> base: %s ietf: %s asset: %s"),
             base.c_str(), ietf_dir.c_str(), asset.name.c_str());
 
         relative_path = ietf_dir;
@@ -169,7 +169,7 @@ bool deps_entry_t::to_dir_path(const pal::string_t& base, pal::string_t* str, ui
         relative_path = get_filename(asset.relative_path);
     }
 
-    trace::verbose(_X("  Computed relative path: %s"), relative_path.c_str());
+    trace::verbose(PAL_X("  Computed relative path: %s"), relative_path.c_str());
     return to_path(base, relative_path, str, search_options, found_in_bundle);
 }
 

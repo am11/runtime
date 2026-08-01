@@ -13,38 +13,38 @@
 #include <type_traits>
 #endif
 
-#define DOTNET_CORE_DOWNLOAD_URL _X("https://aka.ms/dotnet/download")
-#define DOTNET_CORE_APPLAUNCH_URL _X("https://aka.ms/dotnet-core-applaunch")
+#define DOTNET_CORE_DOWNLOAD_URL PAL_X("https://aka.ms/dotnet/download")
+#define DOTNET_CORE_APPLAUNCH_URL PAL_X("https://aka.ms/dotnet-core-applaunch")
 
-#define DOTNET_INFO_URL _X("https://aka.ms/dotnet/info")
-#define DOTNET_APP_LAUNCH_FAILED_URL _X("https://aka.ms/dotnet/app-launch-failed")
-#define DOTNET_SDK_NOT_FOUND_URL _X("https://aka.ms/dotnet/sdk-not-found")
+#define DOTNET_INFO_URL PAL_X("https://aka.ms/dotnet/info")
+#define DOTNET_APP_LAUNCH_FAILED_URL PAL_X("https://aka.ms/dotnet/app-launch-failed")
+#define DOTNET_SDK_NOT_FOUND_URL PAL_X("https://aka.ms/dotnet/sdk-not-found")
 
 // This message is defined here for consistency between errors on the command line and GUI (Windows apphost).
-#define INSTALL_OR_UPDATE_NET_ERROR_MESSAGE _X("You must install or update .NET to run this application.")
+#define INSTALL_OR_UPDATE_NET_ERROR_MESSAGE PAL_X("You must install or update .NET to run this application.")
 
-#define INSTALL_NET_ERROR_MESSAGE _X("You must install .NET to run this application.")
-#define INSTALL_NET_DESKTOP_ERROR_MESSAGE _X("You must install .NET Desktop Runtime to run this application.")
+#define INSTALL_NET_ERROR_MESSAGE PAL_X("You must install .NET to run this application.")
+#define INSTALL_NET_DESKTOP_ERROR_MESSAGE PAL_X("You must install .NET Desktop Runtime to run this application.")
 
-#define DOC_LINK_INTRO _X("Learn more:")
+#define DOC_LINK_INTRO PAL_X("Learn more:")
 
 #define MISSING_RUNTIME_ERROR_FORMAT \
-    _X("%s\n\n")                                \
-    _X("App: %s\n")                             \
-    _X("Architecture: %s\n")                    \
-    _X("App host version: %s\n")                \
-    _X(".NET location: %s\n")                   \
-    _X("\n")                                    \
-    DOC_LINK_INTRO _X("\n")                     \
+    PAL_X("%s\n\n")                                \
+    PAL_X("App: %s\n")                             \
+    PAL_X("Architecture: %s\n")                    \
+    PAL_X("App host version: %s\n")                \
+    PAL_X(".NET location: %s\n")                   \
+    PAL_X("\n")                                    \
+    DOC_LINK_INTRO PAL_X("\n")                     \
     DOTNET_APP_LAUNCH_FAILED_URL                \
-    _X("\n\n")                                  \
-    _X("Download the .NET runtime:\n")          \
-    _X("%s&apphost_version=%s")
+    PAL_X("\n\n")                                  \
+    PAL_X("Download the .NET runtime:\n")          \
+    PAL_X("%s&apphost_version=%s")
 
-#define DOTNET_ROOT_ENV_VAR _X("DOTNET_ROOT")
-#define DOTNET_ROOT_ARCH_ENV_VAR DOTNET_ROOT_ENV_VAR _X("_") _STRINGIFY(CURRENT_ARCH_NAME_UPPER)
+#define DOTNET_ROOT_ENV_VAR PAL_X("DOTNET_ROOT")
+#define DOTNET_ROOT_ARCH_ENV_VAR DOTNET_ROOT_ENV_VAR PAL_X("_") _STRINGIFY(CURRENT_ARCH_NAME_UPPER)
 
-#define SDK_DOTNET_DLL _X("dotnet.dll")
+#define SDK_DOTNET_DLL PAL_X("dotnet.dll")
 
 #define _TEXT(x) #x
 #define _QUOTE(x) _TEXT(x)

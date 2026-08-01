@@ -63,17 +63,17 @@ pal::string_t version_t::as_str() const
 
         if (m_minor >= 0)
         {
-            version += _X('.');
+            version += PAL_X('.');
             version += pal::to_string(m_minor);
 
             if (m_build >= 0)
             {
-                version += _X('.');
+                version += PAL_X('.');
                 version += pal::to_string(m_build);
 
                 if (m_revision >= 0)
                 {
-                    version += _X('.');
+                    version += PAL_X('.');
                     version += pal::to_string(m_revision);
                 }
             }
@@ -112,7 +112,7 @@ bool parse_internal(const pal::string_t& ver, version_t* ver_out)
 {
     unsigned major = -1;
     size_t maj_start = 0;
-    size_t maj_sep = ver.find(_X('.'));
+    size_t maj_sep = ver.find(PAL_X('.'));
     if (maj_sep == pal::string_t::npos)
     {
         return false; // minor required
@@ -124,7 +124,7 @@ bool parse_internal(const pal::string_t& ver, version_t* ver_out)
 
     unsigned minor = -1;
     size_t min_start = maj_sep + 1;
-    size_t min_sep = ver.find(_X('.'), min_start);
+    size_t min_sep = ver.find(PAL_X('.'), min_start);
     if (min_sep == pal::string_t::npos)
     {
         if (!try_stou(ver.substr(min_start), &minor))
@@ -141,7 +141,7 @@ bool parse_internal(const pal::string_t& ver, version_t* ver_out)
 
     unsigned build = -1;
     size_t build_start = min_sep + 1;
-    size_t build_sep = ver.find(_X('.'), build_start);
+    size_t build_sep = ver.find(PAL_X('.'), build_start);
     if (build_sep == pal::string_t::npos)
     {
         if (!try_stou(ver.substr(build_start), &build))

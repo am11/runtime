@@ -64,7 +64,7 @@ namespace
             rc = hostfxr.init_command_line(static_cast<int32_t>(argv.size()), argv.data(), nullptr, &handle);
             if (rc != StatusCode::Success)
             {
-                test_output << _X("hostfxr_initialize_for_command_line failed: ") << std::hex << std::showbase << rc << std::endl;
+                test_output << PAL_X("hostfxr_initialize_for_command_line failed: ") << std::hex << std::showbase << rc << std::endl;
                 return false;
             }
         }
@@ -72,19 +72,19 @@ namespace
         rc = hostfxr.run_app(handle);
         if (rc != StatusCode::Success)
         {
-            test_output << _X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
+            test_output << PAL_X("hostfxr_run_app failed: ") << std::hex << std::showbase << rc << std::endl;
         }
         else
         {
             hostpolicy_exports hostpolicy;
-            test_output << _X("Found already loaded hostpolicy library: '") << hostpolicy.path.c_str() << _X("'.") << std::endl;
+            test_output << PAL_X("Found already loaded hostpolicy library: '") << hostpolicy.path.c_str() << PAL_X("'.") << std::endl;
 
             rc = action(hostpolicy);
         }
 
         int rcClose = hostfxr.close(handle);
         if (rcClose != StatusCode::Success)
-            test_output << _X("hostfxr_close failed: ") << std::hex << std::showbase << rc << std::endl;
+            test_output << PAL_X("hostfxr_close failed: ") << std::hex << std::showbase << rc << std::endl;
 
         return rc == StatusCode::Success && rcClose == StatusCode::Success;
     }
@@ -122,19 +122,19 @@ namespace
                 assembly_paths_stream << i.c_str() << PATH_SEPARATOR;
             }
 
-            test_output << prefix << _X("corehost_resolve_component_dependencies:Success") << std::endl;
-            test_output << prefix << _X("corehost_resolve_component_dependencies assemblies:[") << assembly_paths_stream.str().c_str() << _X("]") << std::endl;
-            test_output << prefix << _X("corehost_resolve_component_dependencies native_search_paths:[") << result.native_search_paths().c_str() << _X("]") << std::endl;
-            test_output << prefix << _X("corehost_resolve_component_dependencies resource_search_paths:[") << result.resource_search_paths().c_str() << _X("]") << std::endl;
+            test_output << prefix << PAL_X("corehost_resolve_component_dependencies:Success") << std::endl;
+            test_output << prefix << PAL_X("corehost_resolve_component_dependencies assemblies:[") << assembly_paths_stream.str().c_str() << PAL_X("]") << std::endl;
+            test_output << prefix << PAL_X("corehost_resolve_component_dependencies native_search_paths:[") << result.native_search_paths().c_str() << PAL_X("]") << std::endl;
+            test_output << prefix << PAL_X("corehost_resolve_component_dependencies resource_search_paths:[") << result.resource_search_paths().c_str() << PAL_X("]") << std::endl;
         }
         else
         {
-            test_output << prefix << _X("corehost_resolve_component_dependencies:Fail[") << std::hex << std::showbase << rc << _X("]" << std::endl);
+            test_output << prefix << PAL_X("corehost_resolve_component_dependencies:Fail[") << std::hex << std::showbase << rc << PAL_X("]" << std::endl);
         }
 
         if (errors.has_errors())
         {
-            test_output << prefix << _X("corehost reported errors:") << std::endl << errors.get_errors().c_str();
+            test_output << prefix << PAL_X("corehost reported errors:") << std::endl << errors.get_errors().c_str();
         }
 
         return rc;
@@ -156,7 +156,7 @@ bool resolve_component_dependencies_test::run_app_and_resolve(
             return resolve_component_helper(
                 hostpolicy,
                 component_path,
-                _X(""),
+                PAL_X(""),
                 test_output);
         }
     );
@@ -184,7 +184,7 @@ bool resolve_component_dependencies_test::run_app_and_resolve_multithreaded(
                     int rc_inner = resolve_component_helper(
                         hostpolicy,
                         component_path_a,
-                        _X("ComponentA: "),
+                        PAL_X("ComponentA: "),
                         test_output_a);
                     if (rc_inner != StatusCode::Success)
                     {
@@ -197,7 +197,7 @@ bool resolve_component_dependencies_test::run_app_and_resolve_multithreaded(
                     int rc_inner = resolve_component_helper(
                         hostpolicy,
                         component_path_b,
-                        _X("ComponentB: "),
+                        PAL_X("ComponentB: "),
                         test_output_b);
                     if (rc_inner != StatusCode::Success)
                     {

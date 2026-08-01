@@ -13,7 +13,7 @@ void utils_get_filename(const pal_char_t* path, pal_char_t* out_name, size_t out
     if (path == NULL)
     {
         if (out_name_len > 0)
-            out_name[0] = _X('\0');
+            out_name[0] = PAL_X('\0');
 
         return;
     }
@@ -25,7 +25,7 @@ void utils_get_filename(const pal_char_t* path, pal_char_t* out_name, size_t out
     {
         assert(false && "utils_get_filename: out_name buffer too small");
         if (out_name_len > 0)
-            out_name[0] = _X('\0');
+            out_name[0] = PAL_X('\0');
 
         return;
     }
@@ -57,7 +57,7 @@ bool utils_ends_with(const pal_char_t* value, size_t value_len, const pal_char_t
 
 void utils_append_path(pal_char_t* path_buffer, size_t path_buffer_len, const pal_char_t* component)
 {
-    if (component == NULL || component[0] == _X('\0'))
+    if (component == NULL || component[0] == PAL_X('\0'))
         return;
 
     size_t current_len = pal_strlen(path_buffer);
@@ -88,7 +88,7 @@ pal_char_t* utils_append_path_alloc(const pal_char_t* path, const pal_char_t* co
     if (out == NULL)
         return NULL;
 
-    out[0] = _X('\0');
+    out[0] = PAL_X('\0');
     utils_append_path(out, cap, path);
     utils_append_path(out, cap, component);
     return out;
@@ -127,7 +127,7 @@ pal_char_t* utils_get_directory(const pal_char_t* path)
     // Drop trailing separators.
     size_t len = path_len;
     while (len > 0 && result[len - 1] == DIR_SEPARATOR)
-        result[--len] = _X('\0');
+        result[--len] = PAL_X('\0');
 
     // Find the last separator
     pal_char_t* last_sep = pal_strrchr(result, DIR_SEPARATOR);
@@ -140,7 +140,7 @@ pal_char_t* utils_get_directory(const pal_char_t* path)
     }
 
     result[len] = DIR_SEPARATOR;
-    result[len + 1] = _X('\0');
+    result[len + 1] = PAL_X('\0');
     return result;
 }
 
@@ -153,7 +153,7 @@ pal_char_t* utils_get_file_path_from_env(const pal_char_t* env_key)
     pal_char_t* file_path = pal_fullpath(env_value, /* skip_error_logging */ false);
     if (file_path == NULL)
     {
-        trace_verbose(_X("Did not find [%s] directory [%s]"), env_key, env_value);
+        trace_verbose(PAL_X("Did not find [%s] directory [%s]"), env_key, env_value);
         free(env_value);
         return NULL;
     }
@@ -202,10 +202,10 @@ bool utils_get_dotnet_root_from_env(const pal_char_t** out_env_var_name, pal_cha
 #if defined(_WIN32)
     if (pal_get_process_emulation() == pal_process_emulation_wow64)
     {
-        dotnet_root = utils_get_file_path_from_env(_X("DOTNET_ROOT(x86)"));
+        dotnet_root = utils_get_file_path_from_env(PAL_X("DOTNET_ROOT(x86)"));
         if (dotnet_root != NULL)
         {
-            *out_env_var_name = _X("DOTNET_ROOT(x86)");
+            *out_env_var_name = PAL_X("DOTNET_ROOT(x86)");
             *out_dotnet_root = dotnet_root;
             return true;
         }
@@ -225,37 +225,37 @@ bool utils_get_dotnet_root_from_env(const pal_char_t** out_env_var_name, pal_cha
 
 pal_char_t* utils_get_runtime_id(void)
 {
-    pal_char_t* env_rid = pal_getenv(_X("DOTNET_RUNTIME_ID"));
+    pal_char_t* env_rid = pal_getenv(PAL_X("DOTNET_RUNTIME_ID"));
     if (env_rid != NULL)
         return env_rid;
 
-    return pal_strdup(_STRINGIFY(HOST_RID_PLATFORM) _X("-") _STRINGIFY(CURRENT_ARCH_NAME));
+    return pal_strdup(_STRINGIFY(HOST_RID_PLATFORM) PAL_X("-") _STRINGIFY(CURRENT_ARCH_NAME));
 }
 
 void utils_get_download_url(pal_char_t* out_url, size_t out_url_len, const pal_char_t* framework_name, const pal_char_t* framework_version)
 {
     pal_char_t* rid = utils_get_runtime_id();
-    const pal_char_t* rid_value = rid != NULL ? rid : _STRINGIFY(HOST_RID_PLATFORM) _X("-") _STRINGIFY(CURRENT_ARCH_NAME);
+    const pal_char_t* rid_value = rid != NULL ? rid : _STRINGIFY(HOST_RID_PLATFORM) PAL_X("-") _STRINGIFY(CURRENT_ARCH_NAME);
 
     pal_char_t query[MAX_DOWNLOAD_URL_LEN / 2];
-    if (framework_name != NULL && framework_name[0] != _X('\0'))
+    if (framework_name != NULL && framework_name[0] != PAL_X('\0'))
     {
-        if (framework_version != NULL && framework_version[0] != _X('\0'))
+        if (framework_version != NULL && framework_version[0] != PAL_X('\0'))
         {
-            pal_str_printf(query, ARRAY_SIZE(query), _X("framework=%s&framework_version=%s"), framework_name, framework_version);
+            pal_str_printf(query, ARRAY_SIZE(query), PAL_X("framework=%s&framework_version=%s"), framework_name, framework_version);
         }
         else
         {
-            pal_str_printf(query, ARRAY_SIZE(query), _X("framework=%s"), framework_name);
+            pal_str_printf(query, ARRAY_SIZE(query), PAL_X("framework=%s"), framework_name);
         }
     }
     else
     {
-        pal_str_printf(query, ARRAY_SIZE(query), _X("missing_runtime=true"));
+        pal_str_printf(query, ARRAY_SIZE(query), PAL_X("missing_runtime=true"));
     }
 
     pal_str_printf(out_url, out_url_len,
-        DOTNET_CORE_APPLAUNCH_URL _X("?%s&arch=") _STRINGIFY(CURRENT_ARCH_NAME) _X("&rid=%s&os=") _STRINGIFY(FALLBACK_HOST_OS),
+        DOTNET_CORE_APPLAUNCH_URL PAL_X("?%s&arch=") _STRINGIFY(CURRENT_ARCH_NAME) PAL_X("&rid=%s&os=") _STRINGIFY(FALLBACK_HOST_OS),
         query, rid_value);
 
     free(rid);

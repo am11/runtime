@@ -8,13 +8,13 @@
 #include "utils.h"
 #include "longfile.h"
 
-const pal::char_t LongFile::DirectorySeparatorChar = _X('\\');
-const pal::char_t LongFile::AltDirectorySeparatorChar = _X('/');
-const pal::char_t LongFile::VolumeSeparatorChar = _X(':');
-const pal::string_t LongFile::ExtendedPrefix = _X("\\\\?\\");
-const pal::string_t LongFile::DevicePathPrefix = _X("\\\\.\\");
-const pal::string_t LongFile::UNCExtendedPathPrefix = _X("\\\\?\\UNC\\");
-const pal::string_t LongFile::UNCPathPrefix = _X("\\\\");
+const pal::char_t LongFile::DirectorySeparatorChar = PAL_X('\\');
+const pal::char_t LongFile::AltDirectorySeparatorChar = PAL_X('/');
+const pal::char_t LongFile::VolumeSeparatorChar = PAL_X(':');
+const pal::string_t LongFile::ExtendedPrefix = PAL_X("\\\\?\\");
+const pal::string_t LongFile::DevicePathPrefix = PAL_X("\\\\.\\");
+const pal::string_t LongFile::UNCExtendedPathPrefix = PAL_X("\\\\?\\UNC\\");
+const pal::string_t LongFile::UNCPathPrefix = PAL_X("\\\\");
 
 bool LongFile::IsNormalized(const pal::string_t& path)
 {
@@ -81,7 +81,7 @@ bool AssertRepeatingDirSeparator(const pal::string_t& path)
 
     assert(path_to_check.find(combDirSeparator2) == pal::string_t::npos);
 
-    assert(path_to_check.find(_X("..")) == pal::string_t::npos);
+    assert(path_to_check.find(PAL_X("..")) == pal::string_t::npos);
     return true;
 }
 bool  LongFile::ShouldNormalize(const pal::string_t& path)

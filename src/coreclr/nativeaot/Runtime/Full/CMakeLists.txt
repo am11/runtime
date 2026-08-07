@@ -39,10 +39,19 @@ if(NATIVEAOT_PRIVATE_LIBUNWIND_SOURCES)
             "${NATIVEAOT_PRIVATE_LIBUNWIND_OBJECT}"
             "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
     # Generate the objcopy symbol list from libunwind-owned object files only.
-    COMMAND sh -c "nm_tool=\"$1\" && shift && \"$nm_tool\" --extern-only --defined-only --format=just-symbols \"$@\" > \"$0\""
-            "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
-            "${CMAKE_NM}"
-            ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}
+    if(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+        # OpenBSD specific: Extract defined global types safely, removing OS security artifacts
+        COMMAND sh -c "nm_tool=\"$1\" && shift && \"$nm_tool\" -g \"$@\" | grep -E ' [TDBR] ' | sed 's/.* //' | grep -v '^__retguard_' > \"$0\""
+                "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
+                "${CMAKE_NM}"
+                ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}
+    else()
+        # Existing fast path for FreeBSD, Linux, macOS, Haiku, and Illumos
+        COMMAND sh -c "nm_tool=\"$1\" && shift && \"$nm_tool\" --extern-only --defined-only --format=just-symbols \"$@\" > \"$0\""
+                "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
+                "${CMAKE_NM}"
+                ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}
+    endif()
     COMMAND sort -u -o
             "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS}"
             "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"

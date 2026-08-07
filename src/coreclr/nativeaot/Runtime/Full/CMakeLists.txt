@@ -37,14 +37,14 @@ if(NATIVEAOT_PRIVATE_LIBUNWIND_SOURCES)
   if(CLR_CMAKE_HOST_OPENBSD)
     # OpenBSD specific: Extract defined global types safely, removing OS security artifacts
     set(PRIVATE_LIBUNWIND_NM_COMMAND
-      COMMAND sh -c "..."
+      COMMAND sh -c "nm_tool=\"\$1\" && shift && \"\$nm_tool\" -g \"\$@\" | grep -E ' [TDBR] ' | sed 's/.* //' | grep -v '^__retguard_' > \"\$0\""
               "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
               "${CMAKE_NM}"
               ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}
     )
   else()
     set(PRIVATE_LIBUNWIND_NM_COMMAND
-      COMMAND sh -c "..."
+      COMMAND sh -c "nm_tool=\"\$1\" && shift && \"\$nm_tool\" --extern-only --defined-only --format=just-symbols \"\$@\" > \"\$0\""
               "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
               "${CMAKE_NM}"
               ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}

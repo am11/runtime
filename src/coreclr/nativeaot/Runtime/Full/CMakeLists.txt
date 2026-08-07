@@ -33,24 +33,13 @@ if(NATIVEAOT_PRIVATE_LIBUNWIND_SOURCES)
   # localize list is generated only from the bundled libunwind source objects.
   set(NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS "$<FILTER:$<TARGET_OBJECTS:Runtime.PrivateLibunwind>,EXCLUDE,.*(UnwindHelpers|UnixNativeCodeManager)\\.cpp\\.o$>")
 
-  # Generate the objcopy symbol list from libunwind-owned object files only.
-  if(CLR_CMAKE_HOST_OPENBSD)
-    # OpenBSD specific: Extract defined global types safely, removing OS security artifacts
-    set(PRIVATE_LIBUNWIND_NM_SCRIPT
-      "nm_tool=\"\$1\" && shift && \"\$nm_tool\" -g \"\$@\" | grep -E ' [TDBR] ' | sed 's/.* //' | grep -v '^__retguard_' > \"\$0\""
-    )
-  else()
-    set(PRIVATE_LIBUNWIND_NM_SCRIPT
-      "nm_tool=\"\$1\" && shift && \"\$nm_tool\" --extern-only --defined-only --format=just-symbols \"\$@\" > \"\$0\""
-    )
-  endif()
-
   add_custom_command(
     OUTPUT "${NATIVEAOT_PRIVATE_LIBUNWIND_OBJECT}"
     COMMAND "${CMAKE_COMMAND}" -E rm -f
             "${NATIVEAOT_PRIVATE_LIBUNWIND_OBJECT}"
             "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
-    COMMAND sh -c "${PRIVATE_LIBUNWIND_NM_SCRIPT}"
+    # Generate the objcopy symbol list from libunwind-owned object files only.
+    COMMAND sh -c "nm_tool=\"$1\" && shift && \"$nm_tool\" --extern-only --defined-only --format=just-symbols \"$@\" > \"$0\""
             "${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOLS_UNSORTED}"
             "${CMAKE_NM}"
             ${NATIVEAOT_PRIVATE_LIBUNWIND_SYMBOL_OBJECTS}

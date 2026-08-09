@@ -1128,7 +1128,8 @@ CrashReportHelpers::GetVersionString(
 
     version += sizeof(versionPrefix) - 1;
 
-    size_t toCopy = strnlen(version, bufferSize - 1);
+    size_t sourceLength = strlen(version);
+    size_t toCopy = (sourceLength < bufferSize - 1) ? sourceLength : bufferSize - 1;
     if (toCopy != 0)
     {
         memcpy(buffer, version, toCopy);

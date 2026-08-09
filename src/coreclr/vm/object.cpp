@@ -1310,7 +1310,12 @@ uint32_t StackTraceArray::CopyDataFrom(StackTraceArray const & src)
     CONTRACTL_END;
 
     uint32_t size = src.Size();
-    memcpyNoGCRefs(GetRaw(), src.GetRaw(), size * sizeof(StackTraceElement) + sizeof(ArrayHeader));
+    size_t totalBytes = (size_t)size * sizeof(StackTraceElement) + sizeof(ArrayHeader);
+    if (totalBytes > 0 && src.GetRaw() != nullptr && GetRaw() != nullptr)
+    {
+        memcpyNoGCRefs(GetRaw(), src.GetRaw(), totalBytes);
+    }
+
     // Affinitize the copy with the current thread
     SetObjectThread();
 

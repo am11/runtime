@@ -5704,7 +5704,17 @@ void CodeGen::genIntCastOverflowCheck(GenTreeCast* cast, const GenIntCastDesc& d
                 const auto extensionSize = (8 - castSize) * 8;
                 GetEmitter()->emitIns_R_R_I(INS_slli, EA_8BYTE, tempReg, reg, extensionSize);
                 GetEmitter()->emitIns_R_R_I(INS_srai, EA_8BYTE, tempReg, tempReg, extensionSize);
-                genJumpToThrowHlpBlk_la(SCK_OVERFLOW, INS_bne, tempReg, nullptr, reg);
+                if (desc.CheckSrcSize() == 4) // int
+                {
+                    // The upper 32 bits of an int source are not guaranteed to be sign-extended,
+                    // so compare only the lower 32 bits
+                    GetEmitter()->emitIns_R_R_R(INS_subw, EA_4BYTE, tempReg, tempReg, reg);
+                    genJumpToThrowHlpBlk_la(SCK_OVERFLOW, INS_bne, tempReg, nullptr, REG_R0);
+                }
+                else
+                {
+                    genJumpToThrowHlpBlk_la(SCK_OVERFLOW, INS_bne, tempReg, nullptr, reg);
+                }
             }
         }
         break;

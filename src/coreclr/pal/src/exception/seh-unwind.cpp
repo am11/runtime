@@ -774,16 +774,7 @@ RaiseException(IN DWORD dwExceptionCode,
     CONTEXT_CaptureContext(contextRecord);
 
     // Report the caller of RaiseException as the location the exception was raised at.
-    DWORD64 callerPc = (DWORD64)__builtin_return_address(0);
-#if defined(HOST_AMD64)
-    contextRecord->Rip = callerPc;
-#elif defined(HOST_S390X)
-    contextRecord->PSWAddr = callerPc;
-#elif defined(HOST_POWERPC64)
-    contextRecord->Nip = callerPc;
-#else
-    contextRecord->Pc = callerPc;
-#endif
+    CONTEXTSetPC(contextRecord, (DWORD64)__builtin_return_address(0));
     contextRecord->ContextFlags &= ~CONTEXT_EXCEPTION_ACTIVE;
 #if defined(CONTEXT_UNWOUND_TO_CALL)
     contextRecord->ContextFlags |= CONTEXT_UNWOUND_TO_CALL;

@@ -67,7 +67,6 @@ nativeStringResourceTable_mscorrc
 #LoadLibraryExW
 #OutputDebugStringW
 #OutputDebugStringA
-#RaiseException
 #RaiseFailFastException
 #ResumeThread
 #SetLastError

@@ -163,8 +163,15 @@ CallType CallUtils::GetDirectCallSiteInfo(MethodContext*            mc,
         param.pTargetType         = &targetType;
         param.pMethodHandle       = &methodHandle;
 
-        PAL_TRY(Param*, pParam, &param)
+        Param* pParam = &param;
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
+            HardwareExceptionHolder
+            DEBUG_OK_TO_THROW_BEGIN
             CORINFO_CALL_INFO callInfo;
 
             pParam->mc->repGetCallInfoFromMethodHandle(*pParam->pMethodHandle, &callInfo);
@@ -177,13 +184,23 @@ CallType CallUtils::GetDirectCallSiteInfo(MethodContext*            mc,
                     (char*)GetMethodFullName(pParam->mc, *pParam->pMethodHandle, callInfo.sig);
 
             *pParam->pTargetType = CallType_UserFunction;
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+#ifdef HOST_WINDOWS
+        __except (FilterSuperPMIExceptions_CatchMC(GetExceptionInformation(), pParam))
+#else
+        catch (PAL_SEHException& ex)
+#endif
         {
+#ifndef HOST_WINDOWS
+            if (FilterSuperPMIExceptions_CatchMC(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+            {
+                throw;
+            }
+#endif
             LogWarning("Didn't find call info for method handle %016llX (call target: %016llX)", methodHandle,
                        callTarget);
         }
-        PAL_ENDTRY
     }
     else
     {

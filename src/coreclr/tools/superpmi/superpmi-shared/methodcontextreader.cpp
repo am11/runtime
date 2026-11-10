@@ -217,15 +217,30 @@ MethodContextBuffer MethodContextReader::ReadMethodContext(bool acquireLock, boo
     param.ret      = MethodContextBuffer(-2);
     param.justSkip = justSkip;
 
-    PAL_TRY(Param*, pParam, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        pParam->ret = pParam->pThis->ReadMethodContextNoLock(pParam->justSkip);
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
+        param.ret = param.pThis->ReadMethodContextNoLock(param.justSkip);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_FINALLY
+#ifdef HOST_WINDOWS
+    __finally
     {
         this->ReleaseLock();
     }
-    PAL_ENDTRY
+#else
+    catch (...)
+    {
+        this->ReleaseLock();
+        throw;
+    }
+    this->ReleaseLock();
+#endif
 
     return param.ret;
 }
@@ -241,16 +256,32 @@ MethodContextBuffer MethodContextReader::GetNextMethodContext()
     } param;
     param.pThis = this;
 
-    PAL_TRY(Param*, pParam, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        pParam->mcb = pParam->pThis->GetNextMethodContextHelper();
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
+        param.mcb = param.pThis->GetNextMethodContextHelper();
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CaptureExceptionAndStop(GetExceptionInformation(), &param))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CaptureExceptionAndStop(&ex.ExceptionPointers, &param) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         LogError("Method %d is of low integrity.", GetMethodContextIndex());
         param.mcb = MethodContextBuffer(-1);
     }
-    PAL_ENDTRY
 
     return param.mcb;
 }

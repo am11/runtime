@@ -212,16 +212,33 @@ bool MethodContext::Initialize(int mcIndex, unsigned char* buff, DWORD size, boo
     param.size  = size;
     param.pThis = this;
     param.readCompileResults = readCompileResults;
-    PAL_TRY(Param*, pParam, &param)
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->pThis->MethodInitHelper(pParam->buff, pParam->size, pParam->readCompileResults);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CatchMC(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CatchMC(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         LogError("Method %d is of low integrity.", mcIndex);
         result = false;
     }
-    PAL_ENDTRY
 
     return result;
 }
@@ -240,16 +257,33 @@ bool MethodContext::Initialize(int mcIndex, FILE* hFile, bool readCompileResults
     param.pThis = this;
     param.readCompileResults = readCompileResults;
 
-    PAL_TRY(Param*, pParam, &param)
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->pThis->MethodInitHelperFile(pParam->hFile, pParam->readCompileResults);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CatchMC(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CatchMC(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         LogError("Method %d is of low integrity.", mcIndex);
         result = false;
     }
-    PAL_ENDTRY
 
     return result;
 }

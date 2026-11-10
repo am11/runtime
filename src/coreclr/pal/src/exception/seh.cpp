@@ -42,11 +42,6 @@ using namespace CorUnix;
 
 SET_DEFAULT_DEBUG_CHANNEL(EXCEPT);
 
-/* Constant and type definitions **********************************************/
-
-/* Bit 28 of exception codes is reserved. */
-const UINT RESERVED_SEH_BIT = 0x800000;
-
 /* Internal variables definitions **********************************************/
 
 PHARDWARE_EXCEPTION_HANDLER g_hardwareExceptionHandler = NULL;
@@ -215,7 +210,7 @@ static void EnsureExceptionRecordsOnHeap(PAL_SEHException* exception)
 
     CONTEXT* contextRecordCopy;
     EXCEPTION_RECORD* exceptionRecordCopy;
-    AllocateExceptionRecords(&exceptionRecordCopy, &contextRecordCopy);
+    PAL_AllocateExceptionRecords(&exceptionRecordCopy, &contextRecordCopy);
 
     *exceptionRecordCopy = *exceptionRecord;
     *contextRecordCopy = *contextRecord;

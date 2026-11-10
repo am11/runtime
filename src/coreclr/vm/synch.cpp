@@ -58,33 +58,32 @@ static DWORD CLREventWaitHelper(CLREventBase *event, DWORD dwMilliseconds, BOOL 
 {
     STATIC_CONTRACT_NOTHROW;
 
-    struct Param
-    {
-        CLREventBase *event;
-        DWORD dwMilliseconds;
-        BOOL alertable;
-        DWORD result;
-    } param;
-    param.event = event;
-    param.dwMilliseconds = dwMilliseconds;
-    param.alertable = alertable;
-    param.result = WAIT_FAILED;
+    DWORD result = WAIT_FAILED;
 
     // Can not use EX_TRY/CATCH.  EX_CATCH toggles GC mode.  This function is called
     // through RareDisablePreemptiveGC.  EX_CATCH breaks profiler callback.
-    PAL_TRY(Param *, pParam, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         // Need to move to another helper (cannot have SEH and C++ destructors
         // on automatic variables in one function)
-        pParam->result = CLREventWaitHelper2(pParam->event, pParam->dwMilliseconds, pParam->alertable);
+        result = CLREventWaitHelper2(event, dwMilliseconds, alertable);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT (EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
-        param.result = WAIT_FAILED;
+        result = WAIT_FAILED;
     }
-    PAL_ENDTRY;
 
-    return param.result;
+    return result;
 }
 
 

@@ -770,29 +770,23 @@ BOOL SourceLinesHelper(void *GUICookie, LineCodeDescr* pLCD, _Out_writes_(nSize)
         return FALSE;
     }
 
-    struct Param
-    {
-        void *GUICookie;
-        LineCodeDescr* pLCD;
-        WCHAR* pFileName;
-        UINT nSize;
-        BOOL fRet;
-    } param;
-    param.GUICookie = GUICookie;
-    param.pLCD = pLCD;
-    param.pFileName = pFileName;
-    param.nSize = nSize;
-    param.fRet = FALSE;
+    BOOL fRet = FALSE;
 
-    PAL_TRY(Param *, pParam, &param) {
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
+    {
+        DEBUG_OK_TO_THROW_BEGIN
         GUID guidLang={0},guidLangVendor={0},guidDoc={0};
         CHAR zLang[MINIPAL_GUID_BUFFER_LEN],zVendor[MINIPAL_GUID_BUFFER_LEN],zDoc[MINIPAL_GUID_BUFFER_LEN];
         ULONG32 k;
-        if(pParam->pLCD->FileToken != ulWasFileToken)
+        if(pLCD->FileToken != ulWasFileToken)
         {
-            ((ISymUnmanagedDocument*)(pParam->pLCD->FileToken))->GetLanguage(&guidLang);
-            ((ISymUnmanagedDocument*)(pParam->pLCD->FileToken))->GetLanguageVendor(&guidLangVendor);
-            ((ISymUnmanagedDocument*)(pParam->pLCD->FileToken))->GetDocumentType(&guidDoc);
+            ((ISymUnmanagedDocument*)(pLCD->FileToken))->GetLanguage(&guidLang);
+            ((ISymUnmanagedDocument*)(pLCD->FileToken))->GetLanguageVendor(&guidLangVendor);
+            ((ISymUnmanagedDocument*)(pLCD->FileToken))->GetDocumentType(&guidDoc);
             if(memcmp(&guidLang,&guidWasLang,sizeof(GUID))
                 ||memcmp(&guidLangVendor,&guidWasLangVendor,sizeof(GUID))
                 ||memcmp(&guidDoc,&guidWasDoc,sizeof(GUID)))
@@ -802,7 +796,7 @@ BOOL SourceLinesHelper(void *GUICookie, LineCodeDescr* pLCD, _Out_writes_(nSize)
                 minipal_guid_as_string(guidDoc, zDoc, MINIPAL_GUID_BUFFER_LEN);
                 sprintf_s(szString,SZSTRING_SIZE,"%s%s '%s', '%s', '%s'", g_szAsmCodeIndent,KEYWORD(".language"),
                     zLang,zVendor,zDoc);
-                printLine(pParam->GUICookie,szString);
+                printLine(GUICookie,szString);
                 memcpy(&guidWasLang,&guidLang,sizeof(GUID));
                 memcpy(&guidWasLangVendor,&guidLangVendor,sizeof(GUID));
                 memcpy(&guidWasDoc,&guidDoc,sizeof(GUID));
@@ -810,22 +804,28 @@ BOOL SourceLinesHelper(void *GUICookie, LineCodeDescr* pLCD, _Out_writes_(nSize)
 
             /*
             BOOL fHasEmbeddedSource=FALSE;
-            ((ISymUnmanagedDocument*)(pParam->pLCD->FileToken))->HasEmbeddedSource(&fHasEmbeddedSource);
+            ((ISymUnmanagedDocument*)(pLCD->FileToken))->HasEmbeddedSource(&fHasEmbeddedSource);
             _snprintf_s(szString, ARRAY_SIZE(szString), _TRUNCATE, "%s// PDB has %sembedded source",g_szAsmCodeIndent,
                         fHasEmbeddedSource ? "" : "no ");
-            printLine(pParam->GUICookie,szString);
+            printLine(GUICookie,szString);
             */
         }
-        ((ISymUnmanagedDocument*)(pParam->pLCD->FileToken))->GetURL(pParam->nSize,&k,pParam->pFileName);
-        ulWasFileToken = pParam->pLCD->FileToken;
-        pParam->fRet = TRUE;
-    } PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        ((ISymUnmanagedDocument*)(pLCD->FileToken))->GetURL(nSize,&k,pFileName);
+        ulWasFileToken = pLCD->FileToken;
+        fRet = TRUE;
+        DEBUG_OK_TO_THROW_END
+    }
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
+    {
         sprintf_s(szString,SZSTRING_SIZE,RstrUTF(IDS_ERRORREOPENINGFILE),pLCD->FileToken);
         printError(GUICookie, szString);
     }
-    PAL_ENDTRY
 
-    return param.fRet;
+    return fRet;
 }
 
 BOOL Disassemble(IMDInternalImport *pImport, BYTE *ILHeader, void *GUICookie, mdToken FuncToken, ParamDescriptor* pszArgname, ULONG ulArgs)

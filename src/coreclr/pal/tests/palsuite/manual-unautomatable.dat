@@ -1,9 +1,6 @@
 # Licensed to the .NET Foundation under one or more agreements.
 # The .NET Foundation licenses this file to you under the MIT license.
 
-# A successful DebugBreak test run dumps core or throws up an ASSERT
-# dialog box (or...) and returns an exit code != 0
-debug_api/debugbreak/test1,1
 # debug_api/outputdebugstringa/test1 attempts to send "Foo!" to the debugger
 # The PAL behaviour is implementation dependant and can include an interactive
 # dialog

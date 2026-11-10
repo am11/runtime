@@ -164,213 +164,9 @@
 #define IMAGE_COR20_HEADER_FIELD(obj, f)    ((obj).f)
 #endif
 
-
-// PAL SEH
-// Macros for portable exception handling. The Win32 SEH is emulated using
-// these macros and setjmp/longjmp on Unix
-//
-// Usage notes:
-//
-// - The filter has to be a function taking two parameters:
-// LONG MyFilter(PEXCEPTION_POINTERS *pExceptionInfo, PVOID pv)
-//
-// - It is not possible to directly use the local variables in the filter.
-// All the local information that the filter has to need to know about should
-// be passed through pv parameter
-//
-// - Do not use goto to jump out of the PAL_TRY block
-// (jumping out of the try block is not a good idea even on Win32, because of
-// it causes stack unwind)
-//
-// - It is not possible to directly use the local variables in the try block.
-// All the local information that the filter has to need to know about should
-// be passed through pv parameter
-//
-//
-// Simple examples:
-//
-// struct Param { ... local variables used in try block and filter ... } param;
-// PAL_TRY(Param *, pParam, &param) { // read as: Param *pParam = &param;
-//   ....
-// } PAL_FINALLY {
-//   ....
-// }
-// PAL_ENDTRY
-//
-//
-// struct Param { ... local variables used in try block and filter ... } param;
-// PAL_TRY(Param *, pParam, &param) {
-//   ....
-// } PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-//   ....
-// }
-// PAL_ENDTRY
-//
-//
-// LONG MyFilter(PEXCEPTION_POINTERS *pExceptionInfo, PVOID pv)
-// {
-// ...
-// }
-// PAL_TRY(void *, unused, NULL) {
-//   ....
-// } PAL_EXCEPT_FILTER(MyFilter) {
-//   ....
-// }
-// PAL_ENDTRY
-//
-//
-// Complex example:
-//
-// struct MyParams
-// {
-//     ...
-// } params;
-//
-// PAL_TRY(MyParams *, pMyParamsOuter, &params) {
-//   PAL_TRY(MyParams *, pMyParamsInnter, pMyParamsOuter) {
-//       ...
-//       if (error) goto Done;
-//       ...
-//   Done: ;
-//   } PAL_EXCEPT_FILTER(OtherFilter) {
-//   ...
-//   }
-//   PAL_ENDTRY
-// }
-// PAL_FINALLY {
-// }
-// PAL_ENDTRY
-//
-
 #include "staticcontract.h"
 
 #define HardwareExceptionHolder
-
-// Note: PAL_SEH_RESTORE_GUARD_PAGE is only ever defined in clrex.h, so we only restore guard pages automatically
-// when these macros are used from within the VM.
-#define PAL_SEH_RESTORE_GUARD_PAGE
-
-#define PAL_TRY_NAKED                                                           \
-    {                                                                           \
-        bool __exHandled; __exHandled = false;                                  \
-        DWORD __exCode; __exCode = 0;                                           \
-        __try                                                                   \
-        {
-
-#define PAL_EXCEPT_NAKED(Disposition)                                           \
-        }                                                                       \
-        __except(__exCode = GetExceptionCode(), Disposition)                    \
-        {                                                                       \
-            __exHandled = true;                                                 \
-            PAL_SEH_RESTORE_GUARD_PAGE
-
-#define PAL_EXCEPT_FILTER_NAKED(pfnFilter, param)                               \
-        }                                                                       \
-        __except(__exCode = GetExceptionCode(),                                 \
-                 pfnFilter(GetExceptionInformation(), param))                   \
-        {                                                                       \
-            __exHandled = true;                                                 \
-            PAL_SEH_RESTORE_GUARD_PAGE
-
-#define PAL_FINALLY_NAKED                                                       \
-        }                                                                       \
-        __finally                                                               \
-        {                                                                       \
-
-#define PAL_ENDTRY_NAKED                                                        \
-        }                                                                       \
-    }                                                                           \
-
-
-#if defined(_DEBUG) && !defined(DACCESS_COMPILE)
-//
-// In debug mode, compile the try body as a method of a local class.
-// This way, the compiler will check that the body is not directly
-// accessing any local variables and arguments.
-//
-#define PAL_TRY(__ParamType, __paramDef, __paramRef)                            \
-{                                                                               \
-    __ParamType __param = __paramRef;                                           \
-    __ParamType __paramToPassToFilter = __paramRef;                             \
-    class __Body                                                                \
-    {                                                                           \
-    public:                                                                     \
-        static void Run(__ParamType __paramDef)                                 \
-    {                                                                           \
-        PAL_TRY_HANDLER_DBG_BEGIN
-
-#define PAL_TRY_FOR_DLLMAIN(__ParamType, __paramDef, __paramRef, __reason)      \
-{                                                                               \
-    __ParamType __param = __paramRef;                                           \
-    __ParamType __paramToPassToFilter = __paramRef;                             \
-    class __Body                                                                \
-    {                                                                           \
-    public:                                                                     \
-        static void Run(__ParamType __paramDef)                                 \
-    {                                                                           \
-            PAL_TRY_HANDLER_DBG_BEGIN_DLLMAIN(__reason)
-
-#define PAL_EXCEPT(Disposition)                                                 \
-            PAL_TRY_HANDLER_DBG_END                                             \
-        }                                                                       \
-    };                                                                          \
-        PAL_TRY_NAKED                                                           \
-    __Body::Run(__param);                                                       \
-    PAL_EXCEPT_NAKED(Disposition)
-
-#define PAL_EXCEPT_FILTER(pfnFilter)                                            \
-            PAL_TRY_HANDLER_DBG_END                                             \
-        }                                                                       \
-    };                                                                          \
-    PAL_TRY_NAKED                                                               \
-    __Body::Run(__param);                                                       \
-    PAL_EXCEPT_FILTER_NAKED(pfnFilter, __paramToPassToFilter)
-
-#define PAL_FINALLY                                                             \
-            PAL_TRY_HANDLER_DBG_END                                             \
-        }                                                                       \
-    };                                                                          \
-    PAL_TRY_NAKED                                                               \
-    __Body::Run(__param);                                                       \
-    PAL_FINALLY_NAKED
-
-#define PAL_ENDTRY                                                              \
-    PAL_ENDTRY_NAKED                                                            \
-}
-
-#else // _DEBUG
-
-#define PAL_TRY(__ParamType, __paramDef, __paramRef)                            \
-{                                                                               \
-    __ParamType __param = __paramRef;                                           \
-    __ParamType __paramDef = __param;                                           \
-    PAL_TRY_NAKED                                                               \
-    PAL_TRY_HANDLER_DBG_BEGIN
-
-#define PAL_TRY_FOR_DLLMAIN(__ParamType, __paramDef, __paramRef, __reason)      \
-{                                                                               \
-    __ParamType __param = __paramRef;                                           \
-    __ParamType __paramDef; __paramDef = __param;                               \
-    PAL_TRY_NAKED                                                               \
-    PAL_TRY_HANDLER_DBG_BEGIN_DLLMAIN(__reason)
-
-#define PAL_EXCEPT(Disposition)                                                 \
-        PAL_TRY_HANDLER_DBG_END                                                 \
-        PAL_EXCEPT_NAKED(Disposition)
-
-#define PAL_EXCEPT_FILTER(pfnFilter)                                            \
-        PAL_TRY_HANDLER_DBG_END                                                 \
-        PAL_EXCEPT_FILTER_NAKED(pfnFilter, __param)
-
-#define PAL_FINALLY                                                             \
-        PAL_TRY_HANDLER_DBG_END                                                 \
-        PAL_FINALLY_NAKED
-
-#define PAL_ENDTRY                                                              \
-    PAL_ENDTRY_NAKED                                                            \
-    }
-
-#endif // _DEBUG
 
 #define PAL_CPP_TRY try
 #define PAL_CPP_ENDTRY
@@ -380,50 +176,6 @@
 #define PAL_CPP_CATCH_NON_DERIVED(type, obj) catch (type obj)
 #define PAL_CPP_CATCH_NON_DERIVED_NOARG(type) catch (type)
 #define PAL_CPP_CATCH_ALL catch (...)
-
-#if defined(_DEBUG_IMPL) && !defined(JIT_BUILD) && !defined(CROSS_COMPILE) && !defined(DISABLE_CONTRACTS)
-#define PAL_TRY_HANDLER_DBG_BEGIN                                               \
-    BOOL ___oldOkayToThrowValue = FALSE;                                        \
-    ClrDebugState *___pState = ::GetClrDebugState();                            \
-    __try                                                                       \
-    {                                                                           \
-        ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
-        ___pState->SetOkToThrow();
-
-// Special version that avoids touching the debug state after doing work in a DllMain for process or thread detach.
-#define PAL_TRY_HANDLER_DBG_BEGIN_DLLMAIN(_reason)                              \
-    BOOL ___oldOkayToThrowValue = FALSE;                                        \
-    ClrDebugState *___pState = NULL;                                            \
-    if (_reason != DLL_PROCESS_ATTACH)                                          \
-        ___pState = CheckClrDebugState();                                       \
-    __try                                                                       \
-    {                                                                           \
-        if (___pState)                                                          \
-        {                                                                       \
-            ___oldOkayToThrowValue = ___pState->IsOkToThrow();                  \
-            ___pState->SetOkToThrow();                                        \
-        }                                                                       \
-        if ((_reason == DLL_PROCESS_DETACH) || (_reason == DLL_THREAD_DETACH))  \
-        {                                                                       \
-            ___pState = NULL;                                                   \
-        }
-
-#define PAL_TRY_HANDLER_DBG_END                                                 \
-    }                                                                           \
-    __finally                                                                   \
-    {                                                                           \
-        if (___pState != NULL)                                                  \
-        {                                                                       \
-            _ASSERTE(___pState == CheckClrDebugState());                        \
-            ___pState->SetOkToThrow( ___oldOkayToThrowValue );                \
-        }                                                                       \
-    }
-
-#else
-#define PAL_TRY_HANDLER_DBG_BEGIN
-#define PAL_TRY_HANDLER_DBG_BEGIN_DLLMAIN(_reason)
-#define PAL_TRY_HANDLER_DBG_END
-#endif // defined(ENABLE_CONTRACTS_IMPL)
 
 
 #if !BIGENDIAN
@@ -503,5 +255,107 @@ typedef HMODULE NATIVE_LIBRARY_HANDLE;
 #endif
 
 #endif // defined(HOST_WINDOWS)
+
+// Contract bookkeeping for the body of a __try that catches its own exceptions:
+// the body is allowed to throw even if the enclosing function is NOTHROW.
+#if defined(HOST_WINDOWS) && defined(_DEBUG_IMPL) && !defined(JIT_BUILD) && !defined(CROSS_COMPILE) && !defined(DISABLE_CONTRACTS)
+#define DEBUG_OK_TO_THROW_BEGIN                                                 \
+    BOOL ___oldOkayToThrowValue = FALSE;                                        \
+    ClrDebugState *___pState = ::GetClrDebugState();                            \
+    __try                                                                       \
+    {                                                                           \
+        ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
+        ___pState->SetOkToThrow();
+
+// Special version that avoids touching the debug state after doing work in a DllMain for process or thread detach.
+#define DEBUG_OK_TO_THROW_BEGIN_DLLMAIN(_reason)                                \
+    BOOL ___oldOkayToThrowValue = FALSE;                                        \
+    ClrDebugState *___pState = NULL;                                            \
+    if (_reason != DLL_PROCESS_ATTACH)                                          \
+        ___pState = CheckClrDebugState();                                       \
+    __try                                                                       \
+    {                                                                           \
+        if (___pState)                                                          \
+        {                                                                       \
+            ___oldOkayToThrowValue = ___pState->IsOkToThrow();                  \
+            ___pState->SetOkToThrow();                                          \
+        }                                                                       \
+        if ((_reason == DLL_PROCESS_DETACH) || (_reason == DLL_THREAD_DETACH))  \
+        {                                                                       \
+            ___pState = NULL;                                                   \
+        }
+
+#define DEBUG_OK_TO_THROW_END                                                   \
+    }                                                                           \
+    __finally                                                                   \
+    {                                                                           \
+        if (___pState != NULL)                                                  \
+        {                                                                       \
+            _ASSERTE(___pState == CheckClrDebugState());                        \
+            ___pState->SetOkToThrow( ___oldOkayToThrowValue );                  \
+        }                                                                       \
+    }
+#else
+#define DEBUG_OK_TO_THROW_BEGIN
+#define DEBUG_OK_TO_THROW_BEGIN_DLLMAIN(_reason)
+#define DEBUG_OK_TO_THROW_END
+#endif
+
+// Raise a Win32 SEH exception. On Unix, it is thrown as a PAL_SEHException carrying the
+// exception record and the context of the raise site.
+#ifdef HOST_WINDOWS
+#define RAISE_SEH_EXCEPTION(code, flags, numArgs, args) RaiseException(code, flags, numArgs, args)
+#else // HOST_WINDOWS
+
+#if defined(HOST_AMD64)
+#define SEH_CONTEXT_PC(pContext) ((pContext)->Rip)
+#elif defined(HOST_S390X)
+#define SEH_CONTEXT_PC(pContext) ((pContext)->PSWAddr)
+#elif defined(HOST_POWERPC64)
+#define SEH_CONTEXT_PC(pContext) ((pContext)->Nip)
+#else
+#define SEH_CONTEXT_PC(pContext) ((pContext)->Pc)
+#endif
+
+#if defined(HOST_ARM) || defined(HOST_ARM64) || defined(HOST_LOONGARCH64) || defined(HOST_RISCV64)
+#define SEH_RAISE_CONTEXT_FLAGS (CONTEXT_FULL | CONTEXT_UNWOUND_TO_CALL)
+#else
+#define SEH_RAISE_CONTEXT_FLAGS CONTEXT_FULL
+#endif
+
+// RtlCaptureContext reads the requested ContextFlags on some architectures and adds
+// CONTEXT_SEGMENTS / CONTEXT_DEBUG on others, so the flags are set before and after.
+// WASM-TODO: reconsider this
+#ifdef TARGET_WASM
+#define SEH_CAPTURE_CONTEXT(pContext) ((PVOID)NULL)
+#else
+#define SEH_CAPTURE_CONTEXT(pContext)                                           \
+    ((pContext)->ContextFlags = CONTEXT_FULL,                                   \
+     RtlCaptureContext(pContext),                                               \
+     (pContext)->ContextFlags = SEH_RAISE_CONTEXT_FLAGS,                        \
+     (PVOID)SEH_CONTEXT_PC(pContext))
+#endif
+
+#define RAISE_SEH_EXCEPTION(code, flags, numArgs, args)                         \
+    do                                                                          \
+    {                                                                           \
+        EXCEPTION_RECORD* __exceptionRecord;                                    \
+        CONTEXT* __contextRecord;                                               \
+        PAL_AllocateExceptionRecords(&__exceptionRecord, &__contextRecord);     \
+        memset(__exceptionRecord, 0, sizeof(EXCEPTION_RECORD));                 \
+        memset(__contextRecord, 0, sizeof(CONTEXT));                            \
+        __exceptionRecord->ExceptionCode = (code);                              \
+        __exceptionRecord->ExceptionFlags = (flags);                            \
+        __exceptionRecord->NumberParameters = (numArgs);                        \
+        if ((numArgs) != 0)                                                     \
+        {                                                                       \
+            memcpy(__exceptionRecord->ExceptionInformation, (args),             \
+                   (numArgs) * sizeof(ULONG_PTR));                              \
+        }                                                                       \
+        __exceptionRecord->ExceptionAddress = SEH_CAPTURE_CONTEXT(__contextRecord); \
+        throw PAL_SEHException(__exceptionRecord, __contextRecord);             \
+    } while (false)
+
+#endif // HOST_WINDOWS
 
 #endif // __PALCLR_H__

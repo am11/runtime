@@ -830,8 +830,14 @@ HRESULT CeeFileGenWriter::emitResourceSection()
     param.genWriter = this;
     param.hr = S_OK;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         SIZE_T cbFileSize;
         const BYTE *pbStartOfMappedMem;
         IMAGE_SECTION_HEADER *rsrc[2] = { NULL, NULL };
@@ -1079,12 +1085,16 @@ HRESULT CeeFileGenWriter::emitResourceSection()
             VAL32(rsrc[1]->SizeOfRawData));
 
 lDone: ;
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         param.hr = HRESULT_FROM_WIN32(ERROR_RESOURCE_DATA_NOT_FOUND);
     }
-    PAL_ENDTRY
 
     hMod = param.hMod;
     hFile = param.hFile;

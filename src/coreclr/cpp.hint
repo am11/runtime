@@ -22,11 +22,6 @@
 #define WRAPPER_NO_CONTRACT
 
 
-// Exceptions
-#define PAL_ENDTRY
-#define PAL_EXCEPT_FILTER(x)
-#define PAL_TRY(x, y, z)
-
 // DAC
 #define GVAL_ADDR(g) (&(g))
 #define _SPTR_DECL(acc_type, store_type, var) \

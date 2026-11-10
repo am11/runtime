@@ -30,7 +30,7 @@
 
 #ifdef TARGET_LINUX
 // process_vm_readv is the safe in-process read path on Linux. See
-// ReadFromTargetCallback below for why PAL_TRY around memcpy is not viable.
+// ReadFromTargetCallback below for why __try around memcpy is not viable.
 #include <sys/uio.h>
 #include <unistd.h>
 #endif
@@ -281,7 +281,7 @@ static thread_local DWORD    s_currentThreadId = 0;
 //-----------------------------------------------------------------------------
 
 // Helper for ReadFromTargetCallback — AVInRuntimeImplOkayHolder cannot be
-// directly inside PAL_TRY scope (see controller.cpp:109).
+// directly inside __try scope (see controller.cpp:109).
 static void ReadFromTargetHelper(void* src, uint8_t* dest, uint32_t count)
 {
     AVInRuntimeImplOkayHolder AVOkay;
@@ -296,7 +296,7 @@ static int ReadFromTargetCallback(uint64_t addr, uint8_t* dest, uint32_t count, 
     // in exceptionhandling.cpp -- only managed code, virtual stubs, and marked JIT
     // helpers qualify). If the cDAC asks us to read from an invalid address, the
     // memcpy below would AV inside libc's __memcpy_advsimd, the signal handler
-    // would bail, and the whole process would abort -- a PAL_TRY around memcpy
+    // would bail, and the whole process would abort -- a __try around memcpy
     // cannot catch it.
     //
     // process_vm_readv performs the copy in the kernel, returning EFAULT for
@@ -311,15 +311,25 @@ static int ReadFromTargetCallback(uint64_t addr, uint8_t* dest, uint32_t count, 
     void* src = reinterpret_cast<void*>(static_cast<uintptr_t>(addr));
     struct Param { void* src; uint8_t* dest; uint32_t count; } param;
     param.src = src; param.dest = dest; param.count = count;
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         ReadFromTargetHelper(pParam->src, pParam->dest, pParam->count);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         return E_FAIL;
     }
-    PAL_ENDTRY
     return S_OK;
 #endif
 }

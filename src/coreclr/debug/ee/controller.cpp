@@ -109,7 +109,7 @@ LONG FilterAccessViolation2(LPEXCEPTION_POINTERS ep, PVOID pv)
 }
 
 // This helper is required because the AVInRuntimeImplOkayHolder can not
-// be directly placed inside the scope of a PAL_TRY
+// be directly placed inside the scope of a __try
 void _CopyInstructionBlockHelper(BYTE* to, const BYTE* from)
 {
     AVInRuntimeImplOkayHolder AVOkay;
@@ -139,19 +139,28 @@ void DebuggerControllerPatch::CopyInstructionBlock(BYTE *to, const BYTE* from)
     // extremely rare case where we're copying an instruction off the
     // end of a method that is also at the end of a page, and the next
     // page is unmapped.
-    struct Param
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        BYTE *to;
-        const BYTE* from;
-    } param;
-    param.to = to;
-    param.from = from;
-    PAL_TRY(Param *, pParam, &param)
-    {
-        _CopyInstructionBlockHelper(pParam->to, pParam->from);
+        DEBUG_OK_TO_THROW_BEGIN
+        _CopyInstructionBlockHelper(to, from);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterAccessViolation2)
+#ifdef HOST_WINDOWS
+    __except (FilterAccessViolation2(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterAccessViolation2(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // The whole point is that if we copy up the AV, then
         // that's enough to execute, otherwise we would not have been
         // able to execute the code anyway. So we just ignore the
@@ -159,7 +168,6 @@ void DebuggerControllerPatch::CopyInstructionBlock(BYTE *to, const BYTE* from)
         LOG((LF_CORDB, LL_INFO10000,
              "DCP::CIP: AV copying instruction block ignored.\n"));
     }
-    PAL_ENDTRY
 }
 
 

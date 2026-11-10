@@ -951,8 +951,14 @@ BOOL IsIPInModule(PTR_VOID pModuleBaseAddress, PCODE ip)
 
 // UNIXTODO: implement a proper version for PAL
 #ifdef HOST_WINDOWS
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         PTR_BYTE pBase = dac_cast<PTR_BYTE>(pParam->pModuleBaseAddress);
 
         PTR_IMAGE_DOS_HEADER pDOS = NULL;
@@ -1014,11 +1020,15 @@ BOOL IsIPInModule(PTR_VOID pModuleBaseAddress, PCODE ip)
         pParam->fRet = TRUE;
 
 lDone: ;
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT (EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
     }
-    PAL_ENDTRY
 #endif // HOST_WINDOWS
 
     return param.fRet;
@@ -1368,22 +1378,23 @@ void DACRaiseException(TADDR *args, UINT argCount)
     STATIC_CONTRACT_GC_NOTRIGGER;
     STATIC_CONTRACT_MODE_ANY;
 
-    struct Param
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        TADDR *args;
-        UINT argCount;
-    } param;
-    param.args = args;
-    param.argCount = argCount;
-
-    PAL_TRY(Param *, pParam, &param)
-    {
-        RaiseException(CLRDATA_NOTIFY_EXCEPTION, 0, pParam->argCount, (ULONG_PTR *)pParam->args);
+        DEBUG_OK_TO_THROW_BEGIN
+        RAISE_SEH_EXCEPTION(CLRDATA_NOTIFY_EXCEPTION, 0, argCount, (ULONG_PTR *)args);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
     }
-    PAL_ENDTRY
 }
 
 void DACNotifyExceptionHelper(TADDR *args, UINT argCount)

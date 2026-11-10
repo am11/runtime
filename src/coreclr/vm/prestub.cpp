@@ -2373,26 +2373,44 @@ static void TestSEHGuardPageRestoreOverflow()
 
 static void TestSEHGuardPageRestore()
 {
-        PAL_TRY(void *, unused, NULL)
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
+            DEBUG_OK_TO_THROW_BEGIN
             TestSEHGuardPageRestoreOverflow();
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+        __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+        catch (PAL_SEHException&)
+#endif
         {
             _ASSERTE(!"Got first overflow.");
         }
-        PAL_ENDTRY;
 
-        PAL_TRY(void *, unused, NULL)
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
+            DEBUG_OK_TO_THROW_BEGIN
             TestSEHGuardPageRestoreOverflow();
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+        __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+        catch (PAL_SEHException&)
+#endif
         {
             // If you get two asserts, then it works!
             _ASSERTE(!"Got second overflow.");
         }
-        PAL_ENDTRY;
 }
 #endif // _DEBUG
 

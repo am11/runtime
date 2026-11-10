@@ -75,7 +75,7 @@
 #if _SAFECRT_USE_INLINES && !defined(_SAFECRT_NO_INCLUDES)
 #include <stdlib.h>     /* for _MAX_DRIVE */
 #include <string.h>     /* for memset */
-#include <windows.h>    /* for NTSTATUS, RaiseException */
+#include <windows.h>    /* for NTSTATUS, PAL_SEHException */
 #if _SAFECRT_SET_ERRNO
 #include <errno.h>
 #endif
@@ -322,7 +322,32 @@ void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionNam
     (_Reserved);
 #endif
     /* invoke Watson */
-    RaiseException((DWORD)STATUS_INVALID_PARAMETER, 0, 0, nullptr);
+    EXCEPTION_RECORD *exceptionRecord;
+    CONTEXT *contextRecord;
+    PAL_AllocateExceptionRecords(&exceptionRecord, &contextRecord);
+    memset(exceptionRecord, 0, sizeof(EXCEPTION_RECORD));
+    memset(contextRecord, 0, sizeof(CONTEXT));
+    exceptionRecord->ExceptionCode = (DWORD)STATUS_INVALID_PARAMETER;
+#ifndef TARGET_WASM
+    // RtlCaptureContext reads the requested ContextFlags on some architectures and adds
+    // CONTEXT_SEGMENTS / CONTEXT_DEBUG on others, so the flags are set before and after.
+    contextRecord->ContextFlags = CONTEXT_FULL;
+    RtlCaptureContext(contextRecord);
+    contextRecord->ContextFlags = CONTEXT_FULL;
+#if defined(CONTEXT_UNWOUND_TO_CALL)
+    contextRecord->ContextFlags |= CONTEXT_UNWOUND_TO_CALL;
+#endif
+#if defined(HOST_AMD64)
+    exceptionRecord->ExceptionAddress = (PVOID)contextRecord->Rip;
+#elif defined(HOST_S390X)
+    exceptionRecord->ExceptionAddress = (PVOID)contextRecord->PSWAddr;
+#elif defined(HOST_POWERPC64)
+    exceptionRecord->ExceptionAddress = (PVOID)contextRecord->Nip;
+#else
+    exceptionRecord->ExceptionAddress = (PVOID)contextRecord->Pc;
+#endif
+#endif // !TARGET_WASM
+    throw PAL_SEHException(exceptionRecord, contextRecord);
 }
 
 #endif

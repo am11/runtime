@@ -125,16 +125,7 @@ CorJitResult interceptor_ICJC::compileMethod(ICorJitInfo*                comp,  
 
     auto doCompile = [mc, our_ICorJitInfo, this, &compileParams]()
     {
-        PAL_TRY(CompileParams*, pParam, &compileParams)
-        {
-            pParam->result = pParam->origComp->compileMethod(
-                pParam->ourICJI,
-                pParam->methodInfo,
-                pParam->flags,
-                pParam->nativeEntry,
-                pParam->nativeSizeOfCode);
-        }
-        PAL_FINALLY
+        auto finallyBlock = [&]()
         {
             if (!our_ICorJitInfo.SavedCollectionEarly())
             {
@@ -142,8 +133,37 @@ CorJitResult interceptor_ICJC::compileMethod(ICorJitInfo*                comp,  
             }
 
             delete mc;
+        };
+
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
+        {
+            HardwareExceptionHolder
+            DEBUG_OK_TO_THROW_BEGIN
+            compileParams.result = compileParams.origComp->compileMethod(
+                compileParams.ourICJI,
+                compileParams.methodInfo,
+                compileParams.flags,
+                compileParams.nativeEntry,
+                compileParams.nativeSizeOfCode);
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_ENDTRY;
+#ifdef HOST_WINDOWS
+        __finally
+        {
+            finallyBlock();
+        }
+#else
+        catch (...)
+        {
+            finallyBlock();
+            throw;
+        }
+        finallyBlock();
+#endif
     };
 
     doCompile();

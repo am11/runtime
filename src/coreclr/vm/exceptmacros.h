@@ -112,63 +112,6 @@ VOID DECLSPEC_NORETURN RealCOMPlusThrowOM();
 #include <excepcpu.h>
 #include <runtimeexceptionkind.h>
 
-//==========================================================================
-// Macros to allow catching exceptions from within the EE. These are lightweight
-// handlers that do not install the managed frame handler.
-//
-//      struct Param { ... } param;
-//      EE_TRY_FOR_FINALLY(Param *, pParam, &param) {
-//          ...<guarded code>...
-//      } EE_FINALLY {
-//          ...<handler>...
-//      } EE_END_FINALLY
-//
-//      EE_TRY(filter expr) {
-//          ...<guarded code>...
-//      } EE_CATCH {
-//          ...<handler>...
-//      }
-//==========================================================================
-
-// __GotException will only be FALSE if got all the way through the code
-// guarded by the try, otherwise it will be TRUE, so we know if we got into the
-// finally from an exception or not. In which case need to reset the GC state back
-// to what it was for the finally to run in that state.
-
-#define EE_TRY_FOR_FINALLY(ParamType, paramDef, paramRef)               \
-    {                                                               \
-        struct __EEParam                                                \
-        {                                                               \
-            BOOL fGCDisabled;                                           \
-            BOOL GotException;                                          \
-            ParamType param;                                            \
-        } __EEparam;                                                    \
-        __EEparam.fGCDisabled = GetThread()->PreemptiveGCDisabled();    \
-        __EEparam.GotException = TRUE;                                  \
-        __EEparam.param = paramRef;                                     \
-        PAL_TRY(__EEParam *, __pEEParam, &__EEparam)                    \
-        {                                                               \
-            ParamType paramDef; paramDef = __pEEParam->param;
-
-#define GOT_EXCEPTION() __EEparam.GotException
-
-#define EE_FINALLY                                                                  \
-            __pEEParam->GotException = FALSE;                                       \
-        } PAL_FINALLY {                                                             \
-            if (__EEparam.GotException) {                                           \
-                if (__EEparam.fGCDisabled != GetThread()->PreemptiveGCDisabled()) { \
-                    if (__EEparam.fGCDisabled)                                      \
-                        GetThread()->DisablePreemptiveGC();                         \
-                    else                                                            \
-                        GetThread()->EnablePreemptiveGC();                          \
-                }                                                                   \
-            }
-
-#define EE_END_FINALLY                                                  \
-        }                                                               \
-        PAL_ENDTRY                                                      \
-    }
-
 enum VEH_ACTION
 {
     VEH_NO_ACTION = -3,

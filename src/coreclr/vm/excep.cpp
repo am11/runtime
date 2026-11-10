@@ -1967,7 +1967,7 @@ VOID DECLSPEC_NORETURN RaiseTheExceptionInternalOnly(OBJECTREF throwable)
     // Enable preemptive mode before call into OS
     GCX_PREEMP_NO_DTOR();
 
-    RaiseException(code, flags, argCount, exceptionArgs);
+    RAISE_SEH_EXCEPTION(code, flags, argCount, exceptionArgs);
 
     _ASSERTE(!"Cannot continue after CLR exception");      // Debugger can bring you here.
     // For example,
@@ -2026,14 +2026,6 @@ VOID DECLSPEC_NORETURN RealCOMPlusThrow(OBJECTREF throwable)
     GCPROTECT_END();
 }
 
-#ifdef TARGET_WASM
-EXCEPTION_DISPOSITION SetTargetFrame(PAL_SEHException& ex, UINT_PTR targetSP)
-{
-    ex.TargetFrameSp = targetSP;
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-#endif // TARGET_WASM
-
 VOID DECLSPEC_NORETURN __fastcall PropagateExceptionThroughNativeFrames(Object *exceptionObj, UINT_PTR targetSP)
 {
     CONTRACTL
@@ -2048,25 +2040,18 @@ VOID DECLSPEC_NORETURN __fastcall PropagateExceptionThroughNativeFrames(Object *
     // On WASM, the exception needs to keep propagating until it reaches the target frame. On other platforms,
     // this is ensured by unwinding stack up to the target frame before propagating the exception. This
     // difference is due to the fact that on WASM we don't have native stack unwinding support.
-    struct Param
+    try
     {
-        Object *exceptionObj;
-        UINT_PTR targetSP;
-    } param = { exceptionObj, targetSP };
-
-    PAL_TRY(Param *, pParam, &param)
-    {
-        OBJECTREF throwable = ObjectToOBJECTREF(pParam->exceptionObj);
-#else
-        OBJECTREF throwable = ObjectToOBJECTREF(exceptionObj);
 #endif // TARGET_WASM
+        OBJECTREF throwable = ObjectToOBJECTREF(exceptionObj);
         RealCOMPlusThrowWorker(throwable);
 #ifdef TARGET_WASM
     }
-    PAL_EXCEPT(SetTargetFrame(ex, __param->targetSP))
+    catch (PAL_SEHException& ex)
     {
+        ex.TargetFrameSp = targetSP;
+        throw;
     }
-    PAL_ENDTRY
 #endif // TARGET_WASM
     UNREACHABLE();
 }
@@ -3777,8 +3762,14 @@ LONG InternalUnhandledExceptionFilter_Worker(
     param.fIgnore = ((param.pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) ||
                     (param.pExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_SINGLE_STEP));
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         // If fIgnore, then this is some sort of breakpoint, not a "normal" unhandled exception.  But, the
         //  breakpoint is due to an int3 or debugger step instruction, not due to calling Debugger.Break()
         TypeOfReportedError tore = pParam->fIgnore ? TypeOfReportedError::NativeBreakpoint : TypeOfReportedError::UnhandledException;
@@ -3912,9 +3903,20 @@ LONG InternalUnhandledExceptionFilter_Worker(
         DefaultCatchHandler(pParam->pExceptionInfo, NULL, useLastThrownObject, TRUE /* sendWindowsEventLog */);
 
 lDone: ;
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER (SaveIPFilter)
+#ifdef HOST_WINDOWS
+    __except (SaveIPFilter(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (SaveIPFilter(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // Should never get here.
 #ifdef _DEBUG
         char buffer[200];
@@ -3925,7 +3927,6 @@ lDone: ;
 #endif
         EEPOLICY_HANDLE_FATAL_ERROR(COR_E_EXECUTIONENGINE)
     }
-    PAL_ENDTRY;
 
     return param.retval;
 } // LONG InternalUnhandledExceptionFilter_Worker()
@@ -6697,7 +6698,7 @@ void SaveCurrentExceptionInfo(PEXCEPTION_RECORD pRecord, PCONTEXT pContext)
 //
 // Parameters:
 //   pExceptionInfo - the pExceptionInfo passed to a filter function.
-//   pCatcherStackAddr - a Frame* from the PAL_TRY/PAL_EXCEPT_FILTER site.
+//   pCatcherStackAddr - a Frame* from the __try/__except site.
 //
 // Return:
 //   always returns EXCEPTION_CONTINUE_SEARCH.
@@ -6705,7 +6706,7 @@ void SaveCurrentExceptionInfo(PEXCEPTION_RECORD pRecord, PCONTEXT pContext)
 //******************************************************************************
 LONG NotifyOfCHFFilterWrapper(
     EXCEPTION_POINTERS *pExceptionInfo, // the pExceptionInfo passed to a filter function.
-    PVOID               pParam)         // contains a Frame* from the PAL_TRY/PAL_EXCEPT_FILTER site.
+    PVOID               pParam)         // contains a Frame* from the __try/__except site.
 {
     LIMITED_METHOD_CONTRACT;
 

@@ -43,7 +43,7 @@ void DECLSPEC_NORETURN fatal(int errCode)
 #endif // DEBUG
 
     ULONG_PTR exceptArg = errCode;
-    RaiseException(FATAL_JIT_EXCEPTION, EXCEPTION_NONCONTINUABLE, 1, &exceptArg);
+    RAISE_SEH_EXCEPTION(FATAL_JIT_EXCEPTION, EXCEPTION_NONCONTINUABLE, 1, &exceptArg);
     UNREACHABLE();
 }
 

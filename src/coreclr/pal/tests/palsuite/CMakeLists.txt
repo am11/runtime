@@ -29,7 +29,6 @@ endif()
 
 
 #these PAL tests have special build needs, and are built separately
-add_subdirectory(exception_handling/pal_sxs/test1)
 if(FEATURE_EVENT_TRACE)
   add_subdirectory(eventprovider)
 endif(FEATURE_EVENT_TRACE)
@@ -72,31 +71,7 @@ add_executable_clr(paltests
   c_runtime/_vsnprintf_s/test8/test8.cpp
   c_runtime/_vsnprintf_s/test9/test9.cpp
   c_runtime/_wcslwr_s/test1/test1.cpp
-  #debug_api/DebugBreak/test1/test1.cpp
   debug_api/OutputDebugStringW/test1/test1.cpp
-  #exception_handling/pal_except/test1/test1.cpp
-  #exception_handling/pal_except/test2/test2.cpp
-  #exception_handling/pal_except/test3/test3.cpp
-  #exception_handling/pal_except/test4/test4.cpp
-  #exception_handling/pal_except/test5/test5.cpp
-  #exception_handling/pal_except/test6/test6.cpp
-  #exception_handling/pal_except/test7/test7.cpp
-  #exception_handling/PAL_EXCEPT_FILTER/test1/PAL_EXCEPT_FILTER.cpp
-  #exception_handling/PAL_EXCEPT_FILTER/test2/pal_except_filter.cpp
-  #exception_handling/PAL_EXCEPT_FILTER/test3/pal_except_filter.cpp
-  #exception_handling/PAL_EXCEPT_FILTER_EX/test1/PAL_EXCEPT_FILTER_EX.cpp
-  #exception_handling/PAL_EXCEPT_FILTER_EX/test2/pal_except_filter_ex.cpp
-  #exception_handling/PAL_EXCEPT_FILTER_EX/test3/pal_except_filter.cpp
-  #exception_handling/pal_finally/test1/pal_finally.cpp
-  #exception_handling/PAL_TRY_EXCEPT/test1/PAL_TRY_EXCEPT.cpp
-  #exception_handling/PAL_TRY_EXCEPT/test2/PAL_TRY_EXCEPT.cpp
-  #exception_handling/PAL_TRY_EXCEPT_EX/test1/PAL_TRY_EXCEPT_EX.cpp
-  #exception_handling/PAL_TRY_EXCEPT_EX/test2/PAL_TRY_EXCEPT_EX.cpp
-  #exception_handling/PAL_TRY_EXCEPT_EX/test3/PAL_TRY_EXCEPT_EX.cpp
-  #exception_handling/PAL_TRY_LEAVE_FINALLY/test1/PAL_TRY_LEAVE_FINALLY.cpp
-  exception_handling/RaiseException/test1/test1.cpp
-  exception_handling/RaiseException/test2/test2.cpp
-  exception_handling/RaiseException/test3/test.cpp
 #  filemapping_memmgt/FreeLibrary/test1/dlltest.cpp
   filemapping_memmgt/FreeLibrary/test1/FreeLibrary.cpp
   filemapping_memmgt/FreeLibrary/test2/test2.cpp

@@ -244,12 +244,29 @@ std::invoke_result_t<Function> CallWithSEHWrapper(Function function)
         std::invoke_result_t<Function> result;
     } local { function };
 
-    PAL_TRY(Local *, pParam, &local)
+    Local *pParam = &local;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->result = pParam->function();
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(IgnoreCppExceptionFilter)
+#ifdef HOST_WINDOWS
+    __except (IgnoreCppExceptionFilter(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (IgnoreCppExceptionFilter(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // There can be both C++ (thrown by the COMPlusThrow) and managed exceptions thrown
         // from the called method's call chain.
         // We need to process only managed ones here, the C++ ones are handled by the
@@ -260,7 +277,6 @@ std::invoke_result_t<Function> CallWithSEHWrapper(Function function)
         OBJECTREF ohThrowable = GetThread()->LastThrownObject();
         DispatchManagedException(ohThrowable);
     }
-    PAL_ENDTRY
 
     return local.result;
 }
@@ -286,15 +302,32 @@ void InvokeUnmanagedMethodWithTransition(MethodDesc *targetMethod, int8_t *stack
     }
     param = { targetMethod, pArgs, pRet, callTarget };
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         GCX_PREEMP_NO_DTOR();
         // WASM-TODO: Handle unmanaged calling conventions
         InvokeManagedMethod(pParam->targetMethod, pParam->pArgs, pParam->pRet, pParam->callTarget, NULL);
         GCX_PREEMP_NO_DTOR_END();
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(IgnoreCppExceptionFilter)
+#ifdef HOST_WINDOWS
+    __except (IgnoreCppExceptionFilter(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (IgnoreCppExceptionFilter(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // There can be both C++ (thrown by the COMPlusThrow) and managed exceptions thrown
         // from the native method (QCALL) call chain.
         // We need to process only managed ones here, the C++ ones are handled by the
@@ -305,7 +338,6 @@ void InvokeUnmanagedMethodWithTransition(MethodDesc *targetMethod, int8_t *stack
         OBJECTREF ohThrowable = GetThread()->LastThrownObject();
         DispatchManagedException(ohThrowable);
     }
-    PAL_ENDTRY
 
     inlinedCallFrame.Pop();
 }

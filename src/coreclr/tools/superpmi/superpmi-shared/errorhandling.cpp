@@ -20,7 +20,7 @@ void MSC_ONLY(__declspec(noreturn)) ThrowSpmiException(DWORD exceptionCode, va_l
 
     ULONG_PTR exArgs[1];
     exArgs[0] = (ULONG_PTR)buffer;
-    RaiseException(exceptionCode, 0, ArrLen(exArgs), exArgs);
+    RAISE_SEH_EXCEPTION(exceptionCode, 0, ArrLen(exArgs), exArgs);
 }
 
 void MSC_ONLY(__declspec(noreturn)) ThrowSpmiException(DWORD exceptionCode, const char* msg, ...)
@@ -46,7 +46,7 @@ void MSC_ONLY(__declspec(noreturn)) ThrowRecordedException(DWORD innerExceptionC
 
     ULONG_PTR args[1];
     args[0] = (ULONG_PTR)innerExceptionCode;
-    RaiseException(EXCEPTIONCODE_RECORDED_EXCEPTION, 0, ArrLen(args), args);
+    RAISE_SEH_EXCEPTION(EXCEPTIONCODE_RECORDED_EXCEPTION, 0, ArrLen(args), args);
 }
 
 SpmiException::SpmiException(FilterSuperPMIExceptionsParam_CaptureException* e)
@@ -155,23 +155,31 @@ bool RunWithErrorTrap(void (*function)(void*), void* param)
 {
     bool success = true;
 
-    struct TrapParam
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        void (*function)(void*);
-        void* param;
-    } trapParam;
-    trapParam.function = function;
-    trapParam.param    = param;
-
-    PAL_TRY(TrapParam*, pTrapParam, &trapParam)
-    {
-        pTrapParam->function(pTrapParam->param);
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
+        function(param);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchNonSuperPMIException)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CatchNonSuperPMIException(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CatchNonSuperPMIException(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         success = false;
     }
-    PAL_ENDTRY
 
     return success;
 }
@@ -180,39 +188,38 @@ bool RunWithSPMIErrorTrap(void (*function)(void*), void* param)
 {
     bool success = true;
 
-    struct TrapParam
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        void (*function)(void*);
-        void* param;
-    } trapParam;
-    trapParam.function = function;
-    trapParam.param    = param;
-
-    PAL_TRY(TrapParam*, pTrapParam, &trapParam)
-    {
-        pTrapParam->function(pTrapParam->param);
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
+        function(param);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchSuperPMIException)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CatchSuperPMIException(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CatchSuperPMIException(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         success = false;
     }
-    PAL_ENDTRY
 
     return success;
 }
 
 void RunWithErrorExceptionCodeCaptureAndContinueImp(void* param, void (*function)(void*), void (*finallyFunction)(void*, DWORD))
 {
-    struct Param : FilterSuperPMIExceptionsParam_CaptureException
-    {
-        void (*function)(void*);
-        void (*finallyFunction)(void*, DWORD);
-        void*       pParamActual;
-    } paramStruct;
-
-    paramStruct.pParamActual = param;
-    paramStruct.function = function;
-    paramStruct.finallyFunction = finallyFunction;
+    FilterSuperPMIExceptionsParam_CaptureException paramStruct;
 
 #ifdef HOST_UNIX
     // We can't capture the exception code as a PAL exceptions when the exception is
@@ -225,24 +232,54 @@ void RunWithErrorExceptionCodeCaptureAndContinueImp(void* param, void (*function
     paramStruct.exceptionCode = 1;
 #endif // HOST_UNIX
 
-    PAL_TRY(Param*, pOuterParam, &paramStruct)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        PAL_TRY(Param*, pParam, pOuterParam)
+        HardwareExceptionHolder
+        DEBUG_OK_TO_THROW_BEGIN
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
-            pParam->function(pParam->pParamActual);
+            HardwareExceptionHolder
+            DEBUG_OK_TO_THROW_BEGIN
+            function(param);
 #ifdef HOST_UNIX
-            pParam->exceptionCode = 0;
+            paramStruct.exceptionCode = 0;
 #endif // HOST_UNIX
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndContinue)
+#ifdef HOST_WINDOWS
+        __except (FilterSuperPMIExceptions_CaptureExceptionAndContinue(GetExceptionInformation(), &paramStruct))
+#else
+        catch (PAL_SEHException& ex)
+#endif
         {
+#ifndef HOST_WINDOWS
+            if (FilterSuperPMIExceptions_CaptureExceptionAndContinue(&ex.ExceptionPointers, &paramStruct) == EXCEPTION_CONTINUE_SEARCH)
+            {
+                throw;
+            }
+#endif
         }
-        PAL_ENDTRY
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_FINALLY
+#ifdef HOST_WINDOWS
+    __finally
     {
-        paramStruct.finallyFunction(paramStruct.pParamActual, paramStruct.exceptionCode);
+        finallyFunction(param, paramStruct.exceptionCode);
     }
-    PAL_ENDTRY
-
+#else
+    catch (...)
+    {
+        finallyFunction(param, paramStruct.exceptionCode);
+        throw;
+    }
+    finallyFunction(param, paramStruct.exceptionCode);
+#endif
 }

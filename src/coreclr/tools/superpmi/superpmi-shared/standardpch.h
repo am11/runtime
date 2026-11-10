@@ -29,7 +29,7 @@
 //#define USE_COREDISTOOLS
 #endif // INTERNAL_BUILD
 
-// JIT_BUILD disables certain PAL_TRY debugging and Contracts features. Set this just as the JIT sets it.
+// JIT_BUILD disables certain SEH debugging and Contracts features. Set this just as the JIT sets it.
 #define JIT_BUILD
 
 #ifdef _MSC_VER

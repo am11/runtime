@@ -80,7 +80,7 @@ enum class NearDifferResult
     Failure,
 };
 
-// This function uses PAL_TRY, so it can't be in the a function that requires object unwinding. Extracting it out here
+// This function uses __try, so it can't be in the a function that requires object unwinding. Extracting it out here
 // avoids compiler error.
 //
 static NearDifferResult InvokeNearDiffer(NearDiffer*           nearDiffer,
@@ -103,8 +103,14 @@ static NearDifferResult InvokeNearDiffer(NearDiffer*           nearDiffer,
     param.reader     = reader;
     param.result     = NearDifferResult::Failure;
 
-    PAL_TRY(Param*, pParam, &param)
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         if (!pParam->nearDiffer->compare(*pParam->mc, *pParam->crl, (*pParam->mc)->cr))
         {
             pParam->result = NearDifferResult::SuccessWithDiff;
@@ -115,9 +121,20 @@ static NearDifferResult InvokeNearDiffer(NearDiffer*           nearDiffer,
         {
             pParam->result = NearDifferResult::SuccessWithoutDiff;
         }
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CaptureExceptionAndStop(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CaptureExceptionAndStop(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         SpmiException e(&param);
 
         LogError("main method %d of size %d failed to load and compile correctly.", (*reader)->GetMethodContextIndex(),
@@ -125,7 +142,6 @@ static NearDifferResult InvokeNearDiffer(NearDiffer*           nearDiffer,
         e.ShowAndDeleteMessage();
         param.result = NearDifferResult::Failure;
     }
-    PAL_ENDTRY
 
     return param.result;
 }

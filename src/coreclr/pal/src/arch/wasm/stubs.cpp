@@ -15,9 +15,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include "pal/wasi/pal_wasi_missing.h"
-// RESERVED_SEH_BIT is defined file-locally in seh.cpp (internal linkage) and
-// isn't exposed in a header, so redefine the value here for WASI.
-namespace { const UINT WASI_RESERVED_SEH_BIT = 0x800000; }
 #endif
 
 SET_DEFAULT_DEBUG_CHANNEL(EXCEPT); // some headers have code with asserts, so do this first
@@ -162,46 +159,6 @@ DWORD CONTEXTGetExceptionCodeForSignal(const siginfo_t *siginfo,
     return 0;
 }
 
-// WIN32 SEH entry — normally in seh-unwind.cpp which we exclude on WASI.
-// Mirrors that file's RaiseException: allocate EXCEPTION_RECORD + CONTEXT,
-// fill the record, throw PAL_SEHException (what RtlpRaiseException does on
-// Unix). The CONTEXT capture / PAL_VirtualUnwind step is skipped — already
-// guarded by #ifndef TARGET_WASM in seh-unwind.cpp.
-extern "C" VOID PALAPI
-RaiseException(
-    IN DWORD dwExceptionCode,
-    IN DWORD dwExceptionFlags,
-    IN DWORD nNumberOfArguments,
-    IN CONST ULONG_PTR *lpArguments)
-{
-    if (dwExceptionCode & WASI_RESERVED_SEH_BIT)
-    {
-        dwExceptionCode ^= WASI_RESERVED_SEH_BIT;
-    }
-
-    if (nNumberOfArguments > EXCEPTION_MAXIMUM_PARAMETERS)
-    {
-        nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
-    }
-
-    EXCEPTION_RECORD *exceptionRecord;
-    CONTEXT *contextRecord;
-    AllocateExceptionRecords(&exceptionRecord, &contextRecord);
-
-    exceptionRecord->ExceptionCode = dwExceptionCode;
-    exceptionRecord->ExceptionFlags = dwExceptionFlags;
-    exceptionRecord->ExceptionRecord = NULL;
-    exceptionRecord->ExceptionAddress = NULL;
-    exceptionRecord->NumberParameters = nNumberOfArguments;
-    if (nNumberOfArguments)
-    {
-        memcpy(exceptionRecord->ExceptionInformation, lpArguments,
-               nNumberOfArguments * sizeof(ULONG_PTR));
-    }
-
-    throw PAL_SEHException(exceptionRecord, contextRecord);
-}
-
 // WIN32 debug-output APIs. WASI build excludes pal/src/debug/debug.cpp; route
 // to the same internal channels stderr would on a real platform.
 extern "C" VOID PALAPI
@@ -258,8 +215,8 @@ PAL_FreeExceptionRecords(IN EXCEPTION_RECORD *exceptionRecord, IN CONTEXT *conte
     free(contextRecord);
 }
 
-VOID
-AllocateExceptionRecords(EXCEPTION_RECORD** exceptionRecord, CONTEXT** contextRecord)
+extern "C" PALIMPORT VOID PALAPI
+PAL_AllocateExceptionRecords(EXCEPTION_RECORD** exceptionRecord, CONTEXT** contextRecord)
 {
     WasiExceptionRecords* records = (WasiExceptionRecords*)calloc(1, sizeof(WasiExceptionRecords));
     if (records == nullptr)

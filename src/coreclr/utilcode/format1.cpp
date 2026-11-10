@@ -41,26 +41,34 @@ COR_ILMETHOD_DECODER::COR_ILMETHOD_DECODER(
     // CONTRACTL_END
 
     bool fErrorInInit = false;
-    struct Param
-    {
-        COR_ILMETHOD_DECODER * pThis;
-        COR_ILMETHOD * header;
-    } param;
-    param.pThis = this;
-    param.header = header;
 
-    PAL_TRY(Param *, pParam, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         // Decode the COR header into a more convenient form
-        DecoderInit(pParam->pThis, pParam->header);
+        DecoderInit(this, header);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterAllExceptions)
+#ifdef HOST_WINDOWS
+    __except (FilterAllExceptions(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterAllExceptions(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         fErrorInInit = true;
         Code = 0;
         SetLocalVarSigTok(0);
     }
-    PAL_ENDTRY
 
     if (fErrorInInit)
     {

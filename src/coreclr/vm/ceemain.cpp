@@ -1162,13 +1162,18 @@ LONG FilterStartupException(PEXCEPTION_POINTERS p, PVOID pv)
 //
 HRESULT EEStartup()
 {
-    // Cannot use normal contracts here because of the PAL_TRY.
+    // Cannot use normal contracts here because of the __try.
     STATIC_CONTRACT_NOTHROW;
 
     _ASSERTE(!g_fEEStarted && !g_fEEInit && SUCCEEDED (g_EEStartupStatus));
 
-    PAL_TRY(PVOID, p, NULL)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         InitializeClrNotifications();
 #ifdef TARGET_UNIX
         InitializeJITNotificationTable();
@@ -1176,13 +1181,23 @@ HRESULT EEStartup()
 #endif
 
         EEStartupHelper();
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER (FilterStartupException)
+#ifdef HOST_WINDOWS
+    __except (FilterStartupException(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterStartupException(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // The filter should have set g_EEStartupStatus to a failure HRESULT.
         _ASSERTE(FAILED(g_EEStartupStatus));
     }
-    PAL_ENDTRY
 
     return g_EEStartupStatus;
 }
@@ -1644,22 +1659,17 @@ BOOL STDMETHODCALLTYPE EEDllMain( // TRUE on success, FALSE on error.
     // BEGIN_EXTERNAL_ENTRYPOINT(&hr);
     // EE isn't spun up enough to use this macro
 
-    struct Param
+    // Can't use DEBUG_OK_TO_THROW_BEGIN/EX_TRY here as they access the ClrDebugState which gets blown away as part of the
+    // PROCESS_DETACH path. Must use special DEBUG_OK_TO_THROW_BEGIN_DLLMAIN, passing the reason were in the DllMain.
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        HINSTANCE hInst;
-        DWORD dwReason;
-        LPVOID lpReserved;
-    } param;
-    param.hInst = hInst;
-    param.dwReason = dwReason;
-    param.lpReserved = lpReserved;
+        DEBUG_OK_TO_THROW_BEGIN_DLLMAIN(dwReason)
 
-    // Can't use PAL_TRY/EX_TRY here as they access the ClrDebugState which gets blown away as part of the
-    // PROCESS_DETACH path. Must use special PAL_TRY_FOR_DLLMAIN, passing the reason were in the DllMain.
-    PAL_TRY_FOR_DLLMAIN(Param *, pParam, &param, pParam->dwReason)
-    {
-
-    switch (pParam->dwReason)
+    switch (dwReason)
         {
             case DLL_PROCESS_DETACH:
             {
@@ -1667,7 +1677,7 @@ BOOL STDMETHODCALLTYPE EEDllMain( // TRUE on success, FALSE on error.
                 // and non-null if we're here because the process is exiting.
                 // Since nobody should ever be calling FreeLibrary on mscorwks.dll, lpReserved
                 // should always be non NULL.
-                _ASSERTE(pParam->lpReserved || !g_fEEStarted);
+                _ASSERTE(lpReserved || !g_fEEStarted);
                 g_fProcessDetach = TRUE;
 
                 if (g_fEEStarted)
@@ -1685,11 +1695,21 @@ BOOL STDMETHODCALLTYPE EEDllMain( // TRUE on success, FALSE on error.
             }
         }
 
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(DllMainFilter)
+#ifdef HOST_WINDOWS
+    __except (DllMainFilter(GetExceptionInformation(), NULL))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (DllMainFilter(&ex.ExceptionPointers, NULL) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
     }
-    PAL_ENDTRY;
 
     return TRUE;
 }

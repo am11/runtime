@@ -1343,7 +1343,7 @@ VOID RaiseComPlusException()
 
     ULONG_PTR exceptionArgs[INSTANCE_TAGGED_SEH_PARAM_ARRAY_SIZE];
     DWORD     numParams = MarkAsThrownByUs(exceptionArgs);
-    RaiseException(EXCEPTION_COMPLUS, 0, numParams, exceptionArgs);
+    RAISE_SEH_EXCEPTION(EXCEPTION_COMPLUS, 0, numParams, exceptionArgs);
 }
 
 //===========================================================================================

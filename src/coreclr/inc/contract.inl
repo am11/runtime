@@ -460,7 +460,7 @@ void CONTRACT_ASSERT(const char *szElaboration,
         BOOL foundconflict = FALSE;
         BOOL exceptionBuildingStack = FALSE;
 
-        PAL_TRY_NAKED
+        __try
         {
             while (pRec != NULL)
             {
@@ -504,7 +504,7 @@ void CONTRACT_ASSERT(const char *szElaboration,
                 pRec = pRec->m_pNext;
             }
         }
-        PAL_EXCEPT_NAKED(EXCEPTION_EXECUTE_HANDLER)
+        __except(EXCEPTION_EXECUTE_HANDLER)
         {
             // We're done trying to walk the stack of contracts. We faulted trying to form the contract stack trace,
             // and that usually means that its corrupted. A common cause of this is having CONTRACTs in functions that
@@ -512,7 +512,6 @@ void CONTRACT_ASSERT(const char *szElaboration,
             count = 0;
             exceptionBuildingStack = TRUE;
         }
-        PAL_ENDTRY_NAKED;
 
         if (count == 0)
         {

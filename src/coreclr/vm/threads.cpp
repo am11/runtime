@@ -6060,32 +6060,35 @@ static void ManagedThreadBase_DispatchOuter(ManagedThreadCallState *pCallState)
     TryParam param(pCallState);
     param.pFrame = &catchFrame;
 
-    struct TryArgs
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        TryParam *pTryParam;
-        Thread *pThread;
-
-        BOOL *pfHadException;
-
-        Frame *pFrame;
-    }args;
-
-    args.pTryParam = &param;
-    args.pThread = pThread;
-
-    BOOL fHadException = TRUE;
-    args.pfHadException = &fHadException;
-
-    args.pFrame = pFrame;
-
-    PAL_TRY(TryArgs *, pArgs, &args)
-    {
-        PAL_TRY(TryParam *, pParam, pArgs->pTryParam)
+        DEBUG_OK_TO_THROW_BEGIN
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
-            ManagedThreadBase_DispatchMiddle(pParam->m_pCallState);
+            DEBUG_OK_TO_THROW_BEGIN
+            ManagedThreadBase_DispatchMiddle(param.m_pCallState);
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT_FILTER(ThreadBaseRedirectingFilter)
+#ifdef HOST_WINDOWS
+        __except (ThreadBaseRedirectingFilter(GetExceptionInformation(), &param))
+#else
+        catch (PAL_SEHException& ex)
+#endif
         {
+#ifndef HOST_WINDOWS
+            if (ThreadBaseRedirectingFilter(&ex.ExceptionPointers, &param) == EXCEPTION_CONTINUE_SEARCH)
+            {
+                throw;
+            }
+#endif
             // Note: one of our C++ exceptions will never reach this filter because they're always caught by
             // the EX_CATCH in ManagedThreadBase_DispatchMiddle().
             //
@@ -6094,19 +6097,25 @@ static void ManagedThreadBase_DispatchOuter(ManagedThreadCallState *pCallState)
             // this must be done after the second pass has run, it does not
             // reference anything on the stack, so it is safe to run in an
             // SEH __except clause as well as a C++ catch clause.
-            ExInfo::PopTrackers(pArgs->pFrame);
+            ExInfo::PopTrackers(pFrame);
 
-            _ASSERTE(!pArgs->pThread->IsAbortRequested());
+            _ASSERTE(!pThread->IsAbortRequested());
         }
-        PAL_ENDTRY;
-
-        *(pArgs->pfHadException) = FALSE;
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_FINALLY
+#ifdef HOST_WINDOWS
+    __finally
     {
         catchFrame.Pop();
     }
-    PAL_ENDTRY;
+#else
+    catch (...)
+    {
+        catchFrame.Pop();
+        throw;
+    }
+    catchFrame.Pop();
+#endif
 }
 
 void ManagedThreadBase::KickOff(ADCallBackFcnType pTarget, LPVOID args)

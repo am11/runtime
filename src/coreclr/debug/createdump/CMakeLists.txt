@@ -46,6 +46,9 @@ else(CLR_CMAKE_HOST_WIN32)
 
     include(configure.cmake)
 
+    # createdump links the DAC PAL, which has no exception support; createdumppal.cpp provides _invalid_parameter.
+    add_definitions(-D_SAFECRT_DO_NOT_DEFINE_INVALID_PARAMETER)
+
     # Set the RPATH of createdump so that it can find dependencies without needing to set LD_LIBRARY_PATH
     # For more information: http://www.cmake.org/Wiki/CMake_RPATH_handling.
     if (CORECLR_SET_RPATH)

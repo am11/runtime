@@ -33,31 +33,32 @@ IMAGE_NT_HEADERS *Cor_RtlImageNtHeader(VOID *pvBase, ULONG FileLength)
     LIMITED_METHOD_CONTRACT;
     IMAGE_NT_HEADERS *pNtHeaders = NULL;
     if (pvBase && (pvBase != (VOID*)-1)) {
-        struct Param
+        IMAGE_DOS_HEADER *pDos = (IMAGE_DOS_HEADER*)pvBase;
+
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
-            IMAGE_DOS_HEADER *pDos;
-            ULONG FileLength;
-            IMAGE_NT_HEADERS *pNtHeaders;
-        } param;
-        param.pDos = (IMAGE_DOS_HEADER*)pvBase;
-        param.FileLength = FileLength;
-        param.pNtHeaders = pNtHeaders;
-
-        PAL_TRY(Param *, pParam, &param) {
-            if (   (pParam->pDos->e_magic == VAL16(IMAGE_DOS_SIGNATURE))
-                && ((DWORD)VAL32(pParam->pDos->e_lfanew) < RTLP_IMAGE_MAX_DOS_HEADER)
-                && ovadd_lt((DWORD)VAL32(pParam->pDos->e_lfanew), sizeof(IMAGE_FILE_HEADER) + sizeof(DWORD), pParam->FileLength)) {
-                pParam->pNtHeaders = (IMAGE_NT_HEADERS*)((BYTE*)pParam->pDos + VAL32(pParam->pDos->e_lfanew));
-                if (pParam->pNtHeaders->Signature != VAL32(IMAGE_NT_SIGNATURE))
-                    pParam->pNtHeaders = NULL;
+            DEBUG_OK_TO_THROW_BEGIN
+            if (   (pDos->e_magic == VAL16(IMAGE_DOS_SIGNATURE))
+                && ((DWORD)VAL32(pDos->e_lfanew) < RTLP_IMAGE_MAX_DOS_HEADER)
+                && ovadd_lt((DWORD)VAL32(pDos->e_lfanew), sizeof(IMAGE_FILE_HEADER) + sizeof(DWORD), FileLength)) {
+                pNtHeaders = (IMAGE_NT_HEADERS*)((BYTE*)pDos + VAL32(pDos->e_lfanew));
+                if (pNtHeaders->Signature != VAL32(IMAGE_NT_SIGNATURE))
+                    pNtHeaders = NULL;
             }
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-            param.pNtHeaders = NULL;
+#ifdef HOST_WINDOWS
+        __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+        catch (PAL_SEHException&)
+#endif
+        {
+            pNtHeaders = NULL;
         }
-        PAL_ENDTRY
-
-        pNtHeaders = param.pNtHeaders;
     }
     return pNtHeaders;
 }

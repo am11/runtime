@@ -84,7 +84,7 @@ void MSC_ONLY(__declspec(noreturn)) ThrowRecordedException(DWORD innerExceptionC
 #define Assert(expr) AssertCode(expr, EXCEPTIONCODE_ASSERT)
 
 //
-// Functions and types used by PAL_TRY-related macros.
+// Functions and types used by the SEH filters.
 //
 
 extern bool IsSuperPMIException(unsigned code);

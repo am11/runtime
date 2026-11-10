@@ -28,35 +28,6 @@ struct ErrorTrapParam
 // Only catch JIT internal errors (will not catch EE generated Errors)
 extern LONG __JITfilter(PEXCEPTION_POINTERS pExceptionPointers, LPVOID lpvParam);
 
-#define setErrorTrap(compHnd, ParamType, paramDef, paramRef)                                                           \
-    struct __JITParam : ErrorTrapParam                                                                                 \
-    {                                                                                                                  \
-        ParamType param;                                                                                               \
-    } __JITparam;                                                                                                      \
-    __JITparam.errc    = CORJIT_INTERNALERROR;                                                                         \
-    __JITparam.jitInfo = compHnd;                                                                                      \
-    __JITparam.param   = paramRef;                                                                                     \
-    PAL_TRY(__JITParam*, __JITpParam, &__JITparam)                                                                     \
-    {                                                                                                                  \
-        ParamType paramDef = __JITpParam->param;
-
-// Only catch JIT internal errors (will not catch EE generated Errors)
-#define impJitErrorTrap()                                                                                              \
-    }                                                                                                                  \
-    PAL_EXCEPT_FILTER(__JITfilter)                                                                                     \
-    {                                                                                                                  \
-        int __errc = __JITparam.errc;                                                                                  \
-        (void)__errc;
-
-#define endErrorTrap()                                                                                                 \
-    }                                                                                                                  \
-    PAL_ENDTRY
-
-#define finallyErrorTrap()                                                                                             \
-    }                                                                                                                  \
-    PAL_FINALLY                                                                                                        \
-    {
-
 /*****************************************************************************/
 
 // clang-format off

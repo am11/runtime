@@ -1163,27 +1163,34 @@ void Debugger::WriteFuncEvalRegister(
 void FuncEvalWrapper(UnmanagedCallersOnlyCaller* pCaller, DebuggerFuncEvalContext* pContext,
                      BYTE* pCatcherStackAddr)
 {
-    struct Param : NotifyOfCHFFilterWrapperParam
-    {
-        UnmanagedCallersOnlyCaller* pCaller;
-        DebuggerFuncEvalContext* pContext;
-    };
+    NotifyOfCHFFilterWrapperParam param;
+    param.pFrame = pCatcherStackAddr;
 
-    Param param;
-    param.pFrame = pCatcherStackAddr; // Inherited from NotifyOfCHFFilterWrapperParam
-    param.pCaller = pCaller;
-    param.pContext = pContext;
-
-    PAL_TRY(Param *, pParam, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        pParam->pCaller->InvokeDirect(reinterpret_cast<INT_PTR>(pParam->pContext));
+        DEBUG_OK_TO_THROW_BEGIN
+        pCaller->InvokeDirect(reinterpret_cast<INT_PTR>(pContext));
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(NotifyOfCHFFilterWrapper)
+#ifdef HOST_WINDOWS
+    __except (NotifyOfCHFFilterWrapper(GetExceptionInformation(), &param))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (NotifyOfCHFFilterWrapper(&ex.ExceptionPointers, &param) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // Should never reach here b/c handler should always continue search.
         _ASSERTE(false);
     }
-    PAL_ENDTRY
 }
 
 /*

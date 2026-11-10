@@ -1572,7 +1572,7 @@ void Debugger::SendRawEvent(const DebuggerIPCEvent * pManagedEvent)
     EX_TRY
     {
         const DWORD dwFlags = 0; // continuable (eg, Debugger can continue GH)
-        RaiseException(CLRDBG_NOTIFICATION_EXCEPTION_CODE, dwFlags, ARRAY_SIZE(rgData), rgData);
+        RAISE_SEH_EXCEPTION(CLRDBG_NOTIFICATION_EXCEPTION_CODE, dwFlags, ARRAY_SIZE(rgData), rgData);
 
         // If debugger continues "GH" (DBG_CONTINUE), then we land here.
         // This is the expected path for a well-behaved ICorDebug debugger.
@@ -2989,7 +2989,7 @@ CodeRegionInfo CodeRegionInfo::GetCodeRegionInfo(DebuggerJitInfo *dji, MethodDes
 #ifndef DACCESS_COMPILE
 /******************************************************************************
 //  Helper function for getBoundaries to get around AMD64 compiler and
-// contract holders with PAL_TRY in the same function.
+// contract holders with __try in the same function.
  ******************************************************************************/
 void Debugger::getBoundariesHelper(MethodDesc * md,
                                    unsigned int *cILOffsets,

@@ -15,16 +15,10 @@ bool g_arm64_atomics_present = false;
 #endif
 
 //
-// Used in pal\inc\rt\safecrt.h's _invalid_parameter handler
+// Used by pal\inc\rt\safecrt.h
 //
 
-VOID
-PALAPI
-RaiseException(
-    IN DWORD dwExceptionCode,
-    IN DWORD dwExceptionFlags,
-    IN DWORD nNumberOfArguments,
-    IN CONST ULONG_PTR* lpArguments)
+void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionName, const WCHAR *_FileName, unsigned int _LineNumber, uintptr_t _Reserved)
 {
     throw;
 }

@@ -243,8 +243,14 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
     UINT64 insCountBefore = 0;
     Instrumentor_GetInsCount(&insCountBefore);
 
-    PAL_TRY(Param*, pParam, &param)
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         uint8_t*   NEntryBlock    = nullptr;
         uint32_t   NCodeSizeBlock = 0;
         CORINFO_OS os             = CORINFO_WINNT;
@@ -355,9 +361,20 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
             LogDebug("compileMethod failed with result %d", jitResult);
             pParam->results.Result = ReplayResult::Error;
         }
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CaptureExceptionAndStop(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CaptureExceptionAndStop(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         SpmiException e(&param);
 
         if (e.GetCode() == EXCEPTIONCODE_MC)
@@ -387,7 +404,6 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
             param.results.Result = ReplayResult::Error;
         }
     }
-    PAL_ENDTRY
 
     stj.Stop();
     if (collectThroughput)
@@ -539,19 +555,35 @@ bool JitInstance::callJitStartup(ICorJitHost* jithost)
     param.jithost = jithost;
     param.result  = false;
 
-    PAL_TRY(Param*, pParam, &param)
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->pThis->pnjitStartup(pParam->jithost);
         pParam->result = true;
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+#ifdef HOST_WINDOWS
+    __except (FilterSuperPMIExceptions_CaptureExceptionAndStop(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (FilterSuperPMIExceptions_CaptureExceptionAndStop(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         SpmiException e(&param);
 
         LogError("failed to call jitStartup.");
         e.ShowAndDeleteMessage();
     }
-    PAL_ENDTRY
 
     Assert(environment.getIntConfigValue == nullptr && environment.getStringConfigValue == nullptr);
     environment = mc->cloneEnvironment();

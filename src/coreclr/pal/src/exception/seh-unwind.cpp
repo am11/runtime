@@ -632,7 +632,7 @@ static volatile size_t s_allocatedContextsBitmap = 0;
 
 /*++
 Function:
-    AllocateExceptionRecords
+    PAL_AllocateExceptionRecords
 
     Allocate EXCEPTION_RECORD and CONTEXT structures for an exception.
 Parameters:
@@ -640,7 +640,8 @@ Parameters:
     contextRecord - output pointer to the allocated context record
 --*/
 VOID
-AllocateExceptionRecords(EXCEPTION_RECORD** exceptionRecord, CONTEXT** contextRecord)
+PALAPI
+PAL_AllocateExceptionRecords(EXCEPTION_RECORD** exceptionRecord, CONTEXT** contextRecord)
 {
     ExceptionRecords* records;
     if (posix_memalign((void**)&records, alignof(ExceptionRecords), sizeof(ExceptionRecords)) != 0)
@@ -674,7 +675,7 @@ Function:
     PAL_FreeExceptionRecords
 
     Free EXCEPTION_RECORD and CONTEXT structures of an exception that were allocated by the
-    AllocateExceptionRecords.
+    PAL_AllocateExceptionRecords.
 Parameters:
     exceptionRecord - exception record
     contextRecord - context record
@@ -694,98 +695,6 @@ PAL_FreeExceptionRecords(IN EXCEPTION_RECORD *exceptionRecord, IN CONTEXT *conte
     {
         free(contextRecord);
     }
-}
-
-/*++
-Function:
-    RtlpRaiseException
-
-Parameters:
-    ExceptionRecord - the Windows exception record to throw
---*/
-PAL_NORETURN
-__attribute__((noinline))
-__attribute__((NOOPT_ATTRIBUTE))
-static void
-RtlpRaiseException(EXCEPTION_RECORD *ExceptionRecord, CONTEXT *ContextRecord)
-{
-    throw PAL_SEHException(ExceptionRecord, ContextRecord);
-}
-
-/*++
-Function:
-  RaiseException
-
-See MSDN doc.
---*/
-// no PAL_NORETURN, as callers must assume this can return for continuable exceptions.
-__attribute__((noinline))
-VOID
-PALAPI
-RaiseException(IN DWORD dwExceptionCode,
-               IN DWORD dwExceptionFlags,
-               IN DWORD nNumberOfArguments,
-               IN CONST ULONG_PTR *lpArguments)
-{
-    // PERF_ENTRY_ONLY is used here because RaiseException may or may not
-    // return. We can not get latency data without PERF_EXIT. For this reason,
-    // PERF_ENTRY_ONLY is used to profile frequency only.
-    PERF_ENTRY_ONLY(RaiseException);
-    ENTRY("RaiseException(dwCode=%#x, dwFlags=%#x, nArgs=%u, lpArguments=%p)\n",
-          dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
-
-    /* Validate parameters */
-    if (dwExceptionCode & RESERVED_SEH_BIT)
-    {
-        WARN("Exception code %08x has bit 28 set; clearing it.\n", dwExceptionCode);
-        dwExceptionCode ^= RESERVED_SEH_BIT;
-    }
-
-    if (nNumberOfArguments > EXCEPTION_MAXIMUM_PARAMETERS)
-    {
-        WARN("Number of arguments (%d) exceeds the limit "
-            "EXCEPTION_MAXIMUM_PARAMETERS (%d); ignoring extra parameters.\n",
-            nNumberOfArguments, EXCEPTION_MAXIMUM_PARAMETERS);
-        nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
-    }
-
-    CONTEXT *contextRecord;
-    EXCEPTION_RECORD *exceptionRecord;
-    AllocateExceptionRecords(&exceptionRecord, &contextRecord);
-
-    ZeroMemory(exceptionRecord, sizeof(EXCEPTION_RECORD));
-
-    exceptionRecord->ExceptionCode = dwExceptionCode;
-    exceptionRecord->ExceptionFlags = dwExceptionFlags;
-    exceptionRecord->ExceptionRecord = NULL;
-    exceptionRecord->ExceptionAddress = NULL; // will be set by RtlpRaiseException
-    exceptionRecord->NumberParameters = nNumberOfArguments;
-    if (nNumberOfArguments)
-    {
-        CopyMemory(exceptionRecord->ExceptionInformation, lpArguments,
-                   nNumberOfArguments * sizeof(ULONG_PTR));
-    }
-
-    // Capture the context of RaiseException.
-    ZeroMemory(contextRecord, sizeof(CONTEXT));
-    // WASM-TODO: reconsider this
-#ifndef TARGET_WASM
-    contextRecord->ContextFlags = CONTEXT_FULL;
-    CONTEXT_CaptureContext(contextRecord);
-
-    // Report the caller of RaiseException as the location the exception was raised at.
-    CONTEXTSetPC(contextRecord, (DWORD64)__builtin_return_address(0));
-    contextRecord->ContextFlags &= ~CONTEXT_EXCEPTION_ACTIVE;
-#if defined(CONTEXT_UNWOUND_TO_CALL)
-    contextRecord->ContextFlags |= CONTEXT_UNWOUND_TO_CALL;
-#endif
-#endif // !TARGET_WASM
-
-    exceptionRecord->ExceptionAddress = (void *)CONTEXTGetPC(contextRecord);
-
-    RtlpRaiseException(exceptionRecord, contextRecord);
-
-    LOGEXIT("RaiseException returns\n");
 }
 
 #endif // !HOST_WINDOWS

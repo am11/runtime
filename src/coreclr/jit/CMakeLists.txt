@@ -96,7 +96,7 @@ if (CLR_CMAKE_TARGET_ARCH_AMD64 OR CLR_CMAKE_TARGET_ARCH_ARM64 OR CLR_CMAKE_TARG
   add_compile_definitions($<$<NOT:$<BOOL:$<TARGET_PROPERTY:IGNORE_DEFAULT_TARGET_ARCH>>>:FEATURE_MASKED_HW_INTRINSICS>)
 endif ()
 
-# JIT_BUILD disables certain PAL_TRY debugging features
+# JIT_BUILD disables certain SEH debugging features
 add_definitions(-DJIT_BUILD)
 
 if(CLR_CMAKE_TARGET_WIN32)

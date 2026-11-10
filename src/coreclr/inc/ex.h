@@ -5,14 +5,6 @@
 #if !defined(_EX_H_)
 #define _EX_H_
 
-#ifdef HOST_UNIX
-#define EX_TRY_HOLDER                                   \
-    HardwareExceptionHolder
-
-#else // HOST_UNIX
-#define EX_TRY_HOLDER
-#endif // HOST_UNIX
-
 #include "sstring.h"
 #include "crtwrap.h"
 #include "winwrap.h"
@@ -742,7 +734,6 @@ Exception *GetExceptionFromCxxException();
             {                                                                           \
                 CAutoTryCleanup<STATETYPE> __autoCleanupTry(__state);                   \
                 {                                                                       \
-                    EX_TRY_HOLDER                                                       \
 
 
 #define EX_CATCH_IMPL_EX(DerivedExceptionClass)                                         \

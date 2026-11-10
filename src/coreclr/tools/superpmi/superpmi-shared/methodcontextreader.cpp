@@ -207,52 +207,37 @@ MethodContextBuffer MethodContextReader::ReadMethodContext(bool acquireLock, boo
         return MethodContextBuffer(-1);
     }
 
-    struct Param
+    MethodContextBuffer ret;
+    try
     {
-        MethodContextReader* pThis;
-        MethodContextBuffer  ret;
-        bool                 justSkip;
-    } param;
-    param.pThis    = this;
-    param.ret      = MethodContextBuffer(-2);
-    param.justSkip = justSkip;
-
-    PAL_TRY(Param*, pParam, &param)
-    {
-        pParam->ret = pParam->pThis->ReadMethodContextNoLock(pParam->justSkip);
+        ret = ReadMethodContextNoLock(justSkip);
     }
-    PAL_FINALLY
+    catch (...)
     {
         this->ReleaseLock();
+        throw;
     }
-    PAL_ENDTRY
+    this->ReleaseLock();
 
-    return param.ret;
+    return ret;
 }
 
 // Read a method context buffer from the ContextCollection
 // (either a hive [single] or an index)
 MethodContextBuffer MethodContextReader::GetNextMethodContext()
 {
-    struct Param : FilterSuperPMIExceptionsParam_CaptureException
+    MethodContextBuffer mcb;
+    try
     {
-        MethodContextReader* pThis;
-        MethodContextBuffer  mcb;
-    } param;
-    param.pThis = this;
-
-    PAL_TRY(Param*, pParam, &param)
-    {
-        pParam->mcb = pParam->pThis->GetNextMethodContextHelper();
+        mcb = GetNextMethodContextHelper();
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+    catch (...)
     {
         LogError("Method %d is of low integrity.", GetMethodContextIndex());
-        param.mcb = MethodContextBuffer(-1);
+        mcb = MethodContextBuffer(-1);
     }
-    PAL_ENDTRY
 
-    return param.mcb;
+    return mcb;
 }
 
 MethodContextBuffer MethodContextReader::GetNextMethodContextHelper()

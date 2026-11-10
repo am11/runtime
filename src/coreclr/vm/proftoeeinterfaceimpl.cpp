@@ -8962,7 +8962,7 @@ HRESULT ProfToEEInterfaceImpl::DoStackSnapshotHelper(Thread * pThreadToSnapshot,
     //
     // EX_TRY/EX_CATCH does a lot of extras that we do not need and that can go wrong for us.
     // E.g. It asserts in debug build for AVs in mscorwks or it synthetizes an object for the exception.
-    // We use a plain PAL_TRY/PAL_EXCEPT since it is all we need.
+    // We use a plain __try/__except since it is all we need.
     struct Param {
         HRESULT                     hr;
         Thread *                    pThreadToSnapshot;
@@ -8982,8 +8982,14 @@ HRESULT ProfToEEInterfaceImpl::DoStackSnapshotHelper(Thread * pThreadToSnapshot,
     param.pctxSeed = pctxSeed;
     param.fResetProfilerFilterContext = FALSE;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         if ((pParam->pData->infoFlags & COR_PRF_SNAPSHOT_X86_OPTIMIZED) != 0)
         {
 #ifndef TARGET_X86
@@ -9015,12 +9021,16 @@ HRESULT ProfToEEInterfaceImpl::DoStackSnapshotHelper(Thread * pThreadToSnapshot,
                              pParam->pData,
                              pParam->flags);
         }
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         param.hr = E_UNEXPECTED;
     }
-    PAL_ENDTRY;
 
     // Undo the context seeding & thread suspend we did (if any)
     // to ensure that the thread we walked stayed suspended

@@ -75,7 +75,7 @@
 #if _SAFECRT_USE_INLINES && !defined(_SAFECRT_NO_INCLUDES)
 #include <stdlib.h>     /* for _MAX_DRIVE */
 #include <string.h>     /* for memset */
-#include <windows.h>    /* for NTSTATUS, RaiseException */
+#include <windows.h>    /* for NTSTATUS */
 #if _SAFECRT_SET_ERRNO
 #include <errno.h>
 #endif
@@ -307,10 +307,6 @@ void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionNam
 
 #if (_SAFECRT_USE_INLINES || _SAFECRT_IMPL) && !defined(_SAFECRT_DO_NOT_DEFINE_INVALID_PARAMETER)
 
-#ifndef STATUS_INVALID_PARAMETER
-#define STATUS_INVALID_PARAMETER ((NTSTATUS)0xC000000DL)
-#endif
-
 _SAFECRT__INLINE
 void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionName, const WCHAR *_FileName, unsigned int _LineNumber, uintptr_t _Reserved)
 {
@@ -322,7 +318,7 @@ void __cdecl _invalid_parameter(const WCHAR *_Message, const WCHAR *_FunctionNam
     (_Reserved);
 #endif
     /* invoke Watson */
-    RaiseException((DWORD)STATUS_INVALID_PARAMETER, 0, 0, nullptr);
+    abort();
 }
 
 #endif

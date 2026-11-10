@@ -259,12 +259,7 @@ HRESULT Assembler::CreateDebugDirectory(BYTE(&pdbChecksum)[32])
         HRESULT hr = S_OK;
 
         IMAGE_DEBUG_DIRECTORY debugDirIDD;
-        struct Param
-        {
-            DWORD debugDirDataSize;
-            BYTE* debugDirData;
-        } param;
-        param.debugDirData = NULL;
+        BYTE* debugDirData = NULL;
 
         debugDirIDD.Characteristics = characteristics;
         debugDirIDD.TimeDateStamp = timeDateStamp;
@@ -275,26 +270,39 @@ HRESULT Assembler::CreateDebugDirectory(BYTE(&pdbChecksum)[32])
         debugDirIDD.AddressOfRawData = 0; // will be updated later
         debugDirIDD.PointerToRawData = 0; // will be updated later
 
-        param.debugDirDataSize = sizeOfData;
+        DWORD debugDirDataSize = sizeOfData;
 
         if ((sizeOfData > 0) && (data != NULL))
         {
             // Make some room for the data.
-            PAL_TRY(Param*, pParam, &param) {
-                pParam->debugDirData = new BYTE[pParam->debugDirDataSize];
-            } PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+#ifdef HOST_WINDOWS
+            __try
+#else
+            try
+#endif
+            {
+                DEBUG_OK_TO_THROW_BEGIN
+                debugDirData = new BYTE[debugDirDataSize];
+                DEBUG_OK_TO_THROW_END
+            }
+#ifdef HOST_WINDOWS
+            __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+            catch (PAL_SEHException&)
+#endif
+            {
                 hr = E_FAIL;
-            } PAL_ENDTRY
+            }
 
             if (FAILED(hr)) return hr;
         }
 
-        param.debugDirData = data;
+        debugDirData = data;
 
         DebugDirectoryEntry entry = {};
         entry.debugDirIDD = debugDirIDD;
-        entry.debugDirDataSize = param.debugDirDataSize;
-        entry.debugDirData = param.debugDirData;
+        entry.debugDirDataSize = debugDirDataSize;
+        entry.debugDirData = debugDirData;
         entries[numEntries] = entry;
 
         numEntries++;

@@ -378,8 +378,39 @@ void SyncBlockCache::CleanupSyncBlocks()
     param.pRCW = NULL;
 #endif
 
-    EE_TRY_FOR_FINALLY(Param *, pParam, &param)
+    // If the body throws, run the cleanup in the GC mode the body was entered in.
+    BOOL fGCDisabled = GetThread()->PreemptiveGCDisabled();
+    BOOL fGotException = TRUE;
+    auto finallyBlock = [&]()
     {
+        if (fGotException && (fGCDisabled != GetThread()->PreemptiveGCDisabled()))
+        {
+            if (fGCDisabled)
+                GetThread()->DisablePreemptiveGC();
+            else
+                GetThread()->EnablePreemptiveGC();
+        }
+
+        // We are finished cleaning up the sync blocks.
+        m_bSyncBlockCleanupInProgress = FALSE;
+
+#ifdef FEATURE_COMINTEROP
+        if (param.pRCW)
+            param.pRCW->Cleanup();
+#endif
+
+        if (param.psb)
+            DeleteSyncBlock(param.psb);
+    };
+
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
+    {
+        DEBUG_OK_TO_THROW_BEGIN
         // reset the flag
         FinalizerThread::GetFinalizerThread()->ResetSyncBlockCleanup();
 
@@ -421,20 +452,22 @@ void SyncBlockCache::CleanupSyncBlocks()
         if (g_pRCWCleanupList != NULL)
             g_pRCWCleanupList->CleanupAllWrappers();
 #endif // FEATURE_COMINTEROP
+        fGotException = FALSE;
+        DEBUG_OK_TO_THROW_END
     }
-    EE_FINALLY
+#ifdef HOST_WINDOWS
+    __finally
     {
-        // We are finished cleaning up the sync blocks.
-        m_bSyncBlockCleanupInProgress = FALSE;
-
-#ifdef FEATURE_COMINTEROP
-        if (param.pRCW)
-            param.pRCW->Cleanup();
+        finallyBlock();
+    }
+#else
+    catch (...)
+    {
+        finallyBlock();
+        throw;
+    }
+    finallyBlock();
 #endif
-
-        if (param.psb)
-            DeleteSyncBlock(param.psb);
-    } EE_END_FINALLY;
 }
 
 // create the sync block cache
@@ -1002,7 +1035,14 @@ BOOL SyncBlockCache::GCWeakPtrScanElement (int nb, HANDLESCANPROC scanProc, LPAR
     } param;
     param.keyv = keyv;
 
-    PAL_TRY(Param *, pParam, &param) {
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
+    {
+        DEBUG_OK_TO_THROW_BEGIN
         if (! *pParam->keyv)
             pParam->name = "null";
         else if ((size_t) *pParam->keyv & 1)
@@ -1012,10 +1052,16 @@ BOOL SyncBlockCache::GCWeakPtrScanElement (int nb, HANDLESCANPROC scanProc, LPAR
             if (strlen(pParam->name) == 0)
                 pParam->name = "<INVALID>";
         }
-    } PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        DEBUG_OK_TO_THROW_END
+    }
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
+    {
         param.name = "<INVALID>";
     }
-    PAL_ENDTRY
     LogSpewAlways("[%4.4d]: %8.8x, %s\n", nb, *keyv, param.name);
 #endif
 
@@ -1238,16 +1284,27 @@ void DumpSyncBlockCache()
                 param.descrip = descrip;
                 param.oref = oref;
 
-                PAL_TRY(Param *, pParam, &param)
+                Param *pParam = &param;
+#ifdef HOST_WINDOWS
+                __try
+#else
+                try
+#endif
                 {
+                    DEBUG_OK_TO_THROW_BEGIN
                     pParam->descrip = pParam->oref->GetMethodTable()->GetDebugClassName();
                     if (strlen(pParam->descrip) == 0)
                         pParam->descrip = "<INVALID>";
+                    DEBUG_OK_TO_THROW_END
                 }
-                PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+#ifdef HOST_WINDOWS
+                __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+                catch (PAL_SEHException&)
+#endif
+                {
                     param.descrip = "<INVALID>";
                 }
-                PAL_ENDTRY
 
                 descrip = param.descrip;
             }

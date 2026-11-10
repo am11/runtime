@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 //----------------------------------------------------------
-// ErrorHandling.h - Helpers & whatnot for using SEH for errors
+// ErrorHandling.h - Helpers & whatnot for using exceptions for errors
 //----------------------------------------------------------
 #ifndef _ErrorHandling
 #define _ErrorHandling
@@ -25,7 +25,7 @@
 #define EXCEPTIONCODE_RECORDED_EXCEPTION 0xe0428000
 #define EXCEPTIONCODE_ASSERT 0xe0440000
 
-// RaiseException wrappers
+// Throw SpmiException
 void MSC_ONLY(__declspec(noreturn)) ThrowSpmiException(DWORD exceptionCode, const char* message, ...);
 void MSC_ONLY(__declspec(noreturn)) ThrowRecordedException(DWORD innerExceptionCode);
 
@@ -83,90 +83,16 @@ void MSC_ONLY(__declspec(noreturn)) ThrowRecordedException(DWORD innerExceptionC
 #define AssertMsg(expr, msg, ...) AssertCodeMsg(expr, EXCEPTIONCODE_ASSERT, msg, ##__VA_ARGS__)
 #define Assert(expr) AssertCode(expr, EXCEPTIONCODE_ASSERT)
 
-//
-// Functions and types used by PAL_TRY-related macros.
-//
-
 extern bool IsSuperPMIException(unsigned code);
-
-extern LONG FilterSuperPMIExceptions_CatchMC(PEXCEPTION_POINTERS pExceptionPointers, LPVOID lpvParam);
-
-struct FilterSuperPMIExceptionsParam_CaptureException
-{
-    DWORD exceptionCode;
-    char* exceptionMessage; // 'new' memory passed from ThrowException()
-
-    FilterSuperPMIExceptionsParam_CaptureException()
-        : exceptionCode(0)
-        , exceptionMessage(nullptr)
-    {
-    }
-
-    // Note: this is called during an SEH filter; the data pointed to by PEXCEPTION_POINTERS is not valid after
-    // calling this function, so anything we want to safe must be copied.
-    // The exception message string is 'new' memory, allocated in the ThrowException() function.
-    void Initialize(PEXCEPTION_POINTERS pExceptionPointers)
-    {
-        exceptionCode    = pExceptionPointers->ExceptionRecord->ExceptionCode;
-        exceptionMessage = nullptr;
-        if (IsSuperPMIException(exceptionCode) && (pExceptionPointers->ExceptionRecord->NumberParameters >= 1))
-        {
-            exceptionMessage = (char*)pExceptionPointers->ExceptionRecord->ExceptionInformation[0];
-        }
-    }
-};
-
-extern LONG FilterSuperPMIExceptions_CaptureExceptionAndStop(PEXCEPTION_POINTERS pExceptionPointers, LPVOID lpvParam);
-extern bool RunWithErrorTrap(void (*function)(void*), void* param);
-extern bool RunWithSPMIErrorTrap(void (*function)(void*), void* param);
-extern void RunWithErrorExceptionCodeCaptureAndContinueImp(void* param, void (*function)(void*), void (*finallyFunction)(void*, DWORD));
-
-template <typename LambdaType>
-class LambdaExecutor
-{
-public:
-    LambdaType& _lambda;
-
-    LambdaExecutor(LambdaType& lambda) : _lambda(lambda) {}
-};
-
-template <typename LambdaTry, typename LambdaFinally>
-void RunWithErrorExceptionCodeCaptureAndContinue(LambdaTry function, LambdaFinally finally)
-{
-    struct LambdaArguments
-    {
-        LambdaExecutor<LambdaTry> *pTryLambda;
-        LambdaExecutor<LambdaFinally> *pFinallyLambda;
-    } lambdaArgs;
-
-    LambdaExecutor<LambdaTry> tryStorage(function);
-    LambdaExecutor<LambdaFinally> finallyStorage(finally);
-
-    lambdaArgs.pTryLambda = &tryStorage;
-    lambdaArgs.pFinallyLambda = &finallyStorage;
-    
-    RunWithErrorExceptionCodeCaptureAndContinueImp(&lambdaArgs,
-        [](void* pParam)
-        {
-            ((LambdaArguments*)pParam)->pTryLambda->_lambda();
-        },
-        [](void* pParam, DWORD exceptionCode)
-        {
-            ((LambdaArguments*)pParam)->pFinallyLambda->_lambda(exceptionCode);
-        });
-}
 
 class SpmiException
 {
 private:
     DWORD exCode;
-    char* exMessage;
+    char* exMessage; // 'new' memory allocated by ThrowSpmiException()
 
 public:
-    SpmiException(FilterSuperPMIExceptionsParam_CaptureException* e);
-#if 0
-    ~SpmiException();
-#endif
+    SpmiException(DWORD code, char* message);
 
     char* GetExceptionMessage();
     DWORD GetCode();
@@ -174,5 +100,30 @@ public:
     void ShowAndDeleteMessage();
     void DeleteMessage();
 };
+
+// Returns the exception being handled as an SpmiException. Exceptions not thrown by SuperPMI have code 0
+// and no message. Must be called from a catch block.
+extern SpmiException GetCurrentSpmiException();
+
+extern bool RunWithErrorTrap(void (*function)(void*), void* param);
+extern bool RunWithSPMIErrorTrap(void (*function)(void*), void* param);
+
+// Runs 'function' and then 'finally' with the exception code it threw, or 0. Exceptions thrown by the
+// runtime cannot be inspected here, so they are recorded as 1; replay only checks for non-zero.
+template <typename LambdaTry, typename LambdaFinally>
+void RunWithErrorExceptionCodeCaptureAndContinue(LambdaTry function, LambdaFinally finally)
+{
+    try
+    {
+        function();
+    }
+    catch (...)
+    {
+        DWORD exceptionCode = GetCurrentSpmiException().GetCode();
+        finally(exceptionCode != 0 ? exceptionCode : 1);
+        throw;
+    }
+    finally(0);
+}
 
 #endif

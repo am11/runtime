@@ -1239,11 +1239,53 @@ HRESULT RunMain(MethodDesc *pFD ,
     param.wzArgs = wzArgs;
     param.captureException = captureException;
 
-    EX_TRY_NOCATCH(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        RunMainInternal(pParam);
+        DEBUG_OK_TO_THROW_BEGIN
+        CLRException::HandlerState state(::GetThreadNULLOk());
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
+        {
+            DEBUG_OK_TO_THROW_BEGIN
+            RunMainInternal(pParam);
+            DEBUG_OK_TO_THROW_END
+        }
+#ifdef HOST_WINDOWS
+        __finally
+        {
+            state.CleanupTry();
+        }
+#else
+        catch (...)
+        {
+            state.CleanupTry();
+            throw;
+        }
+        state.CleanupTry();
+#endif
+        DEBUG_OK_TO_THROW_END
     }
-    EX_END_NOCATCH
+#ifdef HOST_WINDOWS
+    __except (EntryPointFilter(GetExceptionInformation(), pParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
+    {
+#ifndef HOST_WINDOWS
+        if (EntryPointFilter(&ex.ExceptionPointers, pParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
+    }
 
     ETWFireEvent(MainEnd_V1);
 

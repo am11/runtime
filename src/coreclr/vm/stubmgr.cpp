@@ -454,10 +454,12 @@ BOOL StubManager::CheckIsStub_Worker(PCODE stubStartAddress)
 
     // This may be called from DAC, and DAC + non-DAC have very different
     // exception handling.
-#ifdef DACCESS_COMPILE
-    PAL_TRY(Param *, pParam, &param)
-#else
     Param *pParam = &param;
+#if defined(DACCESS_COMPILE) && defined(HOST_WINDOWS)
+    __try
+#elif defined(DACCESS_COMPILE)
+    try
+#else
     EX_TRY
 #endif
     {
@@ -474,8 +476,10 @@ BOOL StubManager::CheckIsStub_Worker(PCODE stubStartAddress)
         // with SEH.
         pParam->fIsStub = pParam->pThis->CheckIsStub_Internal(pParam->stubStartAddress);
     }
-#ifdef DACCESS_COMPILE
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#if defined(DACCESS_COMPILE) && defined(HOST_WINDOWS)
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#elif defined(DACCESS_COMPILE)
+    catch (PAL_SEHException&)
 #else
     EX_CATCH
 #endif
@@ -484,9 +488,7 @@ BOOL StubManager::CheckIsStub_Worker(PCODE stubStartAddress)
 
         param.fIsStub = FALSE;
     }
-#ifdef DACCESS_COMPILE
-    PAL_ENDTRY
-#else
+#ifndef DACCESS_COMPILE
     EX_END_CATCH
 #endif
 

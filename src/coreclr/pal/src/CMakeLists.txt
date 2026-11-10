@@ -118,7 +118,6 @@ if (NOT CLR_CMAKE_HOST_ARCH_WASM)
   set(ARCH_SOURCES
     arch/${PAL_ARCH_SOURCES_DIR}/context2.S
     arch/${PAL_ARCH_SOURCES_DIR}/debugbreak.S
-    arch/${PAL_ARCH_SOURCES_DIR}/exceptionhelper.S
   )
 endif()
 

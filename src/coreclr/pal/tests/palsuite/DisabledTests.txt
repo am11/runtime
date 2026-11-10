@@ -4,7 +4,6 @@ Disabled Test Cases
 Below is a list of all disabled test cases currently listed in
 testconfig.dat and an explanation as to why they are disabled.
 
-debug_api/debugbreak/test1
 debug_api/outputdebugstringa/test1
 debug_api/outputdebugstringw/test1
 debug_api/writeprocessmemory/test1

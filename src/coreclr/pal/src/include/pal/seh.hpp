@@ -69,17 +69,6 @@ Return value:
 BOOL
 SEHProcessException(PAL_SEHException* exception);
 
-/*++
-Function:
-    AllocateExceptionRecords
-
-Parameters:
-    exceptionRecord - output pointer to the allocated Windows exception record
-    contextRecord - output pointer to the allocated Windows context record
---*/
-VOID
-AllocateExceptionRecords(EXCEPTION_RECORD** exceptionRecord, CONTEXT** contextRecord);
-
 extern "C"
 {
 

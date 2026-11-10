@@ -101,54 +101,32 @@ CorJitResult interceptor_ICJC::compileMethod(ICorJitInfo*                comp,  
         mc->recGlobalContext(*g_globalContext);
     }
 
-    struct CompileParams
-    {
-        ICorJitCompiler* origComp;
-        interceptor_ICJI* ourICJI;
-        struct CORINFO_METHOD_INFO* methodInfo;
-        unsigned flags;
-        uint8_t** nativeEntry;
-        uint32_t* nativeSizeOfCode;
-        CorJitResult result;
-    } compileParams;
-
-    compileParams.origComp = original_ICorJitCompiler;
-    compileParams.ourICJI = &our_ICorJitInfo;
-    compileParams.methodInfo = info;
-    compileParams.flags = flags;
-    compileParams.nativeEntry = nativeEntry;
-    compileParams.nativeSizeOfCode = nativeSizeOfCode;
-    compileParams.result = CORJIT_INTERNALERROR;
-
     *nativeEntry = nullptr;
     *nativeSizeOfCode = 0;
 
-    auto doCompile = [mc, our_ICorJitInfo, this, &compileParams]()
+    CorJitResult result = CORJIT_INTERNALERROR;
+    auto finallyBlock = [&]()
     {
-        PAL_TRY(CompileParams*, pParam, &compileParams)
+        if (!our_ICorJitInfo.SavedCollectionEarly())
         {
-            pParam->result = pParam->origComp->compileMethod(
-                pParam->ourICJI,
-                pParam->methodInfo,
-                pParam->flags,
-                pParam->nativeEntry,
-                pParam->nativeSizeOfCode);
+            finalizeAndCommitCollection(mc, result, *nativeEntry, *nativeSizeOfCode);
         }
-        PAL_FINALLY
-        {
-            if (!our_ICorJitInfo.SavedCollectionEarly())
-            {
-                finalizeAndCommitCollection(mc, compileParams.result, *compileParams.nativeEntry, *compileParams.nativeSizeOfCode);
-            }
 
-            delete mc;
-        }
-        PAL_ENDTRY;
+        delete mc;
     };
 
-    doCompile();
+    try
+    {
+        result = original_ICorJitCompiler->compileMethod(&our_ICorJitInfo, info, flags, nativeEntry, nativeSizeOfCode);
+    }
+    catch (...)
+    {
+        finallyBlock();
+        throw;
+    }
+    finallyBlock();
 
-    return compileParams.result;
+    return result;
 }
 
 void interceptor_ICJC::ProcessShutdownWork(ICorStaticInfo* info)

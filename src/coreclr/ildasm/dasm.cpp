@@ -1523,28 +1523,32 @@ mdToken TypeRefToTypeDef(mdToken tk, IMDInternalImport *pIMDI, IMDInternalImport
             md.szLocale = wzLocale;
             md.cbLocale = 1024;
 
-            struct Param
+            ULONG cPKT;
+
+            pAssemblyImport->GetAssemblyRefProps(tkRS,&pPKT,&cPKT,wzName,2048,&cName,&md,&pHash,&cHash,&dwFlags);
+
+#ifdef HOST_WINDOWS
+            __try
+#else
+            try
+#endif
             {
-                IMetaDataAssemblyImport* pAssemblyImport;
-                WCHAR *wzName;
-                IUnknown **pIAMDI;
-                ULONG cPKT;
-            } param;
-            param.pAssemblyImport = pAssemblyImport;
-            param.wzName = wzName;
-            param.pIAMDI = pIAMDI;
-
-            pAssemblyImport->GetAssemblyRefProps(tkRS,&pPKT,&param.cPKT,wzName,2048,&cName,&md,&pHash,&cHash,&dwFlags);
-
-            PAL_TRY(Param *, pParam, &param) {
-                if(FAILED(pParam->pAssemblyImport->FindAssembliesByName(NULL,NULL,(LPCWSTR)pParam->wzName,pParam->pIAMDI,64,&pParam->cPKT)))
-                    pParam->cPKT=0;
-            } PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-                param.cPKT=0;
-            } PAL_ENDTRY
+                DEBUG_OK_TO_THROW_BEGIN
+                if(FAILED(pAssemblyImport->FindAssembliesByName(NULL,NULL,(LPCWSTR)wzName,pIAMDI,64,&cPKT)))
+                    cPKT=0;
+                DEBUG_OK_TO_THROW_END
+            }
+#ifdef HOST_WINDOWS
+            __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+            catch (PAL_SEHException&)
+#endif
+            {
+                cPKT=0;
+            }
 
             pAssemblyImport->Release();
-            if(param.cPKT == 0) goto AssignAndReturn;
+            if(cPKT == 0) goto AssignAndReturn;
             _ASSERTE(pIAMDI[0] != NULL);
 
             IUnknown *pUnk;
@@ -1560,7 +1564,7 @@ mdToken TypeRefToTypeDef(mdToken tk, IMDInternalImport *pIMDI, IMDInternalImport
             _ASSERTE(*ppIMDInew != NULL);
             g_asmref_import[RidFromToken(tkRS)] = *ppIMDInew;
             pUnk->Release();
-            for(cHash=0; cHash<param.cPKT; cHash++)
+            for(cHash=0; cHash<cPKT; cHash++)
                 if(pIAMDI[cHash]) pIAMDI[cHash]->Release();
         }
     }

@@ -1882,12 +1882,8 @@ static PCODE PreStubWorker_Preemptive(
     UNINSTALL_UNWIND_AND_CONTINUE_HANDLER;
     UNINSTALL_MANAGED_EXCEPTION_DISPATCHER;
 
-    {
-        HardwareExceptionHolder;
-
-        // Give debugger opportunity to stop here
-        ThePreStubPatch();
-    }
+    // Give debugger opportunity to stop here
+    ThePreStubPatch();
 
     return pbRetVal;
 }
@@ -2003,12 +1999,8 @@ extern "C" PCODE STDCALL PreStubWorker(TransitionBlock* pTransitionBlock, Method
         }
         EX_END_CATCH
 
-        {
-            HardwareExceptionHolder;
-
-            // Give debugger opportunity to stop here
-            ThePreStubPatch();
-        }
+        // Give debugger opportunity to stop here
+        ThePreStubPatch();
 
         pPFrame->Pop(CURRENT_THREAD);
     }
@@ -2373,26 +2365,44 @@ static void TestSEHGuardPageRestoreOverflow()
 
 static void TestSEHGuardPageRestore()
 {
-        PAL_TRY(void *, unused, NULL)
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
+            DEBUG_OK_TO_THROW_BEGIN
             TestSEHGuardPageRestoreOverflow();
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+        __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+        catch (PAL_SEHException&)
+#endif
         {
             _ASSERTE(!"Got first overflow.");
         }
-        PAL_ENDTRY;
 
-        PAL_TRY(void *, unused, NULL)
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
+            DEBUG_OK_TO_THROW_BEGIN
             TestSEHGuardPageRestoreOverflow();
+            DEBUG_OK_TO_THROW_END
         }
-        PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+        __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+        catch (PAL_SEHException&)
+#endif
         {
             // If you get two asserts, then it works!
             _ASSERTE(!"Got second overflow.");
         }
-        PAL_ENDTRY;
 }
 #endif // _DEBUG
 

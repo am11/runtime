@@ -1192,38 +1192,27 @@ static BOOL LOADCallDllMainSafe(MODSTRUCT *module, DWORD dwReason, LPVOID lpRese
     int old_level = DBG_change_entrylevel(0);
 #endif /* _ENABLE_DEBUG_MESSAGES_ */
 
-    struct Param
-    {
-        MODSTRUCT *module;
-        DWORD dwReason;
-        LPVOID lpReserved;
-        BOOL ret;
-    } param;
-    param.module = module;
-    param.dwReason = dwReason;
-    param.lpReserved = lpReserved;
-    param.ret = FALSE;
+    BOOL ret = FALSE;
 
-    PAL_TRY(Param *, pParam, &param)
+    try
     {
         TRACE("Calling DllMain (%p) for module %S\n",
-              pParam->module->pDllMain,
-              pParam->module->lib_name ? pParam->module->lib_name : W16_NULLSTRING);
+              module->pDllMain,
+              module->lib_name ? module->lib_name : W16_NULLSTRING);
 
-        pParam->ret = pParam->module->pDllMain(pParam->module->hinstance, pParam->dwReason, pParam->lpReserved);
+        ret = module->pDllMain(module->hinstance, dwReason, lpReserved);
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    catch (PAL_SEHException&)
     {
         WARN("Call to DllMain (%p) got an unhandled exception; ignoring.\n", module->pDllMain);
     }
-    PAL_ENDTRY
 
 #if _ENABLE_DEBUG_MESSAGES_
     /* ...and set nesting level back to what it was */
     DBG_change_entrylevel(old_level);
 #endif /* _ENABLE_DEBUG_MESSAGES_ */
 
-    return param.ret;
+    return ret;
 }
 
 /*++

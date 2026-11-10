@@ -2118,15 +2118,6 @@ CloseHandle(
 PALIMPORT
 VOID
 PALAPI
-RaiseException(
-           IN DWORD dwExceptionCode,
-           IN DWORD dwExceptionFlags,
-           IN DWORD nNumberOfArguments,
-           IN CONST ULONG_PTR *lpArguments);
-
-PALIMPORT
-VOID
-PALAPI
 DECLSPEC_NORETURN
 RaiseFailFastException(
     IN PEXCEPTION_RECORD pExceptionRecord,
@@ -2818,6 +2809,13 @@ PALIMPORT DLLEXPORT char * __cdecl PAL_getenv(const char *);
 PALIMPORT
 VOID
 PALAPI
+PAL_AllocateExceptionRecords(
+  OUT EXCEPTION_RECORD **exceptionRecord,
+  OUT CONTEXT **contextRecord);
+
+PALIMPORT
+VOID
+PALAPI
 PAL_FreeExceptionRecords(
   IN EXCEPTION_RECORD *exceptionRecord,
   IN CONTEXT *contextRecord) noexcept;
@@ -2831,7 +2829,7 @@ struct
 // OpenBSD's libc++ compares exception type_info by pointer (relying on ld.so to merge
 // type_info across shared objects) instead of falling back to a name compare like Linux's
 // libstdc++. Default visibility lets ld.so merge type_info into one instance so a
-// PAL_SEHException thrown in one PAL DSO is caught in another (e.g. the pal_sxs test).
+// PAL_SEHException thrown in one DSO is caught in another.
 __attribute__((visibility("default")))
 #endif
 PAL_SEHException
@@ -2846,7 +2844,6 @@ private:
         TargetFrameSp = ex.TargetFrameSp;
         TargetIp = ex.TargetIp;
         RecordsOnStack = ex.RecordsOnStack;
-        IsExternal = ex.IsExternal;
 
         ex.Clear();
     }
@@ -2868,9 +2865,6 @@ public:
     SIZE_T TargetIp;
     SIZE_T ReturnValue;
     bool RecordsOnStack;
-    // The exception is a hardware exception coming from a native code out of
-    // the well known runtime helpers
-    bool IsExternal;
 
     PAL_SEHException(EXCEPTION_RECORD *pExceptionRecord, CONTEXT *pContextRecord, bool onStack = false)
     {
@@ -2879,7 +2873,6 @@ public:
         TargetFrameSp = NoTargetFrameSp;
         TargetIp = 0;
         RecordsOnStack = onStack;
-        IsExternal = false;
     }
 
     PAL_SEHException()
@@ -2917,7 +2910,6 @@ public:
         TargetFrameSp = NoTargetFrameSp;
         TargetIp = 0;
         RecordsOnStack = false;
-        IsExternal = false;
     }
 
     bool HasTargetFrame()
@@ -2953,136 +2945,16 @@ PALAPI
 PAL_SetGetGcMarkerExceptionCode(
     IN PGET_GCMARKER_EXCEPTION_CODE getGcMarkerExceptionCode);
 
-PALIMPORT
-VOID
-PALAPI
-PAL_ThrowExceptionFromContext(
-    IN CONTEXT* context,
-    IN PAL_SEHException* ex);
-
-PALIMPORT
-VOID
-PALAPI
-PAL_CatchHardwareExceptionHolderEnter();
-
-PALIMPORT
-VOID
-PALAPI
-PAL_CatchHardwareExceptionHolderExit();
-
-//
-// This holder is used to indicate that a hardware
-// exception should be raised as a C++ exception
-// to better emulate SEH on the xplat platforms.
-//
-class CatchHardwareExceptionHolder
-{
-public:
-    CatchHardwareExceptionHolder()
-    {
-        PAL_CatchHardwareExceptionHolderEnter();
-    }
-
-    ~CatchHardwareExceptionHolder()
-    {
-        PAL_CatchHardwareExceptionHolderExit();
-    }
-
-    static bool IsEnabled();
-};
-
-//
-// NOTE: This is only defined in one PAL test.
-//
-#ifdef FEATURE_ENABLE_HARDWARE_EXCEPTIONS
-#define HardwareExceptionHolder CatchHardwareExceptionHolder __catchHardwareException;
-#else
-#define HardwareExceptionHolder
-#endif // FEATURE_ENABLE_HARDWARE_EXCEPTIONS
-
-// Start of a try block for exceptions raised by RaiseException
-#define PAL_TRY(__ParamType, __paramDef, __paramRef)                            \
-{                                                                               \
-    __ParamType __param = __paramRef;                                           \
-    auto tryBlock = [](__ParamType __paramDef)                                  \
-    {
-
-// Start of an exception handler. If an exception raised by the RaiseException
-// occurs in the try block and the disposition is EXCEPTION_EXECUTE_HANDLER,
-// the handler code is executed. If the disposition is EXCEPTION_CONTINUE_SEARCH,
-// the exception is rethrown. The EXCEPTION_CONTINUE_EXECUTION disposition is
-// not supported.
-#define PAL_EXCEPT(dispositionExpression)                                       \
-    };                                                                          \
-    const bool isFinally = false;                                               \
-    auto finallyBlock = []() {};                                                \
-    EXCEPTION_DISPOSITION disposition = EXCEPTION_CONTINUE_EXECUTION;           \
-    auto exceptionFilter = [&disposition, &__param](PAL_SEHException& ex)       \
-    {                                                                           \
-        (void)__param;                                                          \
-        disposition = dispositionExpression;                                    \
-        _ASSERTE(disposition != EXCEPTION_CONTINUE_EXECUTION);                  \
-        return disposition;                                                     \
-    };                                                                          \
-    try                                                                         \
-    {                                                                           \
-        HardwareExceptionHolder                                                 \
-        tryBlock(__param);                                                      \
-    }                                                                           \
-    catch (PAL_SEHException& ex)                                                \
-    {                                                                           \
-        if (disposition == EXCEPTION_CONTINUE_EXECUTION)                        \
-        {                                                                       \
-            exceptionFilter(ex);                                                \
-        }                                                                       \
-        if (disposition == EXCEPTION_CONTINUE_SEARCH)                           \
-        {                                                                       \
-            throw;                                                              \
-        }
-
-// Start of an exception handler. It works the same way as the PAL_EXCEPT except
-// that the disposition is obtained by calling the specified filter.
-#define PAL_EXCEPT_FILTER(filter) PAL_EXCEPT(filter(&ex.ExceptionPointers, __param))
-
-// Start of a finally block. The finally block is executed both when the try block
-// finishes or when an exception is raised using the RaiseException in it.
-#define PAL_FINALLY                     \
-    };                                  \
-    const bool isFinally = true;        \
-    auto finallyBlock = [&]()           \
-    {
-
-// End of an except or a finally block.
-#define PAL_ENDTRY                      \
-    };                                  \
-    if (isFinally)                      \
-    {                                   \
-        try                             \
-        {                               \
-            HardwareExceptionHolder     \
-            tryBlock(__param);          \
-        }                               \
-        catch (...)                     \
-        {                               \
-            finallyBlock();             \
-            throw;                      \
-        }                               \
-        finallyBlock();                 \
-    }                                   \
-}
-
 } // extern "C++"
 
 #define PAL_CPP_THROW(type, obj) { throw obj; }
 #define PAL_CPP_RETHROW { throw; }
-#define PAL_CPP_TRY                     try { HardwareExceptionHolder
+#define PAL_CPP_TRY                     try {
 #define PAL_CPP_CATCH_DERIVED(type, ident) } catch (type *ident) {
 #define PAL_CPP_CATCH_NON_DERIVED(type, ident) } catch (type ident) {
 #define PAL_CPP_CATCH_NON_DERIVED_NOARG(type) } catch (type) {
 #define PAL_CPP_CATCH_ALL               } catch (...) {
 #define PAL_CPP_ENDTRY                  }
-
-#define PAL_TRY_FOR_DLLMAIN(ParamType, paramDef, paramRef, _reason) PAL_TRY(ParamType, paramDef, paramRef)
 
 #endif // __cplusplus
 

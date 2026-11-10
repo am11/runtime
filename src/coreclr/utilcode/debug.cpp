@@ -94,17 +94,16 @@ void DoRaiseExceptionOnAssert(DWORD chance)
     if (chance)
     {
 #ifndef TARGET_UNIX
-        PAL_TRY_NAKED
+        __try
         {
             RaiseException(EXCEPTION_INTERNAL_ASSERT, 0, 0, NULL);
         }
-        PAL_EXCEPT_NAKED((chance == 1) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+        __except((chance == 1) ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
         {
         }
-        PAL_ENDTRY_NAKED
 #else // TARGET_UNIX
-        // For PAL always raise the exception.
-        RaiseException(EXCEPTION_INTERNAL_ASSERT, 0, 0, NULL);
+        // On Unix always raise the exception.
+        RAISE_SEH_EXCEPTION(EXCEPTION_INTERNAL_ASSERT, 0, 0, NULL);
 #endif // TARGET_UNIX
     }
 #endif // !DACCESS_COMPILE

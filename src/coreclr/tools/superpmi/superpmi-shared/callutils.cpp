@@ -149,41 +149,29 @@ CallType CallUtils::GetDirectCallSiteInfo(MethodContext*            mc,
     {
         // Now try to obtain the call info associated with this method handle
 
-        struct Param
-        {
-            MethodContext*         mc;
-            CORINFO_SIG_INFO*      outSigInfo;
-            char**                 outCallTargetSymbol;
-            CallType*              pTargetType;
-            CORINFO_METHOD_HANDLE* pMethodHandle;
-        } param;
-        param.mc                  = mc;
-        param.outSigInfo          = outSigInfo;
-        param.outCallTargetSymbol = outCallTargetSymbol;
-        param.pTargetType         = &targetType;
-        param.pMethodHandle       = &methodHandle;
-
-        PAL_TRY(Param*, pParam, &param)
+        try
         {
             CORINFO_CALL_INFO callInfo;
 
-            pParam->mc->repGetCallInfoFromMethodHandle(*pParam->pMethodHandle, &callInfo);
+            mc->repGetCallInfoFromMethodHandle(methodHandle, &callInfo);
 
-            if (pParam->outSigInfo != nullptr)
-                *pParam->outSigInfo = callInfo.sig;
+            if (outSigInfo != nullptr)
+                *outSigInfo = callInfo.sig;
 
-            if (pParam->outCallTargetSymbol != nullptr)
-                *pParam->outCallTargetSymbol =
-                    (char*)GetMethodFullName(pParam->mc, *pParam->pMethodHandle, callInfo.sig);
+            if (outCallTargetSymbol != nullptr)
+                *outCallTargetSymbol = (char*)GetMethodFullName(mc, methodHandle, callInfo.sig);
 
-            *pParam->pTargetType = CallType_UserFunction;
+            targetType = CallType_UserFunction;
         }
-        PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+        catch (SpmiException& e)
         {
+            if (e.GetCode() != EXCEPTIONCODE_MC)
+            {
+                throw;
+            }
             LogWarning("Didn't find call info for method handle %016llX (call target: %016llX)", methodHandle,
                        callTarget);
         }
-        PAL_ENDTRY
     }
     else
     {

@@ -409,8 +409,14 @@ bool Arm64SingleStepper::GetMem(uint64_t *pdwResult, uint8_t* pAddress, int cbSi
     param.fSignExtend = fSignExtend;
     param.bReturnValue = true;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         switch (pParam->cbSize)
         {
         case 4:
@@ -425,12 +431,16 @@ bool Arm64SingleStepper::GetMem(uint64_t *pdwResult, uint8_t* pAddress, int cbSi
             UNREACHABLE();
             pParam->bReturnValue = false;
         }
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         param.bReturnValue = false;
     }
-    PAL_ENDTRY;
 
     return param.bReturnValue;
 }

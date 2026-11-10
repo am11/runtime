@@ -80,54 +80,36 @@ enum class NearDifferResult
     Failure,
 };
 
-// This function uses PAL_TRY, so it can't be in the a function that requires object unwinding. Extracting it out here
-// avoids compiler error.
-//
 static NearDifferResult InvokeNearDiffer(NearDiffer*           nearDiffer,
                                    MethodContext**       mc,
                                    CompileResult**       crl,
                                    MethodContextReader** reader)
 {
-
-    struct Param : FilterSuperPMIExceptionsParam_CaptureException
+    NearDifferResult result = NearDifferResult::Failure;
+    try
     {
-        NearDiffer*           nearDiffer;
-        MethodContext**       mc;
-        CompileResult**       crl;
-        MethodContextReader** reader;
-        NearDifferResult      result;
-    } param;
-    param.nearDiffer = nearDiffer;
-    param.mc         = mc;
-    param.crl        = crl;
-    param.reader     = reader;
-    param.result     = NearDifferResult::Failure;
-
-    PAL_TRY(Param*, pParam, &param)
-    {
-        if (!pParam->nearDiffer->compare(*pParam->mc, *pParam->crl, (*pParam->mc)->cr))
+        if (!nearDiffer->compare(*mc, *crl, (*mc)->cr))
         {
-            pParam->result = NearDifferResult::SuccessWithDiff;
-            LogIssue(ISSUE_ASM_DIFF, "main method %d of size %d differs", (*pParam->reader)->GetMethodContextIndex(),
-                     (*pParam->mc)->methodSize);
+            result = NearDifferResult::SuccessWithDiff;
+            LogIssue(ISSUE_ASM_DIFF, "main method %d of size %d differs", (*reader)->GetMethodContextIndex(),
+                     (*mc)->methodSize);
         }
         else
         {
-            pParam->result = NearDifferResult::SuccessWithoutDiff;
+            result = NearDifferResult::SuccessWithoutDiff;
         }
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+    catch (...)
     {
-        SpmiException e(&param);
+        SpmiException e = GetCurrentSpmiException();
 
         LogError("main method %d of size %d failed to load and compile correctly.", (*reader)->GetMethodContextIndex(),
                  (*mc)->methodSize);
         e.ShowAndDeleteMessage();
-        param.result = NearDifferResult::Failure;
+        result = NearDifferResult::Failure;
     }
-    PAL_ENDTRY
 
-    return param.result;
+    return result;
 }
 
 static const char* ResultToString(ReplayResult result)

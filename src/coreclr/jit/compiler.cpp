@@ -6377,14 +6377,7 @@ int Compiler::compCompileAfterInit(CORINFO_MODULE_HANDLE classPtr,
     param.compileFlags   = compileFlags;
     param.result         = CORJIT_INTERNALERROR;
 
-    setErrorTrap(info.compCompHnd, Param*, pParam, &param) // ERROR TRAP: Start normal block
-    {
-        pParam->result =
-            pParam->pThis->compCompileHelper(pParam->classPtr, pParam->compHnd, pParam->methodInfo,
-                                             pParam->methodCodePtr, pParam->methodCodeSize, pParam->compileFlags);
-    }
-    finallyErrorTrap() // ERROR TRAP: The following block handles errors
-    {
+    auto finallyBlock = [&]() {
         /* Cleanup  */
 
         if (compIsForInlining())
@@ -6398,10 +6391,34 @@ int Compiler::compCompileAfterInit(CORINFO_MODULE_HANDLE classPtr,
 
     DoneCleanUp:
         compDone();
-    }
-    endErrorTrap() // ERROR TRAP: End
+    };
 
-        return param.result;
+    Param* pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
+    {
+        pParam->result =
+            pParam->pThis->compCompileHelper(pParam->classPtr, pParam->compHnd, pParam->methodInfo,
+                                             pParam->methodCodePtr, pParam->methodCodeSize, pParam->compileFlags);
+    }
+#ifdef HOST_WINDOWS
+    __finally
+    {
+        finallyBlock();
+    }
+#else
+    catch (...)
+    {
+        finallyBlock();
+        throw;
+    }
+    finallyBlock();
+#endif
+
+    return param.result;
 }
 
 #if defined(DEBUG)
@@ -7646,10 +7663,46 @@ START:
 #endif
     param.result = result;
 
+    ErrorTrapParam trapParam;
+    trapParam.errc    = CORJIT_INTERNALERROR;
+    trapParam.jitInfo = compHnd;
+
+    Param* pParamOuter  = &param;
+    auto   finallyBlock = [&]() {
+        Compiler* pCompiler = pParamOuter->pComp;
+
+        // If OOM is thrown when allocating memory for a pComp, we will end up here.
+        // For this case, pComp and also pCompiler will be a nullptr
+        //
+        if (pCompiler != nullptr)
+        {
+            pCompiler->info.compCode = nullptr;
+
+            // pop the compiler off the TLS stack only if it was linked above
+            assert(JitTls::GetCompiler() == pCompiler);
+            JitTls::SetCompiler(pParamOuter->pPrevComp);
+        }
+
+        if (pParamOuter->inlineInfo == nullptr)
+        {
+            // Free up the allocator we were using
+            pParamOuter->pAlloc->destroy();
+        }
+    };
+
     // clang-format off
-    setErrorTrap(compHnd, Param*, pParamOuter, &param)
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        setErrorTrap(nullptr, Param*, pParam, pParamOuter)
+        Param* pParam = pParamOuter;
+#ifdef HOST_WINDOWS
+        __try
+#else
+        try
+#endif
         {
             void* compilerMem;
             if (pParam->inlineInfo)
@@ -7690,32 +7743,32 @@ START:
             pParam->result =
                 pParam->pComp->compCompileAfterInit(pParam->classPtr, pParam->methodCodePtr, pParam->methodCodeSize, pParam->compileFlags);
         }
-        finallyErrorTrap()
+#ifdef HOST_WINDOWS
+        __finally
         {
-            Compiler* pCompiler = pParamOuter->pComp;
-
-            // If OOM is thrown when allocating memory for a pComp, we will end up here.
-            // For this case, pComp and also pCompiler will be a nullptr
-            //
-            if (pCompiler != nullptr)
-            {
-                pCompiler->info.compCode = nullptr;
-
-                // pop the compiler off the TLS stack only if it was linked above
-                assert(JitTls::GetCompiler() == pCompiler);
-                JitTls::SetCompiler(pParamOuter->pPrevComp);
-            }
-
-            if (pParamOuter->inlineInfo == nullptr)
-            {
-                // Free up the allocator we were using
-                pParamOuter->pAlloc->destroy();
-            }
+            finallyBlock();
         }
-        endErrorTrap()
+#else
+        catch (...)
+        {
+            finallyBlock();
+            throw;
+        }
+        finallyBlock();
+#endif
     }
-    impJitErrorTrap()
+#ifdef HOST_WINDOWS
+    __except (__JITfilter(GetExceptionInformation(), &trapParam))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (__JITfilter(&ex.ExceptionPointers, &trapParam) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         // If we were looking at an inlinee....
         if (inlineInfo != nullptr)
         {
@@ -7723,31 +7776,30 @@ START:
             // there's no point trying to inline it again anywhere else.
             inlineInfo->inlineResult->NoteFatal(InlineObservation::CALLEE_COMPILATION_ERROR);
         }
-        param.result = __errc;
+        param.result = trapParam.errc;
     }
-    endErrorTrap()
     // clang-format on
 
     result = param.result;
 
-if (!inlineInfo &&
-    (result == CORJIT_INTERNALERROR || result == CORJIT_RECOVERABLEERROR || result == CORJIT_IMPLLIMITATION ||
-     result == CORJIT_R2R_UNSUPPORTED) &&
-    !jitFallbackCompile)
-{
-    // If we failed the JIT, reattempt with debuggable code.
-    jitFallbackCompile = true;
+    if (!inlineInfo &&
+        (result == CORJIT_INTERNALERROR || result == CORJIT_RECOVERABLEERROR || result == CORJIT_IMPLLIMITATION ||
+         result == CORJIT_R2R_UNSUPPORTED) &&
+        !jitFallbackCompile)
+    {
+        // If we failed the JIT, reattempt with debuggable code.
+        jitFallbackCompile = true;
 
-    // Update the flags for 'safer' code generation.
-    compileFlags->Set(JitFlags::JIT_FLAG_MIN_OPT);
-    compileFlags->Clear(JitFlags::JIT_FLAG_SIZE_OPT);
-    compileFlags->Clear(JitFlags::JIT_FLAG_SPEED_OPT);
-    compileFlags->Clear(JitFlags::JIT_FLAG_BBOPT);
+        // Update the flags for 'safer' code generation.
+        compileFlags->Set(JitFlags::JIT_FLAG_MIN_OPT);
+        compileFlags->Clear(JitFlags::JIT_FLAG_SIZE_OPT);
+        compileFlags->Clear(JitFlags::JIT_FLAG_SPEED_OPT);
+        compileFlags->Clear(JitFlags::JIT_FLAG_BBOPT);
 
-    goto START;
-}
+        goto START;
+    }
 
-return result;
+    return result;
 }
 
 #if defined(UNIX_AMD64_ABI)

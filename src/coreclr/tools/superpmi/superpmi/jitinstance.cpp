@@ -216,21 +216,10 @@ extern "C" DLLEXPORT NOINLINE void Instrumentor_GetInsCount(UINT64* result)
 
 ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcIndex, bool collectThroughput)
 {
-    struct Param : FilterSuperPMIExceptionsParam_CaptureException
-    {
-        JitInstance*        pThis;
-        CORINFO_METHOD_INFO info;
-        unsigned            flags;
-        int                 mcIndex;
-        bool                collectThroughput;
-        bool*               isMinOpts;
-        ReplayResults       results;
-    } param;
-    param.pThis             = this;
-    param.flags             = 0;
-    param.mcIndex           = mcIndex;
-    param.collectThroughput = collectThroughput;
-    param.results.Result    = ReplayResult::Success;
+    CORINFO_METHOD_INFO info;
+    unsigned            compileFlags = 0;
+    ReplayResults       results;
+    results.Result = ReplayResult::Success;
 
     // store to instance field our raw values, so we can figure things out a bit later...
     mc = MethodToCompile;
@@ -243,42 +232,41 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
     UINT64 insCountBefore = 0;
     Instrumentor_GetInsCount(&insCountBefore);
 
-    PAL_TRY(Param*, pParam, &param)
+    try
     {
         uint8_t*   NEntryBlock    = nullptr;
         uint32_t   NCodeSizeBlock = 0;
         CORINFO_OS os             = CORINFO_WINNT;
 
-        pParam->pThis->mc->repCompileMethod(&pParam->info, &pParam->flags, &os);
+        mc->repCompileMethod(&info, &compileFlags, &os);
         CORJIT_FLAGS jitFlags;
-        pParam->pThis->getJitFlags(&jitFlags, sizeof(jitFlags));
+        getJitFlags(&jitFlags, sizeof(jitFlags));
 
-        pParam->results.IsMinOpts =
+        results.IsMinOpts =
             jitFlags.IsSet(CORJIT_FLAGS::CORJIT_FLAG_DEBUG_CODE) ||
             jitFlags.IsSet(CORJIT_FLAGS::CORJIT_FLAG_MIN_OPT) ||
             jitFlags.IsSet(CORJIT_FLAGS::CORJIT_FLAG_TIER0);
 
-        if (pParam->collectThroughput)
+        if (collectThroughput)
         {
-            pParam->pThis->lt.Start();
+            lt.Start();
         }
-        pParam->pThis->pJitInstance->setTargetOS(os);
-        CorJitResult jitResult = pParam->pThis->pJitInstance->compileMethod(pParam->pThis->icji, &pParam->info,
-                                                                       pParam->flags, &NEntryBlock, &NCodeSizeBlock);
-        if (pParam->collectThroughput)
+        pJitInstance->setTargetOS(os);
+        CorJitResult jitResult = pJitInstance->compileMethod(icji, &info, compileFlags, &NEntryBlock, &NCodeSizeBlock);
+        if (collectThroughput)
         {
-            pParam->pThis->lt.Stop();
-            pParam->pThis->times[0] = pParam->pThis->lt.GetCycles();
+            lt.Stop();
+            times[0] = lt.GetCycles();
         }
 
-        CorInfoMethodRuntimeFlags flags = pParam->pThis->mc->cr->repSetMethodAttribs(pParam->info.ftn);
+        CorInfoMethodRuntimeFlags flags = mc->cr->repSetMethodAttribs(info.ftn);
         if ((flags & CORINFO_FLG_SWITCHED_TO_MIN_OPT) != 0)
         {
-            pParam->results.IsMinOpts = true;
+            results.IsMinOpts = true;
         }
         else if ((flags & CORINFO_FLG_SWITCHED_TO_OPTIMIZED) != 0)
         {
-            pParam->results.IsMinOpts = false;
+            results.IsMinOpts = false;
         }
 
         if (jitResult == CORJIT_SKIPPED)
@@ -286,7 +274,7 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
             SPMI_TARGET_ARCHITECTURE targetArch = GetSpmiTargetArchitecture();
             bool matchesTargetArch              = false;
 
-            switch (pParam->pThis->mc->repGetExpectedTargetArchitecture())
+            switch (mc->repGetExpectedTargetArchitecture())
             {
                 case CORINFO_ARCH_X64:
                     matchesTargetArch = (targetArch == SPMI_TARGET_ARCHITECTURE_AMD64);
@@ -334,7 +322,7 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
                 // then the JIT will also return CORJIT_SKIPPED, to prevent the generated code from being used.
                 // However, we don't want to treat that as a replay failure.
                 if (jitFlags.IsSet(CORJIT_FLAGS::CORJIT_FLAG_ALT_JIT) &&
-                    (pParam->pThis->jitHost->getIntConfigValue("RunAltJitCode", 1) == 0))
+                    (jitHost->getIntConfigValue("RunAltJitCode", 1) == 0))
                 {
                     jitResult = CORJIT_OK;
                 }
@@ -344,28 +332,28 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
         if ((jitResult == CORJIT_OK) || (jitResult == CORJIT_BADCODE) || (jitResult == CORJIT_R2R_UNSUPPORTED))
         {
             // capture the results of compilation
-            pParam->pThis->mc->cr->recCompileMethod(&NEntryBlock, &NCodeSizeBlock, jitResult);
-            pParam->pThis->mc->cr->recAllocMemCapture();
-            pParam->pThis->mc->cr->recAllocGCInfoCapture();
+            mc->cr->recCompileMethod(&NEntryBlock, &NCodeSizeBlock, jitResult);
+            mc->cr->recAllocMemCapture();
+            mc->cr->recAllocGCInfoCapture();
 
-            pParam->pThis->mc->cr->recMessageLog(jitResult == CORJIT_OK ? "Successful Compile" : "Successful Compile (BADCODE)");
+            mc->cr->recMessageLog(jitResult == CORJIT_OK ? "Successful Compile" : "Successful Compile (BADCODE)");
         }
         else
         {
             LogDebug("compileMethod failed with result %d", jitResult);
-            pParam->results.Result = ReplayResult::Error;
+            results.Result = ReplayResult::Error;
         }
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+    catch (...)
     {
-        SpmiException e(&param);
+        SpmiException e = GetCurrentSpmiException();
 
         if (e.GetCode() == EXCEPTIONCODE_MC)
         {
             char* message = e.GetExceptionMessage();
             LogMissing("Method context %d failed to replay: %s", mcIndex, message);
             e.DeleteMessage();
-            param.results.Result = ReplayResult::Miss;
+            results.Result = ReplayResult::Miss;
         }
         else if (e.GetCode() == EXCEPTIONCODE_RECORDED_EXCEPTION)
         {
@@ -384,26 +372,25 @@ ReplayResults JitInstance::CompileMethod(MethodContext* MethodToCompile, int mcI
         else
         {
             e.ShowAndDeleteMessage();
-            param.results.Result = ReplayResult::Error;
+            results.Result = ReplayResult::Error;
         }
     }
-    PAL_ENDTRY
 
     stj.Stop();
     if (collectThroughput)
     {
         // If we get here, we know it compiles
-        timeResult(param.info, param.flags);
+        timeResult(info, compileFlags);
     }
 
     mc->cr->secondsToCompile = stj.GetSeconds();
-    param.results.CompileResults = mc->cr;
+    results.CompileResults = mc->cr;
 
     UINT64 insCountAfter = 0;
     Instrumentor_GetInsCount(&insCountAfter);
 
-    param.results.NumExecutedInstructions = static_cast<long long>(insCountAfter - insCountBefore);
-    return param.results;
+    results.NumExecutedInstructions = static_cast<long long>(insCountAfter - insCountBefore);
+    return results;
 }
 
 void JitInstance::timeResult(CORINFO_METHOD_INFO info, unsigned flags)
@@ -523,40 +510,30 @@ void JitInstance::freeLongLivedArray(void* array)
     delete [] (BYTE*)array;
 }
 
-// Helper for calling pnjitStartup. Needed to allow SEH here.
+// Helper for calling pnjitStartup.
 bool JitInstance::callJitStartup(ICorJitHost* jithost)
 {
     // Calling into the collection, which could fail, especially
     // for altjits. So protect the call.
 
-    struct Param : FilterSuperPMIExceptionsParam_CaptureException
+    bool result = false;
+    try
     {
-        JitInstance* pThis;
-        ICorJitHost* jithost;
-        bool         result;
-    } param;
-    param.pThis   = this;
-    param.jithost = jithost;
-    param.result  = false;
-
-    PAL_TRY(Param*, pParam, &param)
-    {
-        pParam->pThis->pnjitStartup(pParam->jithost);
-        pParam->result = true;
+        pnjitStartup(jithost);
+        result = true;
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CaptureExceptionAndStop)
+    catch (...)
     {
-        SpmiException e(&param);
+        SpmiException e = GetCurrentSpmiException();
 
         LogError("failed to call jitStartup.");
         e.ShowAndDeleteMessage();
     }
-    PAL_ENDTRY
 
     Assert(environment.getIntConfigValue == nullptr && environment.getStringConfigValue == nullptr);
     environment = mc->cloneEnvironment();
 
-    return param.result;
+    return result;
 }
 
 // Reset JitConfig, that stores Environment variables.

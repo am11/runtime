@@ -760,42 +760,6 @@ class EEFileLoadException : public EEException
 
 LONG CLRNoCatchHandler(EXCEPTION_POINTERS* pExceptionInfo, PVOID pv);
 
-// Re-define the macro to add automatic restoration of the guard page to PAL_EXCEPT and PAL_EXCEPT_FILTER and
-// friends. Note: RestoreGuardPage will only do work if the guard page is not present.
-#undef PAL_SEH_RESTORE_GUARD_PAGE
-#define PAL_SEH_RESTORE_GUARD_PAGE                                                  \
-    if (__exCode == STATUS_STACK_OVERFLOW)                                          \
-    {                                                                               \
-        Thread *__pThread = GetThreadNULLOk();                                            \
-        if (__pThread != NULL)                                                      \
-        {                                                                           \
-            __pThread->RestoreGuardPage();                                          \
-        }                                                                           \
-    }
-
-#undef EX_TRY_NOCATCH
-#define EX_TRY_NOCATCH(ParamType, paramDef, paramRef)            \
-    PAL_TRY(ParamType, __EXparam, paramRef)                      \
-    {                                                            \
-        CLRException::HandlerState __state(::GetThreadNULLOk()); \
-        PAL_TRY(ParamType, paramDef, __EXparam)                  \
-        {
-
-#undef EX_END_NOCATCH
-#define EX_END_NOCATCH                  \
-            ;                           \
-        }                               \
-        PAL_FINALLY                     \
-        {                               \
-            __state.CleanupTry();       \
-        }                               \
-        PAL_ENDTRY                      \
-    }                                   \
-    PAL_EXCEPT_FILTER(EntryPointFilter) \
-    {                                   \
-    }                                   \
-    PAL_ENDTRY
-
 //
 // We need a way to identify an exception in managed code that is rethrown from a new exception in managed code
 // when we get into our managed EH logic. Currently, we do that by checking the GC mode. If a thread has preemptive

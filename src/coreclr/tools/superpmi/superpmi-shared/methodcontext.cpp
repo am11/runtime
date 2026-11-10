@@ -201,27 +201,19 @@ bool MethodContext::Initialize(int mcIndex, unsigned char* buff, DWORD size, boo
 {
     bool result = true;
 
-    struct Param
+    try
     {
-        unsigned char* buff;
-        DWORD          size;
-        MethodContext* pThis;
-        bool           readCompileResults;
-    } param;
-    param.buff  = buff;
-    param.size  = size;
-    param.pThis = this;
-    param.readCompileResults = readCompileResults;
-    PAL_TRY(Param*, pParam, &param)
-    {
-        pParam->pThis->MethodInitHelper(pParam->buff, pParam->size, pParam->readCompileResults);
+        MethodInitHelper(buff, size, readCompileResults);
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+    catch (SpmiException& e)
     {
+        if (e.GetCode() != EXCEPTIONCODE_MC)
+        {
+            throw;
+        }
         LogError("Method %d is of low integrity.", mcIndex);
         result = false;
     }
-    PAL_ENDTRY
 
     return result;
 }
@@ -230,26 +222,19 @@ bool MethodContext::Initialize(int mcIndex, FILE* hFile, bool readCompileResults
 {
     bool result = true;
 
-    struct Param
+    try
     {
-        FILE*          hFile;
-        MethodContext* pThis;
-        bool           readCompileResults;
-    } param;
-    param.hFile = hFile;
-    param.pThis = this;
-    param.readCompileResults = readCompileResults;
-
-    PAL_TRY(Param*, pParam, &param)
-    {
-        pParam->pThis->MethodInitHelperFile(pParam->hFile, pParam->readCompileResults);
+        MethodInitHelperFile(hFile, readCompileResults);
     }
-    PAL_EXCEPT_FILTER(FilterSuperPMIExceptions_CatchMC)
+    catch (SpmiException& e)
     {
+        if (e.GetCode() != EXCEPTIONCODE_MC)
+        {
+            throw;
+        }
         LogError("Method %d is of low integrity.", mcIndex);
         result = false;
     }
-    PAL_ENDTRY
 
     return result;
 }

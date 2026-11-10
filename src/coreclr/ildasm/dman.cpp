@@ -707,8 +707,14 @@ static void DumpResourceFile(void *GUICookie, BYTE *pRes, DWORD dwOffset, LPCWST
     param.GUICookie = GUICookie;
     param.wzFileName = wzFileName;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
        DWORD L;
        memcpy(&L,pParam->pRes+pParam->dwOffset,sizeof(DWORD));
        sprintf_s(szString,SZSTRING_SIZE,COMMENT("%s// Offset: 0x%8.8X Length: 0x%8.8X"), g_szAsmCodeIndent,pParam->dwOffset,L);
@@ -734,29 +740,44 @@ static void DumpResourceFile(void *GUICookie, BYTE *pRes, DWORD dwOffset, LPCWST
                 param.sz = pParam->sz;
                 param.GUICookie = pParam->GUICookie;
 
-                PAL_TRY(Param *, pParam, &param) {
+                Param *pParam = &param;
+#ifdef HOST_WINDOWS
+                __try
+#else
+                try
+#endif
+                {
+                    DEBUG_OK_TO_THROW_BEGIN
                     fwrite((pParam->pRes+pParam->dwOffset+sizeof(DWORD)),pParam->L,1,pParam->pF);
                     sprintf_s(szString,SZSTRING_SIZE,RstrUTF(IDS_W_CREATEDMRES),g_szAsmCodeIndent,ProperName(pParam->sz));
                     printLine(pParam->GUICookie,COMMENT(szString));
+                    DEBUG_OK_TO_THROW_END
                 }
-                PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+                __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+                catch (PAL_SEHException&)
+#endif
                 {
                     sprintf_s(szString,SZSTRING_SIZE,RstrUTF(IDS_E_READINGMRES),g_szAsmCodeIndent,ProperName(pParam->sz),pParam->dwOffset);
                     printError(pParam->GUICookie,szString);
                 }
-                PAL_ENDTRY
                 fclose(pF);
             }
         }
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         sprintf_s(szString, SZSTRING_SIZE,
                   "ERROR retrieving/saving embedded managed resource '%s' at offset 0x%8.8X",
                   UnicodeToUtf(wzName), dwOffset);
         printError(GUICookie, szString);
     }
-    PAL_ENDTRY
 }
 
 void DumpManifestResources(void* GUICookie)
@@ -971,8 +992,14 @@ IMetaDataAssemblyImport* GetAssemblyImport(void* GUICookie)
     }
     param.pAssemblyImport = NULL;
     // OK, let's do it hard way: check if the manifest is hidden somewhere else
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         if(g_CORHeader->Resources.Size)
         {
             DWORD*  pdwSize = NULL;
@@ -1023,14 +1050,18 @@ IMetaDataAssemblyImport* GetAssemblyImport(void* GUICookie)
                 }
             }
         }
+        DEBUG_OK_TO_THROW_END
     } // end try
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
         if(param.pAssemblyImport) param.pAssemblyImport->Release();
         param.pAssemblyImport = NULL;
         if(param.pImport) param.pImport->Release();
     }
-    PAL_ENDTRY
     return param.pAssemblyImport;
 }
 

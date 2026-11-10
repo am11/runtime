@@ -721,32 +721,42 @@ void DebuggerRCThread::RightSideDetach(void)
 //
 // NDPWhidbey issue 10749 - Due to a compiler change for vc7.1,
 // Don't inline this function!
-// PAL_TRY allocates space on the stack and so can not be used within a loop,
+// __try allocates space on the stack and so can not be used within a loop,
 // else we'll slowly leak stack space w/ each interation and get an overflow.
 // So make this its own function to enforce that we free the stack space between
 // iterations.
 //
 bool HandleIPCEventWrapper(Debugger* pDebugger, DebuggerIPCEvent *e)
 {
-    struct Param : DebugFilterParam
-    {
-        Debugger* pDebugger;
-        bool wasContinue;
-    } param;
+    DebugFilterParam param;
     param.event = e;
-    param.pDebugger = pDebugger;
-    param.wasContinue = false;
-    PAL_TRY(Param *, pParam, &param)
+    bool wasContinue = false;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
-        pParam->wasContinue = pParam->pDebugger->HandleIPCEvent(pParam->event);
+        DEBUG_OK_TO_THROW_BEGIN
+        wasContinue = pDebugger->HandleIPCEvent(e);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(_debugFilter)
+#ifdef HOST_WINDOWS
+    __except (_debugFilter(GetExceptionInformation(), &param))
+#else
+    catch (PAL_SEHException& ex)
+#endif
     {
+#ifndef HOST_WINDOWS
+        if (_debugFilter(&ex.ExceptionPointers, &param) == EXCEPTION_CONTINUE_SEARCH)
+        {
+            throw;
+        }
+#endif
         LOG((LF_CORDB, LL_INFO10, "Unhandled exception caught in Debugger::HandleIPCEvent\n"));
     }
-    PAL_ENDTRY
 
-    return param.wasContinue;
+    return wasContinue;
 }
 
 bool DebuggerRCThread::HandleRSEA()

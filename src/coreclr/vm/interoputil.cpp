@@ -1040,11 +1040,22 @@ HRESULT SafeQueryInterface(IUnknown* pUnk, REFIID riid, IUnknown** pResUnk)
     struct Param { HRESULT * const hr; IUnknown** const pUnk; REFIID riid; IUnknown*** const pResUnk; } param = { &hr, &pUnk, riid, &pResUnk };
 #define PAL_TRY_ARG(argName) (*(pParam->argName))
 #define PAL_TRY_REFARG(argName) (pParam->argName)
-    PAL_TRY(Param * const, pParam, &param)
+    Param * const pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         PAL_TRY_ARG(hr) = PAL_TRY_ARG(pUnk)->QueryInterface(PAL_TRY_REFARG(riid), (void**) PAL_TRY_ARG(pResUnk));
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
 #if defined(STACK_GUARDS_DEBUG)
         // Catching and just swallowing an exception means we need to tell
@@ -1053,7 +1064,6 @@ HRESULT SafeQueryInterface(IUnknown* pUnk, REFIID riid, IUnknown** pResUnk)
         GetThread()->GetCurrentStackGuard()->RestoreCurrentGuard();
 #endif
     }
-    PAL_ENDTRY;
 #undef PAL_TRY_ARG
 #undef PAL_TRY_REFARG
 
@@ -1096,11 +1106,22 @@ HRESULT SafeQueryInterfacePreemp(IUnknown* pUnk, REFIID riid, IUnknown** pResUnk
     struct Param { HRESULT * const hr; IUnknown** const pUnk; REFIID riid; IUnknown*** const pResUnk; } param = { &hr, &pUnk, riid, &pResUnk };
 #define PAL_TRY_ARG(argName) (*(pParam->argName))
 #define PAL_TRY_REFARG(argName) (pParam->argName)
-    PAL_TRY(Param * const, pParam, &param)
+    Param * const pParam = &param;
+#ifdef HOST_WINDOWS
+    __try
+#else
+    try
+#endif
     {
+        DEBUG_OK_TO_THROW_BEGIN
         PAL_TRY_ARG(hr) = PAL_TRY_ARG(pUnk)->QueryInterface(PAL_TRY_REFARG(riid), (void**) PAL_TRY_ARG(pResUnk));
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+#ifdef HOST_WINDOWS
+    __except (EXCEPTION_EXECUTE_HANDLER)
+#else
+    catch (PAL_SEHException&)
+#endif
     {
 #if defined(STACK_GUARDS_DEBUG)
         // Catching and just swallowing an exception means we need to tell
@@ -1109,7 +1130,6 @@ HRESULT SafeQueryInterfacePreemp(IUnknown* pUnk, REFIID riid, IUnknown** pResUnk
         GetThread()->GetCurrentStackGuard()->RestoreCurrentGuard();
 #endif
     }
-    PAL_ENDTRY;
 #undef PAL_TRY_ARG
 #undef PAL_TRY_REFARG
 
@@ -2636,8 +2656,10 @@ static HRESULT InvokeExHelper(
     param.pExcepInfo = pExcepInfo;
     param.pspCaller = pspCaller;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+    __try
     {
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->hr = pParam->pDispEx->InvokeEx(pParam->MemberID,
                                                pParam->lcid,
                                                pParam->flags,
@@ -2645,12 +2667,12 @@ static HRESULT InvokeExHelper(
                                                pParam->pVarResult,
                                                pParam->pExcepInfo,
                                                pParam->pspCaller);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(CallOutFilter)
+    __except (CallOutFilter(GetExceptionInformation(), pParam))
     {
         _ASSERTE(!"CallOutFilter returned EXECUTE_HANDLER.");
     }
-    PAL_ENDTRY;
 
     return param.hr;
 }
@@ -2699,8 +2721,10 @@ static HRESULT InvokeHelper(
     param.pExcepInfo = pExcepInfo;
     param.piArgErr = piArgErr;
 
-    PAL_TRY(Param *, pParam, &param)
+    Param *pParam = &param;
+    __try
     {
+        DEBUG_OK_TO_THROW_BEGIN
         pParam->hr = pParam->pDisp->Invoke(pParam->MemberID,
                                            pParam->riid,
                                            pParam->lcid,
@@ -2709,12 +2733,12 @@ static HRESULT InvokeHelper(
                                            pParam->pVarResult,
                                            pParam->pExcepInfo,
                                            pParam->piArgErr);
+        DEBUG_OK_TO_THROW_END
     }
-    PAL_EXCEPT_FILTER(CallOutFilter)
+    __except (CallOutFilter(GetExceptionInformation(), pParam))
     {
         _ASSERTE(!"CallOutFilter returned EXECUTE_HANDLER.");
     }
-    PAL_ENDTRY;
 
     return param.hr;
 }

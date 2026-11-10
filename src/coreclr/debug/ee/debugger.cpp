@@ -2989,7 +2989,7 @@ CodeRegionInfo CodeRegionInfo::GetCodeRegionInfo(DebuggerJitInfo *dji, MethodDes
 #ifndef DACCESS_COMPILE
 /******************************************************************************
 //  Helper function for getBoundaries to get around AMD64 compiler and
-// contract holders with PAL_TRY in the same function.
+// contract holders with __try in the same function.
  ******************************************************************************/
 void Debugger::getBoundariesHelper(MethodDesc * md,
                                    unsigned int *cILOffsets,

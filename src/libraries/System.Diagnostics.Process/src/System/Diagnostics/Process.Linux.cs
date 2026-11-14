@@ -46,6 +46,68 @@ namespace System.Diagnostics
            }
        }
 
+        /// <summary>Counts the entries in a directory, excluding "." and "..", without stat'ing them.</summary>
+        /// <returns>The number of entries, or -1 if the directory does not exist (for example, because the process exited).</returns>
+        private static unsafe int CountDirectoryEntries(string path, bool excludeOwnDescriptor)
+        {
+            IntPtr dir = Interop.Sys.OpenDir(path);
+            if (dir == IntPtr.Zero)
+            {
+                return HandleDirectoryError(Interop.Sys.GetLastErrorInfo(), path);
+            }
+
+            try
+            {
+                int count = 0;
+                Interop.Sys.DirectoryEntry entry;
+                int result;
+                while ((result = Interop.Sys.ReadDir(dir, &entry)) == 0)
+                {
+                    // Skip the "." and ".." entries. Name points at the NUL-terminated d_name of the dirent, and a name
+                    // cannot be empty, so name[0] can always be read. Each subsequent byte is only read once the one
+                    // before it is known not to be the terminator (name[1] only if name[0] is '.', and name[2] only
+                    // if name[1] is also '.'), so this never reads past the end of the name.
+                    byte* name = entry.Name;
+                    if (name[0] == (byte)'.' && (name[1] == 0 || (name[1] == (byte)'.' && name[2] == 0)))
+                    {
+                        continue;
+                    }
+
+                    count++;
+                }
+
+                // ReadDir returns -1 at the end of the directory, and an errno value if the enumeration failed.
+                // Don't report a partial count in the latter case.
+                if (result != -1)
+                {
+                    return HandleDirectoryError(new Interop.ErrorInfo(result), path);
+                }
+
+                return excludeOwnDescriptor ? count - 1 : count;
+            }
+            finally
+            {
+                Interop.Sys.CloseDir(dir);
+            }
+
+            // Returns -1 if the directory no longer exists (for example, because the process exited), otherwise throws.
+            static int HandleDirectoryError(Interop.ErrorInfo error, string path)
+            {
+                if (error.Error is Interop.Error.ENOENT or Interop.Error.ESRCH)
+                {
+                    return -1;
+                }
+
+                // Directory.GetFiles threw UnauthorizedAccessException when the directory could not be read.
+                if (error.Error is Interop.Error.EACCES or Interop.Error.EBADF or Interop.Error.EPERM)
+                {
+                    throw new UnauthorizedAccessException(error.GetErrorMessage(), new Win32Exception(error.RawErrno));
+                }
+
+                throw new IOException($"{error.GetErrorMessage()} : '{path}'", error.RawErrno);
+            }
+        }
+
         /// <summary>Gets the path to the executable for the process, or null if it could not be retrieved.</summary>
         /// <param name="procPid">The pid for the target process.</param>
         internal static string? GetExePath(Interop.procfs.ProcPid procPid)

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.ComponentModel;
-using System.IO;
 
 namespace System.Diagnostics
 {
@@ -211,15 +210,14 @@ namespace System.Diagnostics
                     return;
                 }
                 string path = Interop.procfs.GetFileDescriptorDirectoryPathForProcess(procPid);
-                if (Directory.Exists(path))
+
+                // Count the entries directly from readdir. Directory.GetFiles would stat the target of every
+                // entry (each one is a symlink) just to filter out directories, which is by far the dominant cost.
+                // When the process is the current one, the directory stream opened here is itself listed in the result.
+                int count = CountDirectoryEntries(path, excludeOwnDescriptor: IsCurrentProcess);
+                if (count >= 0)
                 {
-                    try
-                    {
-                        _processInfo.HandleCount = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly).Length;
-                    }
-                    catch (DirectoryNotFoundException) // Occurs when the process is deleted between the Exists check and the GetFiles call.
-                    {
-                    }
+                    _processInfo.HandleCount = count;
                 }
             }
         }

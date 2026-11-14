@@ -55,6 +55,17 @@ public class Program
             RedirectStandardError = true
         });
 
+        // A verifier that was killed or crashed reports nothing, which would look like a clean il.cpp.
+        // It always ends with a summary line, and fails normally because of the native units.
+        string output = result.StandardOutput.TrimEnd();
+        if (result.ExitStatus.Signal is not null || result.ExitStatus.Canceled ||
+            !(output.EndsWith("Errors detected.") || output.EndsWith("No errors.")))
+        {
+            Console.Error.WriteLine($"llvm-dwarfdump --verify did not complete (exit code {result.ExitStatus.ExitCode}, signal {result.ExitStatus.Signal}).");
+            Console.Error.WriteLine(result.StandardError);
+            return 11;
+        }
+
         int count = 0;
         bool foundIlCpp = false;
         bool insideIlCpp = false;

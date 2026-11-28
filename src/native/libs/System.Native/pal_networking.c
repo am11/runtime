@@ -1777,6 +1777,11 @@ int32_t SystemNative_Connect(intptr_t socket, uint8_t* socketAddress, int32_t so
     return err == 0 ? Error_SUCCESS : SystemNative_ConvertErrorPlatformToPal(errno);
 }
 
+#if defined(__linux__) && !defined(TCP_FASTOPEN)
+// glibc < 2.18 doesn't define it
+#define TCP_FASTOPEN 23
+#endif
+
 #if defined(__linux__) && !defined(TCP_FASTOPEN_CONNECT)
 // fixup if compiled against old Kernel headers.
 // Can be removed once we have at least 4.11

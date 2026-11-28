@@ -10,6 +10,10 @@
 #include <inttypes.h>
 #include "elfreader.h"
 
+#ifndef EM_RISCV
+#define EM_RISCV 243
+#endif
+
 #if !defined(HOST_WINDOWS) && !defined(HOST_APPLE)
 static const char ElfMagic[] = { 0x7f, 'E', 'L', 'F', '\0' };
 #endif

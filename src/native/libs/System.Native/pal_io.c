@@ -1387,6 +1387,10 @@ int32_t SystemNative_PosixFAdvise(intptr_t fd, int64_t offset, int64_t length, i
 #endif
 }
 
+#if HAVE_FALLOCATE && !defined(FALLOC_FL_KEEP_SIZE)
+#include <linux/falloc.h>
+#endif
+
 int32_t SystemNative_FAllocate(intptr_t fd, int64_t offset, int64_t length)
 {
     assert_msg(offset == 0, "Invalid offset value", (int)offset);

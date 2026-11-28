@@ -16,7 +16,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#if HAVE_GETRANDOM
+#if defined(__linux__)
+#include <sys/syscall.h>
+#elif HAVE_GETRANDOM
 #include <sys/random.h>
 #endif
 #endif
@@ -25,6 +27,14 @@
 #endif
 
 #include "random.h"
+
+#if defined(__linux__) && defined(SYS_getrandom)
+// Use the syscall directly rather than the glibc 2.25+ wrapper, so binaries and static
+// archives don't take a dependency on a newer glibc than the rest of the runtime.
+#define MINIPAL_GETRANDOM(buf, len) syscall(SYS_getrandom, (buf), (len), 0)
+#elif HAVE_GETRANDOM && !defined(__linux__)
+#define MINIPAL_GETRANDOM(buf, len) getrandom((buf), (len), 0)
+#endif
 
 /*
 
@@ -103,7 +113,7 @@ int32_t minipal_get_cryptographically_secure_random_bytes(uint8_t* buffer, int32
     return BCRYPT_SUCCESS(status) ? 0 : -1;
 #else
 
-#if HAVE_GETRANDOM
+#ifdef MINIPAL_GETRANDOM
     // Try getrandom() first - it's faster than /dev/urandom as it avoids file descriptor overhead.
     // getrandom() was added in Linux 3.17 (2014) and glibc 2.25 (2017).
     static volatile bool sMissingGetrandom;
@@ -113,7 +123,7 @@ int32_t minipal_get_cryptographically_secure_random_bytes(uint8_t* buffer, int32
         int32_t offset = 0;
         while (offset != bufferLength)
         {
-            ssize_t n = getrandom(buffer + offset, (size_t)(bufferLength - offset), 0);
+            ssize_t n = (ssize_t)MINIPAL_GETRANDOM(buffer + offset, (size_t)(bufferLength - offset));
             if (n == -1)
             {
                 if (errno == EINTR)
@@ -141,7 +151,7 @@ int32_t minipal_get_cryptographically_secure_random_bytes(uint8_t* buffer, int32
     }
 #endif
 
-#if HAVE_GETENTROPY
+#if HAVE_GETENTROPY && !defined(__linux__)
     // getentropy() is available on platforms like WASI (via wasi-libc, backed by
     // __wasi_random_get()) and other libc implementations. Used as a fallback when
     // getrandom() is not available or fails.
